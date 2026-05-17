@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { FiImage, FiVideo, FiFileText } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import CreatePost from "./create-post"; // Adjust this import path to match your folder structure
+import Image from "next/image";
+import logo from "@/public/profilepic.jpeg";
 
 export default function CreatePostTrigger() {
   const [openPostModal, setOpenPostModal] = useState(false);
@@ -20,8 +22,12 @@ export default function CreatePostTrigger() {
         <div className=" bg-[#121621] text-white p-4 rounded-2xl border border-white/[0.05] shadow-lg font-sans select-none mx-2 md:mx-0 ">
           <div className="flex items-center gap-3">
             {/* Student Profile Avatar Placeholder */}
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center font-bold text-xs text-white shadow-md shrink-0">
-              DA
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center font-bold text-xs text-white shadow-md shrink-0">
+              <Image
+                alt="AM"
+                className="bg-red-500 w-full h-full object-cover"
+                src={logo}
+              />
             </div>
 
             {/* Simulated Input Field Button */}

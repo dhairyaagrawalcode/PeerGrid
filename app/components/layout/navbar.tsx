@@ -13,6 +13,8 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import logo from "@/public/profilepic.jpeg";
 
 export default function Navbar() {
   const [searchFocused, setSearchFocused] = useState(false);
@@ -180,15 +182,15 @@ export default function Navbar() {
           <div ref={profileRef} className="relative ml-0.5">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-1.5 p-1 pr-2 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-200"
+              className="flex items-center rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-200"
             >
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center font-bold text-[11px] text-white shadow-inner">
-                DA
+              <div className="w-8 h-8 overflow-hidden rounded-lg bg-gradient-to-br from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center font-bold text-[11px] text-white shadow-inner">
+                <Image
+                  alt="AM"
+                  className="bg-red-500 w-full h-full object-cover"
+                  src={logo}
+                />
               </div>
-              <FiChevronDown
-                size={13}
-                className={`text-white/30 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180 text-white/80" : ""}`}
-              />
             </button>
 
             {/* Account Settings Dropdown Card Frame */}

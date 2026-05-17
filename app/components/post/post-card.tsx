@@ -13,7 +13,7 @@ import {
   FiChevronRight,
   FiX,
 } from "react-icons/fi";
-import { motion , AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PostMedia {
   type: "image" | "video" | "doc";
@@ -136,7 +136,6 @@ function PostCard({ post }: PostCardProps) {
               <p className="text-[12px] text-white/40 mt-0.5">
                 {post.course} · {post.year} · {post.time_uploaded}
               </p>
-
               {post.tag_label && (
                 <div className="mt-2">
                   <span className="inline-flex items-center text-[11px] font-medium text-[#4FD1C5] bg-[#4FD1C5]/10 border border-[#4FD1C5]/20 px-2.5 py-0.5 rounded-full">
@@ -312,8 +311,6 @@ function PostCard({ post }: PostCardProps) {
               {like ? <AiFillHeart size={16} /> : <AiOutlineHeart size={16} />}
               <span>{likeNo}</span>
             </button>
-
-          
           </div>
 
           <button
