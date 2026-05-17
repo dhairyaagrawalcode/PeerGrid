@@ -13,7 +13,7 @@ import {
   FiChevronRight,
   FiX,
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion , AnimatePresence } from "framer-motion";
 
 interface PostMedia {
   type: "image" | "video" | "doc";
@@ -115,7 +115,7 @@ function PostCard({ post }: PostCardProps) {
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <div className="w-full bg-[#121621] text-white p-5 rounded-2xl border border-white/5 font-sans shadow-xl  transition-all duration-300">
+      <div className="mx-2 md:mx-0 bg-[#121621] text-white p-5 rounded-2xl border border-white/5 font-sans shadow-xl  transition-all duration-300">
         {/* --- HEADER SECTION --- */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-3">

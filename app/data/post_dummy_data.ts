@@ -264,6 +264,14 @@ Computer Vision projects genuinely feel magical once they start working live.
         type: "image",
         url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60",
       },
+      {
+        type: "image",
+        url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        type: "image",
+        url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60",
+      },
     ],
     links: [
       {
