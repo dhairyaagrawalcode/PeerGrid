@@ -30,7 +30,6 @@ const NAV_LINKS = [
     icon: <IoFolderOpenOutline />,
   },
   { name: "Saved", redirectlink: "/", icon: <CiBookmark /> },
-  { name: "Setting", redirectlink: "/settings", icon: <IoSettingsOutline /> },
 ];
 
 // 2. Move skills list to an array

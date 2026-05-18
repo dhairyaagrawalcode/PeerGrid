@@ -11,7 +11,7 @@ function Page() {
     <div>
       <Navbar />
       <div className="bg-bg text-font flex justify-center py-20">
-        <div className="flex justify-between xl:w-2/3 w-full gap-5 mx-4">
+        <div className="flex justify-between xl:w-2/3 w-full gap-3 mx-4">
           <Sidebar />
           <Feed />
           <Rightsidebar />

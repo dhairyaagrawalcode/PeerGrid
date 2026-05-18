@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-    /* This creates classes like bg-bg, text-bg, etc. */
     --color-bg: #070B14;
 
-    /* This creates text-font, bg-font, etc. */
     --color-font: #F5F7FA;
 
-    /* This creates bg-primary, text-primary, etc. */
     --color-primary: #6C63FF;
 
-    /* This creates bg-secondary, text-secondary, etc. */
     --color-secondary: #4FD1C5;
 
     --color-cardbg: #121621;
 }
 
-*{
+* {
     scroll-behavior: smooth;
+}
+
+*::-webkit-scrollbar {
+    width: 0px;
 }

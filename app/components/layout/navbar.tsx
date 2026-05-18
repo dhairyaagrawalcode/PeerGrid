@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import logo from "@/public/profilepic.jpeg";
+import Link from "next/link";
 
 export default function Navbar() {
   const [searchFocused, setSearchFocused] = useState(false);
@@ -76,17 +77,18 @@ export default function Navbar() {
     <div className="bg-[#0B1120] text-white border-b border-white/[0.05] h-16 fixed top-0 right-0 w-full z-50 font-sans backdrop-blur-md bg-opacity-95 shadow-md flex items-center select-none">
       <div className=" xl:w-2/3 mx-auto px-5 w-full flex items-center justify-between gap-5">
         {/* --- LEFT: BRANDING & LOGO ASSEMBLY --- */}
-        <div className="flex items-center gap-2 shrink-0 cursor-pointer group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center shadow-lg shadow-[#6C63FF]/10">
-            <span className="font-black text-base text-white tracking-tighter">
-              P
+        <Link href="/feed">
+          <div className="flex items-center gap-2 shrink-0 cursor-pointer group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center shadow-lg shadow-[#6C63FF]/10">
+              <span className="font-black text-base text-white tracking-tighter">
+                P
+              </span>
+            </div>
+            <span className="text-[17px] font-bold tracking-tight bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent group-hover:text-white transition-colors block">
+              Peer<span className="text-[#6C63FF]">Grid</span>
             </span>
           </div>
-          <span className="text-[17px] font-bold tracking-tight bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent group-hover:text-white transition-colors block">
-            Peer<span className="text-[#6C63FF]">Grid</span>
-          </span>
-        </div>
-
+        </Link>
         {/* --- MIDDLE: LINKEDIN-STYLE LIVE FILTER SEARCH ENGINE --- */}
         <div
           ref={searchRef}

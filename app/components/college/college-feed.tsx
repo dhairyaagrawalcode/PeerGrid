@@ -7,7 +7,7 @@ import { colleges } from "@/app/data/collages_dummy_data";
 
 export default function CollegesGrid() {
   return (
-    <section className="w-full xl:w-3/5 lg:w-4/5 px-4 md:px-6 py-6">
+    <section className="w-full xl:w-3/5 lg:w-4/5 px-4 md:px-0 py-3">
       {/* Heading */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#F5F7FA]">
@@ -48,11 +48,10 @@ export default function CollegesGrid() {
                   src={college.images}
                   alt={college.name}
                   fill
-                  className="object-cover group-hover:scale-105 transition-all duration-700"
+                  className="object-cover group-hover:scale-105 transition-all duration-700 opacity-90"
                 />
 
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070B14] via-[#070B14]/10 to-transparent"></div>
 
                 {/* Logo */}
                 <div className="absolute left-5 bottom-5 w-14 h-14 rounded-2xl overflow-hidden border border-white/10 bg-[#111827] backdrop-blur-xl shadow-xl">
