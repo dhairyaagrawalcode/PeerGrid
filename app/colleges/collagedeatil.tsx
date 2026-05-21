@@ -153,7 +153,7 @@ export default function CollegeDetailPage({
                 }`}
               >
                 {isFollowing ? <FiCheck size={14} /> : <FiPlus size={14} />}
-                <span>{isFollowing ? "Following Hub" : "Follow Hub"}</span>
+                <span>{isFollowing ? "Following" : "Follow"}</span>
               </button>
             </div>
           </div>

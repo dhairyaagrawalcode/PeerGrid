@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import logo from "@/public/profilepic.jpeg";
+import logo from "@/public/profilepic.png";
 
 // Defined interfaces for type safety
 interface LinkItem {

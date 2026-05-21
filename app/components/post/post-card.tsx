@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Import your decoupled data tables
 import { users } from "@/app/data/user_dummy_data";
 import { colleges } from "@/app/data/collages_dummy_data";
+import Link from "next/link";
 
 interface AttachedDataItem {
   type: "image" | "video" | "doc" | "link";
@@ -128,258 +129,270 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <div className="w-full bg-[#0b0f17] text-white rounded-2xl border border-white/[0.05] p-4 lg:p-5 shadow-lg select-none relative overflow-hidden transition-all duration-200 hover:border-white/[0.08]">
-      {/* CARD HEADER SECTION */}
-      <div className="flex items-start justify-between gap-3 pb-3.5">
-        <div className="flex items-start gap-3">
-          {/* User Avatar Circle Frame */}
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6C63FF]/30 to-[#4FD1C5]/20 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
-            {profilePic ? (
-              <img
-                src={profilePic}
-                alt={name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-xs font-bold text-[#818cf8]">
-                {logoText}
-              </span>
-            )}
-          </div>
-
-          {/* Identity Matrix Meta Fields */}
-          <div>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="text-sm font-bold tracking-wide text-white leading-none hover:underline cursor-pointer">
-                {name}
-              </span>
-              <span className="text-xs text-[#697489] font-mono">
-                {username}
-              </span>
-              {post.tag_label && (
-                <span className="text-[9px] font-bold bg-white/[0.03] text-[#4FD1C5] border border-[#4fd1c5]/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-95 origin-left">
-                  {post.tag_label}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }} // Start low and invisible
+      whileInView={{ opacity: 1, y: 0 }} // Animate to position when scrolled into view
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="group overflow-hidden rounded-[32px] border border-white/10 bg-[#0B1120]/80 hover:border-[#6C63FF]/30 transition-all duration-500 "
+    >
+      <div className="w-full bg-[#0b0f17] text-white rounded-2xl border border-white/[0.05] p-4 lg:p-5 shadow-lg select-none relative overflow-hidden transition-all duration-200 hover:border-white/[0.08]">
+        {/* CARD HEADER SECTION */}
+        <div className="flex items-start justify-between gap-3 pb-3.5">
+          <div className="flex items-start gap-3">
+            {/* User Avatar Circle Frame */}
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6C63FF]/30 to-[#4FD1C5]/20 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt={name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs font-bold text-[#818cf8]">
+                  {logoText}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
-              {courseContext}
-            </p>
-            <p className="text-[10px] text-[#697489] font-medium mt-0.5">
-              {collegeName} · {formatTimeAgo(post.uploaded_time)}
-            </p>
-          </div>
-        </div>
 
-        {/* Dynamic Follow User Button Trigger */}
-        <button
-          onClick={() => setFollowing(!following)}
-          className={`h-7 px-3 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all duration-200 active:scale-95 cursor-pointer ${
-            following
-              ? "bg-white/[0.04] text-emerald-400 border border-emerald-500/10"
-              : "bg-[#6C63FF]/10 hover:bg-[#6C63FF]/20 text-[#818cf8]"
-          }`}
-        >
-          {following ? <FiUserCheck size={12} /> : <FiUserPlus size={12} />}
-          <span>{following ? "Following" : "Follow"}</span>
-        </button>
-      </div>
-
-      {/* BODY CONTENT TEXT SECTION */}
-      <div className="text-[13.5px] text-gray-200 leading-relaxed font-normal whitespace-pre-wrap break-words pb-3">
-        {post.content}
-      </div>
-
-      {/* RENDER DYNAMIC DOCUMENTS / REPO ATTACHMENT CHIPS */}
-      {utilityAttachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 pb-3.5">
-          {utilityAttachments.map((item, idx) => (
-            <a
-              key={idx}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-xl px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors max-w-full"
-            >
-              {item.type === "doc" ? (
-                <FiFileText size={14} className="text-[#818cf8] shrink-0" />
-              ) : (
-                <FiExternalLink size={14} className="text-[#4FD1C5] shrink-0" />
-              )}
-              <span className="truncate font-medium">
-                {item.name || "Attached Asset"}
-              </span>
-            </a>
-          ))}
-        </div>
-      )}
-
-      {/* SLIDING INLINE IMAGE / VIDEO VISUAL MEDIA BOX CONTAINER */}
-      {visualMedia.length > 0 && (
-        <div className="w-full rounded-xl overflow-hidden border border-white/[0.04] bg-black/40 relative aspect-video group mb-4">
-          <div
-            className="w-full h-full cursor-zoom-in"
-            onClick={() => setLightboxIndex(mediaIndex)}
-          >
-            {visualMedia[mediaIndex].type === "image" ? (
-              <img
-                src={visualMedia[mediaIndex].url}
-                alt="Post Attachment File Preview"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
-              />
-            ) : (
-              <video
-                src={visualMedia[mediaIndex].url}
-                controls
-                className="w-full h-full object-contain bg-black"
-              />
-            )}
-          </div>
-
-          {/* Left/Right Carousel Controls Indicator */}
-          {visualMedia.length > 1 && (
-            <>
-              <button
-                onClick={handlePrevMedia}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-black/60 border border-white/5 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/80 z-10 active:scale-90"
-              >
-                <FiChevronLeft size={16} />
-              </button>
-              <button
-                onClick={handleNextMedia}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-black/60 border border-white/5 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/80 z-10 active:scale-90"
-              >
-                <FiChevronRight size={16} />
-              </button>
-
-              {/* Dynamic Bottom Dot Pips Track */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-                {visualMedia.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      mediaIndex === idx
-                        ? "w-3 bg-[#6C63FF]"
-                        : "w-1.5 bg-white/30"
-                    }`}
-                  />
-                ))}
+            {/* Identity Matrix Meta Fields */}
+            <div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="text-sm font-bold tracking-wide text-white leading-none hover:underline cursor-pointer">
+                  {name}
+                </span>
+                <span className="text-xs text-[#697489] font-mono">
+                  {username}
+                </span>
+                {post.tag_label && (
+                  <span className="text-[9px] font-bold bg-white/[0.03] text-[#4FD1C5] border border-[#4fd1c5]/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-95 origin-left">
+                    {post.tag_label}
+                  </span>
+                )}
               </div>
-            </>
-          )}
-        </div>
-      )}
+              <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                {courseContext}
+              </p>
+              <p className="text-[10px] text-[#697489] font-medium mt-0.5">
+                <Link className="underline" href={`/colleges/${post.collage_id}`}>{collegeName}</Link>{" "}
+                · {formatTimeAgo(post.uploaded_time)}
+              </p>
+            </div>
+          </div>
 
-      {/* FOOTER INTERACTIVE UTILITY ROW */}
-      <div className="flex items-center justify-between border-t border-white/[0.04] pt-3 text-[#697489]">
-        <div className="flex items-center gap-5">
-          {/* Like Interaction Toggle Action */}
+          {/* Dynamic Follow User Button Trigger */}
           <button
-            onClick={handleLike}
-            className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors ${
-              liked ? "text-rose-500" : "hover:text-rose-400"
+            onClick={() => setFollowing(!following)}
+            className={`h-7 px-3 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all duration-200 active:scale-95 cursor-pointer ${
+              following
+                ? "bg-white/[0.04] text-emerald-400 border border-emerald-500/10"
+                : "bg-[#6C63FF]/10 hover:bg-[#6C63FF]/20 text-[#818cf8]"
             }`}
           >
-            {liked ? <AiFillHeart size={18} /> : <AiOutlineHeart size={18} />}
-            <span className="font-mono">{likeCount}</span>
+            {following ? <FiUserCheck size={12} /> : <FiUserPlus size={12} />}
+            <span>{following ? "Following" : "Follow"}</span>
           </button>
-
-          {/* Comments Section Shortcut Icon Placeholder */}
-        
         </div>
 
-        {/* Bookmark Trigger State Button */}
-        <button
-          onClick={() => setSaved(!saved)}
-          className={`cursor-pointer transition-colors ${saved ? "text-[#818cf8]" : "hover:text-white"}`}
-        >
-          {saved ? <BsBookmarkFill size={15} /> : <BsBookmark size={15} />}
-        </button>
-      </div>
+        {/* BODY CONTENT TEXT SECTION */}
+        <div className="text-[13.5px] text-gray-200 leading-relaxed font-normal whitespace-pre-wrap break-words pb-3">
+          {post.content}
+        </div>
 
-      {/* OVERLAY LIGHTBOX ZOOM MODAL ELEMENT */}
-      <AnimatePresence>
-        {lightboxIndex !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setLightboxIndex(null)}
-            className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-md"
-          >
-            {/* Top Close Bar Option */}
-            <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex(null);
-                }}
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+        {/* RENDER DYNAMIC DOCUMENTS / REPO ATTACHMENT CHIPS */}
+        {utilityAttachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 pb-3.5">
+            {utilityAttachments.map((item, idx) => (
+              <a
+                key={idx}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-xl px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors max-w-full"
               >
-                <FiX size={20} />
-              </button>
-            </div>
-
-            {/* Central Slide Display Wrapper */}
-            <div className="w-full max-w-5xl h-[75vh] flex items-center justify-center relative select-none">
-              {/* Box Content Renderer */}
-              <motion.div
-                key={lightboxIndex}
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 180 }}
-                className="w-full h-full flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {visualMedia[lightboxIndex].type === "image" ? (
-                  <img
-                    src={visualMedia[lightboxIndex].url}
-                    alt="Lightbox High Res Content view"
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                  />
+                {item.type === "doc" ? (
+                  <FiFileText size={14} className="text-[#818cf8] shrink-0" />
                 ) : (
-                  <video
-                    src={visualMedia[lightboxIndex].url}
-                    controls
-                    autoPlay
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  <FiExternalLink
+                    size={14}
+                    className="text-[#4FD1C5] shrink-0"
                   />
                 )}
-              </motion.div>
+                <span className="truncate font-medium">
+                  {item.name || "Attached Asset"}
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
 
-              {/* Lightbox Horizontal Toggle Elements */}
-              {visualMedia.length > 1 && (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIndex(
-                        (prev) =>
-                          (prev! - 1 + visualMedia.length) % visualMedia.length,
-                      );
-                    }}
-                    className="absolute left-[-16px] md:left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-white flex items-center justify-center transition-all duration-200 z-10 active:scale-90 cursor-pointer"
-                  >
-                    <FiChevronLeft size={24} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIndex(
-                        (prev) => (prev! + 1) % visualMedia.length,
-                      );
-                    }}
-                    className="absolute right-[-16px] md:right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-white flex items-center justify-center transition-all duration-200 z-10 active:scale-90 cursor-pointer"
-                  >
-                    <FiChevronRight size={24} />
-                  </button>
-                </>
+        {/* SLIDING INLINE IMAGE / VIDEO VISUAL MEDIA BOX CONTAINER */}
+        {visualMedia.length > 0 && (
+          <div className="w-full rounded-xl overflow-hidden border border-white/[0.04] bg-black/40 relative aspect-video group mb-4">
+            <div
+              className="w-full h-full cursor-zoom-in"
+              onClick={() => setLightboxIndex(mediaIndex)}
+            >
+              {visualMedia[mediaIndex].type === "image" ? (
+                <img
+                  src={visualMedia[mediaIndex].url}
+                  alt="Post Attachment File Preview"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                />
+              ) : (
+                <video
+                  src={visualMedia[mediaIndex].url}
+                  controls
+                  className="w-full h-full object-contain bg-black"
+                />
               )}
             </div>
-          </motion.div>
+
+            {/* Left/Right Carousel Controls Indicator */}
+            {visualMedia.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevMedia}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-black/60 border border-white/5 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/80 z-10 active:scale-90"
+                >
+                  <FiChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={handleNextMedia}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-black/60 border border-white/5 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/80 z-10 active:scale-90"
+                >
+                  <FiChevronRight size={16} />
+                </button>
+
+                {/* Dynamic Bottom Dot Pips Track */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
+                  {visualMedia.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        mediaIndex === idx
+                          ? "w-3 bg-[#6C63FF]"
+                          : "w-1.5 bg-white/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+
+        {/* FOOTER INTERACTIVE UTILITY ROW */}
+        <div className="flex items-center justify-between border-t border-white/[0.04] pt-3 text-[#697489]">
+          <div className="flex items-center gap-5">
+            {/* Like Interaction Toggle Action */}
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+                liked ? "text-rose-500" : "hover:text-rose-400"
+              }`}
+            >
+              {liked ? <AiFillHeart size={18} /> : <AiOutlineHeart size={18} />}
+              <span className="font-mono">{likeCount}</span>
+            </button>
+
+            {/* Comments Section Shortcut Icon Placeholder */}
+          </div>
+
+          {/* Bookmark Trigger State Button */}
+          <button
+            onClick={() => setSaved(!saved)}
+            className={`cursor-pointer transition-colors ${saved ? "text-[#818cf8]" : "hover:text-white"}`}
+          >
+            {saved ? <BsBookmarkFill size={15} /> : <BsBookmark size={15} />}
+          </button>
+        </div>
+
+        {/* OVERLAY LIGHTBOX ZOOM MODAL ELEMENT */}
+        <AnimatePresence>
+          {lightboxIndex !== null && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLightboxIndex(null)}
+              className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-md"
+            >
+              {/* Top Close Bar Option */}
+              <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxIndex(null);
+                  }}
+                  className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              {/* Central Slide Display Wrapper */}
+              <div className="w-full max-w-5xl h-[75vh] flex items-center justify-center relative select-none">
+                {/* Box Content Renderer */}
+                <motion.div
+                  key={lightboxIndex}
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 180 }}
+                  className="w-full h-full flex items-center justify-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {visualMedia[lightboxIndex].type === "image" ? (
+                    <img
+                      src={visualMedia[lightboxIndex].url}
+                      alt="Lightbox High Res Content view"
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    />
+                  ) : (
+                    <video
+                      src={visualMedia[lightboxIndex].url}
+                      controls
+                      autoPlay
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    />
+                  )}
+                </motion.div>
+
+                {/* Lightbox Horizontal Toggle Elements */}
+                {visualMedia.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex(
+                          (prev) =>
+                            (prev! - 1 + visualMedia.length) %
+                            visualMedia.length,
+                        );
+                      }}
+                      className="absolute left-[-16px] md:left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-white flex items-center justify-center transition-all duration-200 z-10 active:scale-90 cursor-pointer"
+                    >
+                      <FiChevronLeft size={24} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex(
+                          (prev) => (prev! + 1) % visualMedia.length,
+                        );
+                      }}
+                      className="absolute right-[-16px] md:right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-white flex items-center justify-center transition-all duration-200 z-10 active:scale-90 cursor-pointer"
+                    >
+                      <FiChevronRight size={24} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }

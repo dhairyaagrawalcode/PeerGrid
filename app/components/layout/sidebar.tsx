@@ -12,7 +12,7 @@ import { BiBuildings } from "react-icons/bi";
 import Link from "next/link";
 import { BsPostcardHeart } from "react-icons/bs";
 import Image from "next/image";
-import logo from "@/public/profilepic.jpeg";
+import logo from "@/public/profilepic.png";
 
 // 1. Move navigation links to a config array
 const NAV_LINKS = [

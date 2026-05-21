@@ -5,7 +5,7 @@ import { FiImage, FiVideo, FiFileText } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import CreatePost from "./create-post"; // Adjust this import path to match your folder structure
 import Image from "next/image";
-import logo from "@/public/profilepic.jpeg";
+import logo from "@/public/profilepic.png";
 
 export default function CreatePostTrigger() {
   const [openPostModal, setOpenPostModal] = useState(false);

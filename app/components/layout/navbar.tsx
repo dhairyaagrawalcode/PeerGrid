@@ -14,7 +14,7 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import logo from "@/public/profilepic.jpeg";
+import logo from "@/public/profilepic.png";
 import Link from "next/link";
 
 export default function Navbar() {
