@@ -30,12 +30,26 @@ const features = [
 function FeatureVisual({ index }: { index: number }) {
   if (index === 0) {
     return (
-      <div className={`${styles.featureVisual} ${styles.discoveryVisual}`} aria-hidden="true">
-        <div className={styles.visualSearch}><FiSearch /> Search students</div>
+      <div
+        className={`${styles.featureVisual} ${styles.discoveryVisual}`}
+        aria-hidden="true"
+      >
+        <div className={styles.visualSearch}>
+          <FiSearch /> Search students
+        </div>
         {["AS", "MK", "RV"].map((initials, itemIndex) => (
           <div className={styles.visualPerson} key={initials}>
             <i>{initials}</i>
-            <span><b>{["Aditi Sharma", "Manav Kumar", "Riya Verma"][itemIndex]}</b><small>{["Product design", "Full-stack", "Machine learning"][itemIndex]}</small></span>
+            <span>
+              <b>{["Aditi Sharma", "Manav Kumar", "Riya Verma"][itemIndex]}</b>
+              <small>
+                {
+                  ["Product design", "Full-stack", "Machine learning"][
+                    itemIndex
+                  ]
+                }
+              </small>
+            </span>
             <em>View</em>
           </div>
         ))}
@@ -45,19 +59,44 @@ function FeatureVisual({ index }: { index: number }) {
 
   if (index === 1) {
     return (
-      <div className={`${styles.featureVisual} ${styles.feedVisual}`} aria-hidden="true">
+      <div
+        className={`${styles.featureVisual} ${styles.feedVisual}`}
+        aria-hidden="true"
+      >
         <div className={styles.visualPost}>
-          <div className={styles.visualPostAuthor}><i>NK</i><span><b>Naina Khurana</b><small>NST Pune · 2h</small></span></div>
-          <p>Sharing a first look at the project our team has been building this semester.</p>
-          <div className={styles.visualMedia}><span>PROJECT<br /><strong>01</strong></span></div>
-          <div className={styles.visualActions}><span>♡ 24</span><span>◯ 7</span><span>↗</span></div>
+          <div className={styles.visualPostAuthor}>
+            <i>NK</i>
+            <span>
+              <b>Naina Khurana</b>
+              <small>NST Pune · 2h</small>
+            </span>
+          </div>
+          <p>
+            Sharing a first look at the project our team has been building this
+            semester.
+          </p>
+          <div className={styles.visualMedia}>
+            <span>
+              PROJECT
+              <br />
+              <strong>01</strong>
+            </span>
+          </div>
+          <div className={styles.visualActions}>
+            <span>♡ 24</span>
+            <span>◯ 7</span>
+            <span>↗</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${styles.featureVisual} ${styles.networkVisual}`} aria-hidden="true">
+    <div
+      className={`${styles.featureVisual} ${styles.networkVisual}`}
+      aria-hidden="true"
+    >
       <span className={styles.networkLineA} />
       <span className={styles.networkLineB} />
       <span className={styles.networkLineC} />
@@ -65,7 +104,11 @@ function FeatureVisual({ index }: { index: number }) {
       <i className={styles.networkNode}>DA</i>
       <i className={styles.networkNode}>SR</i>
       <i className={styles.networkNode}>AM</i>
-      <div><FiUsers /><strong>Find your team</strong><small>Skills that fit together</small></div>
+      <div>
+        <FiUsers />
+        <strong>Find your team</strong>
+        <small>Skills that fit together</small>
+      </div>
     </div>
   );
 }

@@ -643,7 +643,7 @@
 .footer div {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid var(--landing-line);
+  /* border-top: 1px solid var(--landing-line); */
   padding-top: 30px;
   color: #66616e;
   font-size: 9px;
