@@ -12,7 +12,7 @@ export default function ProfileForm({ campuses, profile, returnTo }: { campuses:
   const skills = profile?.skills?.map((item) => item.name).join(", ") ?? "";
   const interests = profile?.interests?.map((item) => item.name).join(", ") ?? "";
   return (
-    <form action={action} className="space-y-7" encType="multipart/form-data">
+    <form action={action} className="space-y-7">
       <input type="hidden" name="returnTo" value={returnTo} />
       <div className="grid gap-5 sm:grid-cols-2">
         <div><label className="label" htmlFor="fullName">Full name *</label><input className="field" id="fullName" name="fullName" defaultValue={profile?.full_name ?? ""} minLength={2} maxLength={80} required /></div>
@@ -38,4 +38,3 @@ export default function ProfileForm({ campuses, profile, returnTo }: { campuses:
     </form>
   );
 }
-

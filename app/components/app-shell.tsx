@@ -21,7 +21,7 @@ const navigation = [
 export default function AppShell({ profile, children }: { profile: StudentProfile; children: ReactNode }) {
   const pathname = usePathname();
   return (
-    <div className="min-h-screen bg-bg text-font">
+    <div className="h-dvh overflow-hidden bg-bg text-font">
       <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-white/6 bg-bg/90 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <Brand href="/feed" />
@@ -34,21 +34,21 @@ export default function AppShell({ profile, children }: { profile: StudentProfil
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl gap-7 px-4 pb-24 pt-20 sm:px-6 md:pb-8">
-        <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] w-56 shrink-0 flex-col md:flex">
+      <div className="mx-auto flex h-dvh max-w-6xl gap-7 overflow-hidden px-4 pt-16 sm:px-6">
+        <aside className="hidden h-full w-56 shrink-0 flex-col py-4 md:flex">
           <nav className="space-y-1">
             {navigation.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return <Link key={href} href={href} className={`flex min-h-11 items-center gap-3 rounded-xl px-3.5 text-sm font-semibold transition ${active ? "bg-primary/12 text-primary" : "text-muted hover:bg-white/[0.035] hover:text-font"}`}><Icon size={18} />{label}</Link>;
             })}
           </nav>
-          <div className="mt-auto rounded-2xl border border-white/6 bg-white/[0.02] p-4">
+          <div className="mb-4 mt-auto rounded-2xl border border-white/6 bg-white/[0.02] p-4">
             <p className="text-xs font-bold">{profile.campus?.name}</p>
             <p className="mt-1 text-[11px] text-muted">Verified NST student</p>
             <form action={signOut}><button className="mt-4 flex items-center gap-2 text-xs font-semibold text-rose-300" type="submit"><FiLogOut /> Sign out</button></form>
           </div>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain pb-24 pt-4 [scrollbar-gutter:stable] md:pb-8">{children}</main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-5 border-t border-white/7 bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
