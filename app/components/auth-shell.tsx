@@ -15,13 +15,13 @@ export default function AuthShell({ eyebrow, title, copy, children }: { eyebrow:
           {children}
         </div>
       </section>
-      <aside className="relative hidden overflow-hidden border-l border-white/6 bg-panel lg:flex lg:items-center lg:justify-center">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(108,99,255,.2),transparent_45%)]" />
+      <aside className="relative hidden overflow-hidden border-l border-line bg-panel lg:flex lg:items-center lg:justify-center">
+        <div className="absolute inset-x-0 top-0 h-px bg-primary" />
         <div className="relative max-w-md p-10">
           <p className="text-3xl font-black leading-tight tracking-tight">Your campus is full of people worth knowing.</p>
           <p className="mt-4 leading-7 text-muted">Find teammates, mentors, builders, and friends across all four NST campuses—inside one verified network.</p>
           <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
-            {["Bangalore", "Pune", "Delhi NCR", "Hyderabad"].map((campus) => <span className="surface !rounded-xl !bg-white/[0.025] p-3" key={campus}>NST {campus}</span>)}
+            {["Bangalore", "Pune", "Delhi NCR", "Hyderabad"].map((campus) => <span className="surface !rounded-xl !bg-panel p-3" key={campus}>NST {campus}</span>)}
           </div>
         </div>
       </aside>

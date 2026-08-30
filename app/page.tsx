@@ -118,9 +118,9 @@ function ProductPreview() {
     <div className={styles.previewShell} aria-hidden="true">
       <div className={styles.previewWindow}>
         <div className={styles.windowBar}>
-          <span className="bg-[#ff605c]" />
-          <span className="bg-[#ffbd44]" />
-          <span className="bg-[#00ca4e]" />
+          <span className="bg-primary" />
+          <span className="bg-muted" />
+          <span className="bg-muted" />
           <div className={styles.previewSearch}>
             <FiSearch />
             <span>Search PeerGrid</span>

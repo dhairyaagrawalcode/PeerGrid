@@ -25,7 +25,7 @@ export default function PostBody({ text, className = "" }: { text: string; class
   return (
     <p className={`whitespace-pre-wrap break-words ${className}`}>
       {parts.map((part, index) => part.href ? (
-        <a className="break-all text-secondary underline decoration-secondary/40 underline-offset-2 hover:decoration-secondary" href={part.href} key={`${part.href}-${index}`} rel="noopener noreferrer" target="_blank">{part.text}</a>
+        <a className="break-all text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary" href={part.href} key={`${part.href}-${index}`} rel="noopener noreferrer" target="_blank">{part.text}</a>
       ) : <Fragment key={`text-${index}`}>{part.text}</Fragment>)}
     </p>
   );

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FiEdit3 } from "react-icons/fi";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
 import type { ConversationSummary } from "@/app/types";
@@ -60,20 +59,13 @@ export default function ConversationList({
 
   return (
     <aside
-      className={`${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col border-r border-white/8 md:w-[340px] md:flex-none`}
+      className={`${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col border-r border-line md:w-[340px] md:flex-none`}
     >
-      <div className="flex h-17 items-center justify-between border-b border-white/8 px-5">
+      <div className="flex h-17 items-center border-b border-line px-5">
         <div>
           <p className="text-base font-bold">Messages</p>
           <p className="mt-0.5 text-[11px] text-muted">Private student conversations</p>
         </div>
-        <Link
-          aria-label="Find someone to message"
-          className="grid h-9 w-9 place-items-center rounded-xl border border-white/8 bg-white/[0.03] text-muted hover:border-primary/35 hover:text-primary"
-          href="/discover"
-        >
-          <FiEdit3 />
-        </Link>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
@@ -83,7 +75,7 @@ export default function ConversationList({
             const unread = active ? 0 : conversation.unread_count;
             return (
               <Link
-                className={`flex gap-3 rounded-xl p-3 transition ${active ? "bg-primary/12" : "hover:bg-white/[0.035]"}`}
+                className={`flex gap-3 rounded-xl p-3 transition ${active ? "bg-primary/10" : "hover:bg-card"}`}
                 href={`/messages/${conversation.conversation_id}`}
                 key={conversation.conversation_id}
               >
@@ -99,7 +91,7 @@ export default function ConversationList({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-start justify-between gap-2">
-                    <strong className={`truncate text-sm ${unread ? "text-font" : "font-semibold text-[#d5d1dc]"}`}>
+                    <strong className={`truncate text-sm ${unread ? "text-font" : "font-semibold text-subtle"}`}>
                       {conversation.other_full_name}
                     </strong>
                     <small className="shrink-0 text-[10px] text-muted">
@@ -107,7 +99,7 @@ export default function ConversationList({
                     </small>
                   </span>
                   <span className="mt-1 flex items-center gap-2">
-                    <span className={`truncate text-xs ${unread ? "font-semibold text-[#c9c3d2]" : "text-muted"}`}>
+                    <span className={`truncate text-xs ${unread ? "font-semibold text-subtle" : "text-muted"}`}>
                       {conversation.last_message_body
                         ? `${conversation.last_message_sender_id === currentId ? "You: " : ""}${conversation.last_message_body}`
                         : `Start a conversation with @${conversation.other_username}`}
@@ -125,10 +117,7 @@ export default function ConversationList({
         ) : (
           <div className="grid h-full min-h-72 place-items-center px-7 text-center">
             <div>
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-                <FiEdit3 size={20} />
-              </div>
-              <p className="mt-4 text-sm font-bold">No messages yet</p>
+              <p className="text-sm font-bold">No messages yet</p>
               <p className="mt-2 text-xs leading-5 text-muted">
                 Open a student profile and choose Message to start chatting.
               </p>

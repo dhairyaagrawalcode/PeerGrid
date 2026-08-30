@@ -139,8 +139,8 @@ export default function MessageThread({
                   <div
                     className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-5 ${
                       own
-                        ? "rounded-br-md bg-primary text-white"
-                        : "rounded-bl-md border border-white/8 bg-white/[0.05] text-[#e2dee6]"
+                        ? "rounded-br-md border border-line bg-card text-font"
+                        : "rounded-bl-md border border-line bg-panel text-subtle"
                     }`}
                   >
                     {message.body}
@@ -164,7 +164,7 @@ export default function MessageThread({
         )}
       </div>
 
-      <div className="border-t border-white/8 p-3 sm:p-4">
+      <div className="border-t border-line p-3 sm:p-4">
         <form className="mx-auto flex max-w-2xl items-center gap-2" onSubmit={send}>
           <input
             aria-label="Message"
@@ -177,14 +177,14 @@ export default function MessageThread({
           />
           <button
             aria-label="Send message"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/20 transition hover:bg-[#9a70f8] disabled:opacity-40"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-white transition hover:bg-primary-hover disabled:opacity-40"
             disabled={sending || !body.trim()}
             type="submit"
           >
             {sending ? <FiLoader className="animate-spin" /> : <FiSend />}
           </button>
         </form>
-        {error && <p className="mx-auto mt-2 max-w-2xl px-2 text-xs text-rose-300">{error}</p>}
+        {error && <p className="mx-auto mt-2 max-w-2xl px-2 text-xs text-danger">{error}</p>}
       </div>
     </>
   );

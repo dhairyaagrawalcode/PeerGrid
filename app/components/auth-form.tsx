@@ -86,13 +86,13 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           <input className="field !pl-10" id="password" name="password" type="password" minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} required />
         </div>
       </div>
-      {message && <p className="rounded-xl border border-rose-400/15 bg-rose-400/8 p-3 text-sm text-rose-200" role="alert">{message}</p>}
+      {message && <p className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger" role="alert">{message}</p>}
       <button className="button button-primary w-full" disabled={loading} type="submit">
         {loading ? <><FiLoader className="animate-spin" /> Please wait</> : <>{mode === "signup" ? "Create verified account" : "Sign in"}<FiArrowRight /></>}
       </button>
       <p className="text-center text-sm text-muted">
         {mode === "signup" ? "Already on PeerGrid?" : "New to PeerGrid?"}{" "}
-        <Link className="font-semibold text-secondary hover:underline" href={mode === "signup" ? "/auth/login" : "/auth/signup"}>
+        <Link className="font-semibold text-primary hover:underline" href={mode === "signup" ? "/auth/login" : "/auth/signup"}>
           {mode === "signup" ? "Sign in" : "Create an account"}
         </Link>
       </p>

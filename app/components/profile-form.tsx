@@ -33,7 +33,7 @@ export default function ProfileForm({ campuses, profile, returnTo }: { campuses:
         <div><label className="label" htmlFor="linkedinUrl">LinkedIn URL</label><input className="field" id="linkedinUrl" name="linkedinUrl" type="url" defaultValue={profile?.linkedin_url ?? ""} placeholder="https://linkedin.com/in/..." /></div>
         <div><label className="label" htmlFor="portfolioUrl">Portfolio URL</label><input className="field" id="portfolioUrl" name="portfolioUrl" type="url" defaultValue={profile?.portfolio_url ?? ""} placeholder="https://..." /></div>
       </div>
-      {state.error && <p className="rounded-xl border border-rose-400/15 bg-rose-400/8 p-3 text-sm text-rose-200" role="alert">{state.error}</p>}
+      {state.error && <p className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger" role="alert">{state.error}</p>}
       <button className="button button-primary w-full sm:w-auto" disabled={pending} type="submit"><FiSave />{pending ? "Saving…" : "Save profile"}</button>
     </form>
   );

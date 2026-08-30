@@ -9,7 +9,7 @@ export default async function EditProfilePage() {
     getCampuses(supabase),
   ]);
   return (
-    <section className="surface mx-auto max-w-4xl p-5 sm:p-8">
+    <section className="mx-auto max-w-4xl border-y border-line py-6 sm:py-8">
       <p className="eyebrow">Profile settings</p>
       <h1 className="mt-2 text-2xl font-black tracking-tight">
         Edit your profile
@@ -17,7 +17,7 @@ export default async function EditProfilePage() {
       <p className="mt-2 text-sm text-muted">
         Keep this current so the right students can discover you.
       </p>
-      <div className="my-7 h-px bg-white/6" />
+      <div className="my-7 h-px bg-line" />
       <ProfileForm campuses={campuses} profile={profile} returnTo="/profile" />
     </section>
   );

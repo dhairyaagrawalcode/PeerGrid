@@ -59,8 +59,8 @@ export default async function FeedPage() {
     <div className="mx-auto grid max-w-[1240px] gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
       <aside className="hidden xl:block">
         <section className="surface sticky top-0 overflow-hidden !rounded-2xl">
-          <div className="relative h-40 bg-[radial-gradient(circle_at_25%_20%,rgba(153,89,255,.55),transparent_35%),linear-gradient(145deg,#4716a4,#19102f)]">
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_38%,rgba(153,54,255,.42)_38%,rgba(153,54,255,.42)_64%,transparent_64%)]" />
+          <div className="relative h-40 border-b border-line bg-panel">
+            <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
             <div className="absolute inset-x-0 bottom-[-2.6rem] flex justify-center">
               <span className="avatar !h-21 !w-21 !rounded-2xl !border-[3px] !border-panel text-lg">
                 {profile.avatar_url ? (
@@ -82,7 +82,7 @@ export default async function FeedPage() {
               {profile.program || `@${profile.username}`} ·{" "}
               {profile.campus?.name}
             </p>
-            <div className="mt-5 grid grid-cols-2 border-y border-white/8 py-3">
+            <div className="mt-5 grid grid-cols-2 border-y border-line py-3">
               <div>
                 <strong className="block text-sm">
                   {followSummary.follower_count}
@@ -91,7 +91,7 @@ export default async function FeedPage() {
                   Followers
                 </span>
               </div>
-              <div className="border-l border-white/8">
+              <div className="border-l border-line">
                 <strong className="block text-sm">
                   {followSummary.following_count}
                 </strong>
@@ -137,31 +137,31 @@ export default async function FeedPage() {
               Share something with the NST community…
             </Link>
           </div>
-          <div className="mt-4 grid grid-cols-3 border-t border-white/8 pt-3 text-xs font-semibold text-muted">
+          <div className="mt-4 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
             <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font"
+              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
               href="/post"
             >
-              <FiImage className="text-primary" /> Photo
+              <FiImage className="text-subtle" /> Photo
             </Link>
             <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font"
+              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
               href="/post"
             >
-              <FiVideo className="text-primary" /> Video
+              <FiVideo className="text-subtle" /> Video
             </Link>
             <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font"
+              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
               href="/post"
             >
-              <FiFileText className="text-primary" /> Document
+              <FiFileText className="text-subtle" /> Document
             </Link>
           </div>
         </section>
 
-        <div className="space-y-5">
+        <div className="divide-y divide-line border-y border-line">
           {posts.length ? (
-            posts.map((post) => <SocialPostCard key={post.id} post={post} />)
+            posts.map((post) => <SocialPostCard flat key={post.id} post={post} />)
           ) : (
             <EmptyState
               action={
@@ -182,13 +182,13 @@ export default async function FeedPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold">Suggested for you</h2>
             <Link
-              className="text-[10px] font-bold text-primary hover:text-[#a982ff]"
+              className="text-[10px] font-bold text-primary hover:text-primary-hover"
               href="/discover"
             >
               See all
             </Link>
           </div>
-          <div className="mt-2 divide-y divide-white/6">
+          <div className="mt-2 divide-y divide-line">
             {suggestions.length ? (
               suggestions.map((student) => (
                 <SuggestedStudent
@@ -205,7 +205,7 @@ export default async function FeedPage() {
             )}
           </div>
           <Link
-            className="mt-3 flex items-center gap-2 border-t border-white/6 pt-3 text-xs font-bold text-primary"
+            className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-xs font-bold text-primary"
             href="/discover"
           >
             <FiUsers /> Explore the network

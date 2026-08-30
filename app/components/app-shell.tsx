@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  FiCompass,
   FiGrid,
   FiLogOut,
   FiMessageSquare,
@@ -22,7 +21,7 @@ import Brand from "./brand";
 
 const navigation = [
   { href: "/feed", label: "Home", icon: FiGrid },
-  { href: "/discover", label: "Discover", icon: FiCompass },
+  { href: "/discover", label: "Discover", icon: FiSearch },
   { href: "/collaborate", label: "Collaborate", icon: FiUsers },
   { href: "/post", label: "Post", icon: FiPlusSquare },
   { href: "/messages", label: "Messages", icon: FiMessageSquare },
@@ -80,7 +79,7 @@ export default function AppShell({
         className={
           mobile
             ? `relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active ? "text-primary" : "text-muted"}`
-            : `relative grid h-10 w-10 place-items-center rounded-xl transition ${active ? "bg-primary/15 text-primary" : "text-muted hover:bg-white/[0.045] hover:text-font"}`
+            : `relative grid h-10 w-10 place-items-center rounded-xl transition ${active ? "bg-primary/15 text-primary" : "text-muted hover:bg-panel hover:text-font"}`
         }
         href={href}
         key={href}
@@ -99,24 +98,14 @@ export default function AppShell({
 
   return (
     <div className="h-dvh overflow-hidden bg-bg text-font">
-      <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-white/8 bg-bg/95 backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1320px] items-center gap-6 px-4 sm:px-6">
           <Brand href="/feed" />
-
-          <form action="/discover" className="relative mx-auto hidden w-full max-w-[480px] sm:block">
-            <FiSearch className="pointer-events-none absolute left-4 top-3 text-muted" />
-            <input
-              aria-label="Search PeerGrid"
-              className="field !min-h-10 !rounded-full !border-white/7 !bg-white/[0.045] !pl-11"
-              name="q"
-              placeholder="Search students, skills, interests…"
-            />
-          </form>
 
           <nav className="ml-auto hidden items-center gap-1 md:flex" aria-label="Application navigation">
             {navigation.map((item) => navigationLink(item))}
           </nav>
-          <div className="hidden h-7 w-px bg-white/8 md:block" />
+          <div className="hidden h-7 w-px bg-line md:block" />
 
           <details className="group relative">
             <summary
@@ -129,19 +118,19 @@ export default function AppShell({
                 initials(profile.full_name)
               )}
             </summary>
-            <div className="surface absolute right-0 top-12 w-60 !rounded-xl !bg-panel p-2 shadow-2xl shadow-black/60">
-              <div className="border-b border-white/8 px-3 py-2.5">
+            <div className="absolute right-0 top-12 w-60 rounded-xl border border-line bg-panel p-2">
+              <div className="border-b border-line px-3 py-2.5">
                 <p className="truncate text-sm font-bold">{profile.full_name}</p>
                 <p className="mt-0.5 truncate text-xs text-muted">@{profile.username}</p>
               </div>
-              <Link className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-white/5 hover:text-font" href="/profile">
+              <Link className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/profile">
                 <FiUser /> View profile
               </Link>
-              <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-white/5 hover:text-font" href="/connections">
+              <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/connections">
                 <FiUsers /> Followers &amp; following
               </Link>
-              <form action={signOut} className="mt-1 border-t border-white/8 pt-1">
-                <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-300 hover:bg-rose-400/8" type="submit">
+              <form action={signOut} className="mt-1 border-t border-line pt-1">
+                <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger/10" type="submit">
                   <FiLogOut /> Sign out
                 </button>
               </form>
@@ -154,7 +143,7 @@ export default function AppShell({
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-5 border-t border-white/8 bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-5 border-t border-line bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {navigation.map((item) => navigationLink({ ...item, mobile: true }))}
       </nav>
     </div>

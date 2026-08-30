@@ -26,7 +26,7 @@ export default async function OnboardingPage() {
           <p className="eyebrow">Final step</p>
           <h1 className="mt-3 text-3xl font-black tracking-tight">Build your student profile</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Your verified profile powers discovery. Only your name, username, and campus are required; add the details that help the right peers find you.</p>
-          <div className="my-8 h-px bg-white/6" />
+          <div className="my-8 h-px bg-line" />
           <ProfileForm campuses={campuses} profile={enriched} returnTo="/feed" />
         </section>
       </div>

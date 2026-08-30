@@ -137,24 +137,24 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       </div>
 
       {file && (
-        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-white/8 sm:mx-5">
-          <div className="flex items-center justify-between border-b border-white/7 bg-white/[0.025] px-4 py-3">
+        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-line sm:mx-5">
+          <div className="flex items-center justify-between border-b border-line bg-panel px-4 py-3">
             <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-0.5 text-xs text-muted">{readableSize(file.size)}</p></div>
-            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-white/7 hover:text-font" onClick={() => updateFile(null)} type="button"><FiX /></button>
+            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" onClick={() => updateFile(null)} type="button"><FiX /></button>
           </div>
           {kind === "image" && previewUrl && <img alt="Selected post attachment" className="max-h-[460px] w-full object-contain" src={previewUrl} />}
           {kind === "video" && previewUrl && <video className="max-h-[460px] w-full bg-black" controls preload="metadata" src={previewUrl} />}
-          {kind === "document" && <div className="flex items-center gap-3 p-5 text-sm text-muted"><FiFileText className="text-primary" size={24} /> Document ready to upload</div>}
+          {kind === "document" && <div className="flex items-center gap-3 p-5 text-sm text-muted"><FiFileText className="text-subtle" size={24} /> Document ready to upload</div>}
         </div>
       )}
 
-      {error && <p className="mx-4 mb-4 rounded-xl border border-rose-400/15 bg-rose-400/8 p-3 text-sm text-rose-200 sm:mx-5" role="alert">{error}</p>}
+      {error && <p className="mx-4 mb-4 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger sm:mx-5" role="alert">{error}</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/7 px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
         <div className="flex items-center gap-1 text-xs text-muted">
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiVideo className="text-primary" /> Video</label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiFileText /> Document</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiVideo className="text-subtle" /> Video</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiFileText /> Document</label>
           <input
             accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
             className="sr-only"

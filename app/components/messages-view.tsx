@@ -32,10 +32,10 @@ export default function MessagesView({
       <div className={`${selected ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}>
         {selected ? (
           <>
-            <header className="flex h-17 shrink-0 items-center gap-3 border-b border-white/8 px-3 sm:px-5">
+            <header className="flex h-17 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-5">
               <Link
                 aria-label="Back to conversations"
-                className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-white/5 hover:text-font md:hidden"
+                className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-card hover:text-font md:hidden"
                 href="/messages"
               >
                 <FiArrowLeft />
@@ -75,7 +75,7 @@ export default function MessagesView({
         ) : (
           <div className="grid h-full place-items-center px-8 text-center">
             <div>
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-line bg-card text-subtle">
                 <FiMessageCircle size={25} />
               </div>
               <h1 className="mt-5 text-lg font-bold">Your messages</h1>

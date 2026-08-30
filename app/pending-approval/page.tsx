@@ -28,7 +28,7 @@ export default async function PendingApprovalPage() {
     <main className="grid min-h-screen place-items-center bg-bg p-5 text-font">
       <section className="surface w-full max-w-md p-7 text-center sm:p-9">
         <div className="flex justify-center"><Brand /></div>
-        <div className={`mx-auto mt-9 grid h-14 w-14 place-items-center rounded-2xl ${rejected ? "bg-rose-400/10 text-rose-300" : "bg-primary/10 text-primary"}`}>
+        <div className={`mx-auto mt-9 grid h-14 w-14 place-items-center rounded-2xl ${rejected ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary"}`}>
           {rejected ? <FiXCircle size={25} /> : <FiClock size={25} />}
         </div>
         <p className="eyebrow mt-6"><FiShield /> Manual verification</p>
