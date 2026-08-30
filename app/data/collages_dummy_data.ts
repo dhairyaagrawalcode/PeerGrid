@@ -15,6 +15,7 @@ export const colleges = [
     rating_facultys: 8.8,
     rating_campus_life: 8.5,
     rating_overall: 4.8,
+    students: 12
   },
   {
     id: "4bN8v6T1zY3m",
@@ -28,10 +29,12 @@ export const colleges = [
     rating_coding: 9.1,
     rating_startup: 9.4,
     rating_peer_quality: 9.2,
-    rating_opportunities: 8.2 ,
+    rating_opportunities: 8.2,
     rating_facultys: 9.3,
     rating_campus_life: 8.9,
     rating_overall: 4.6,
+    students: 8
+
   },
   {
     id: "9fR2w4L7jK5s",
@@ -49,5 +52,27 @@ export const colleges = [
     rating_facultys: 9.1,
     rating_campus_life: 8.2,
     rating_overall: 4.7,
+    students: 13
+
   },
+  ,
+  {
+    id: "9fR2w4L7jK5s",
+    name: "Scaler School of Technology",
+    logo: "/scaler.jpg",
+    images: "/sclaercampus.avif",
+    banner: "/sclaercampus.avif",
+    des: "An intensive residential computer science program designed by top product engineers from tech companies. The curriculum completely skips archaic engineering theories in favor of algorithmic competence, active hackathons, and long-term tech internships.",
+    place: "Bangalore, Karnataka",
+    est: 2023,
+    rating_coding: 9.7,
+    rating_startup: 8.8,
+    rating_peer_quality: 9.4,
+    rating_opportunities: 9.6,
+    rating_facultys: 9.1,
+    rating_campus_life: 8.2,
+    rating_overall: 4.7,
+    students: 13
+
+  }
 ];

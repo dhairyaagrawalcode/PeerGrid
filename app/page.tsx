@@ -105,47 +105,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Core System Status Badges */}
-          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-gray-400">
-            <a href="#definition" className="hover:text-white transition-colors">What is PeerGrid?</a>
-            <a href="#architecture" className="hover:text-white transition-colors">Relational Schema</a>
-            
-            <Link 
-              href={`/colleges/${sampleCollegeId}`}
-              onClick={(e) => executeProtectedNavigation(`/colleges/${sampleCollegeId}`, e)}
-              className="hover:text-white transition-colors flex items-center gap-1"
-            >
-              <span>Explore Campuses</span>
-              {!isAuthenticated && <FiLock size={10} className="text-gray-500" />}
-            </Link>
-          </div>
+         
 
-          {/* Authentication Session Manager Button */}
-          <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 pl-2.5 pr-3 py-1 rounded-xl">
-                <img src={userProfile?.avatar} className="w-6 h-6 rounded-lg object-cover border border-white/10" alt="Session Node" />
-                <div className="hidden sm:block text-left">
-                  <div className="text-[10px] font-bold text-white leading-tight">{userProfile?.name}</div>
-                  <div className="text-[9px] text-emerald-400 font-mono leading-none">Session Guard Active</div>
-                </div>
-                <button 
-                  onClick={terminateSession}
-                  className="text-[10px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer"
-                >
-                  Disconnect
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => { setInterceptedTarget(null); setIsModalOpen(true); }}
-                className="h-9 px-4 rounded-xl bg-[#6C63FF]/10 hover:bg-[#6C63FF]/20 border border-[#6C63FF]/30 text-xs font-bold tracking-wide text-[#818cf8] flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-              >
-                <FiLock size={12} />
-                <span>Initialize Gateway</span>
-              </button>
-            )}
-          </div>
+          
         </div>
       </nav>
 
@@ -154,11 +116,7 @@ export default function HomePage() {
         
         {/* Left Informative Pillar Text Block */}
         <div className="max-w-2xl text-center lg:text-left space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/[0.02] border border-white/5 rounded-full text-[10px] font-mono font-bold tracking-widest text-[#4FD1C5] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4FD1C5] animate-ping" />
-            Security Interceptor: Active Gated Layer
-          </div>
-
+          
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
             Discover What Modern <br />
             <span className="bg-gradient-to-r from-[#6C63FF] via-[#818cf8] to-[#4FD1C5] bg-clip-text text-transparent">
@@ -292,133 +250,10 @@ export default function HomePage() {
             Relational integrity mapping verified dynamically at runtime.
           </p>
         </div>
-      </section>
+      </section>      
 
-      {/* SECTION: PLATFORM DEFINITION & PURPOSE DETAILS */}
-      <section id="definition" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/[0.03]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          <div className="lg:col-span-5 space-y-4">
-            <span className="text-xs font-bold font-mono tracking-widest text-[#6C63FF] uppercase block">Core Objective</span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-              Why Does PeerGrid Exist?
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-normal">
-              Most platforms mix user profile records directly with communication metrics, leading to heavy datasets that are difficult to update. PeerGrid isolates the platform layers to separate code assets from personal identifiers.
-            </p>
-            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-normal">
-              By referencing only decoupled relation keys like <code className="text-[#4FD1C5] font-mono">user_id</code> and <code className="text-amber-400 font-mono">collage_id</code> inside the timeline data streams, user identity queries run efficiently on client builds.
-            </p>
-          </div>
-
-          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { title: "Campus Choice Engineering", text: "Allows incoming computer science students to parse verified feedback before committing financial capital.", icon: <FiCode className="text-[#4FD1C5]" /> },
-              { title: "Decentralized Network Mapping", text: "Helps student engineers showcase multi-variable backpropagation vectors and custom Go syntax workflows without noise.", icon: <FiLayers className="text-[#818cf8]" /> },
-              { title: "Granular Scoring Metrics", text: "Audits target campus networks transparently across custom parameters including startup capitalization and active hacking groups.", icon: <FiZap className="text-amber-400" /> },
-              { title: "Decoupled Interface Elements", text: "Maintains independent follow, like, and collection markers completely separate from individual database records.", icon: <FiLock className="text-rose-400" /> },
-            ].map((box, i) => (
-              <div key={i} className="p-4 bg-[#0b0f17] border border-white/[0.04] rounded-2xl space-y-3 shadow-md">
-                <div className="w-8 h-8 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-sm">{box.icon}</div>
-                <h3 className="text-xs font-bold text-white tracking-wide">{box.title}</h3>
-                <p className="text-[11.5px] text-gray-400 leading-relaxed font-normal">{box.text}</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION: DETAILED SCHEMA ARCHITECTURE RULES */}
-      <section id="architecture" className="py-16 border-t border-white/[0.03] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center space-y-2 max-w-xl mx-auto">
-          <span className="text-xs font-bold tracking-widest uppercase text-[#4FD1C5] font-mono">Data Flow Protocols</span>
-          <h2 className="text-2xl font-black tracking-tight text-white">Relational Integrity Constraints</h2>
-          <p className="text-xs text-gray-400 font-normal">
-            Our platform strictly enforces data decoupling across three autonomous object entities:
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-left">
-          
-          {/* User Record Definition Box */}
-          <div className="bg-[#0b0f17] border border-white/[0.04] rounded-2xl p-5 space-y-3 relative overflow-hidden group">
-            <div className="text-xs font-bold text-[#818cf8] uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#818cf8]" />
-              <span>Entity 01: Profile Node</span>
-            </div>
-            <div className="text-[11px] text-gray-500 bg-black/30 border border-white/5 p-2 rounded-xl text-left font-mono">
-              id: <span className="text-emerald-400">"usr_dhairya1"</span><br/>
-              name: "Dhairya Agrawal"<br/>
-              username: "@dhairya_builds"<br/>
-              college_id: "a7K9x2M5pQ1w"
-            </div>
-            <p className="text-[11px] text-gray-400 font-sans leading-relaxed font-normal">
-              Stores static personal metrics, handle tracking references, and target institution validation tokens. **Strictly locked out of active timeline arrays.**
-            </p>
-          </div>
-
-          {/* Post Record Definition Box */}
-          <div className="bg-[#0b0f17] border border-white/[0.04] rounded-2xl p-5 space-y-3 relative overflow-hidden group">
-            <div className="text-xs font-bold text-[#4FD1C5] uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4FD1C5]" />
-              <span>Entity 02: Timeline Payload</span>
-            </div>
-            <div className="text-[11px] text-gray-500 bg-black/30 border border-white/5 p-2 rounded-xl text-left font-mono">
-              id: "post_ln_raft001"<br/>
-              user_id: <span className="text-[#818cf8]">"usr_dhairya1"</span><br/>
-              collage_id: <span className="text-amber-400">"a7K9x2M5pQ1w"</span><br/>
-              attached_data: [...]
-            </div>
-            <p className="text-[11px] text-gray-400 font-sans leading-relaxed font-normal">
-              Stores raw strings, categorized tag markers, time indexes, and payload files. Resolves identity and institution profiles dynamically on the client using foreign keys.
-            </p>
-          </div>
-
-          {/* College Record Definition Box */}
-          <div className="bg-[#0b0f17] border border-white/[0.04] rounded-2xl p-5 space-y-3 relative overflow-hidden group">
-            <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              <span>Entity 03: Institution Hub</span>
-            </div>
-            <div className="text-[11px] text-gray-500 bg-black/30 border border-white/5 p-2 rounded-xl text-left font-mono">
-              id: <span className="text-amber-400">"a7K9x2M5pQ1w"</span><br/>
-              name: "Newton School of Tech"<br/>
-              place: "Bangalore, Karnataka"<br/>
-              rating_coding: 9.5
-            </div>
-            <p className="text-[11px] text-gray-400 font-sans leading-relaxed font-normal">
-              Maintains campus properties, locations, and granular evaluation weights. Feeds structural details to associated project logs dynamically.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* FOOTER SYSTEM SEGMENT */}
-      <footer className="border-t border-white/[0.04] bg-[#070B14]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#4FD1C5] flex items-center justify-center font-black text-xs text-white">
-                P
-              </div>
-              <span className="font-bold text-sm tracking-tight text-white">PeerGrid Frameworks</span>
-            </div>
-            <p className="text-[11px] text-gray-500 mt-1 font-normal">
-              Decoupled, high-efficiency data monitoring dashboards for educational ecosystems.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            <button onClick={() => executeProtectedNavigation(`/colleges/${sampleCollegeId}`)} className="hover:text-white transition-colors cursor-pointer">Global Feed</button>
-            <a href="#definition" className="hover:text-white transition-colors">Documentation</a>
-            <a href="https://google.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Identity Provider Configs</a>
-          </div>
-        </div>
-      </footer>
-
-      {/* OVERLAY INTERCEPT MODAL ELEMENT: HIGH FIDELITY GOOGLE AUTHENTICATION SYSTEM SIMULATION */}
+      
+     
       <AnimatePresence>
         {isModalOpen && (
           <motion.div 
