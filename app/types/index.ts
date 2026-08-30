@@ -38,12 +38,25 @@ export type StudentProfile = {
   interests?: TaxonomyItem[];
 };
 
-export type ConnectionRecord = {
-  id: string;
-  requester_id: string;
-  recipient_id: string;
-  status: "pending" | "accepted" | "rejected";
+export type FollowRecord = {
+  follower_id: string;
+  following_id: string;
   created_at: string;
+};
+
+export type FollowSummary = {
+  follower_count: number;
+  following_count: number;
+  viewer_follows: boolean;
+};
+
+export type PostComment = {
+  id: string;
+  post_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  author: Pick<StudentProfile, "id" | "username" | "full_name" | "avatar_url">;
 };
 
 export type CollaborationPost = {
@@ -71,6 +84,9 @@ export type SocialPost = {
   attachment_name: string | null;
   attachment_mime: string | null;
   attachment_url: string | null;
+  like_count: number;
+  comment_count: number;
+  viewer_liked: boolean;
   created_at: string;
   author: Pick<
     StudentProfile,

@@ -5,27 +5,23 @@ import SocialPostCard from "@/app/components/social-post-card";
 import SuggestedStudent from "@/app/components/suggested-student";
 import { initials } from "@/app/lib/format";
 import { requireStudent } from "@/app/lib/auth";
-import { getConnections, getSocialPosts, getStudent, getStudents } from "@/app/lib/data";
+import { getFollows, getSocialPosts, getStudent, getStudents } from "@/app/lib/data";
 import AvatarImage from "@/app/components/avatar-image";
 
 export default async function FeedPage() {
   const { supabase, user, profile } = await requireStudent();
-  const [posts, connections, students, completeProfile] = await Promise.all([
+  const [posts, follows, students, completeProfile] = await Promise.all([
     getSocialPosts(supabase, { limit: 30 }),
-    getConnections(supabase, user.id),
+    getFollows(supabase, user.id),
     getStudents(supabase, user.id),
     getStudent(supabase, { id: user.id }),
   ]);
 
-  const connectionMap = new Map(connections.map((item) => {
-    const other = item.requester_id === user.id ? item.recipient_id : item.requester_id;
-    return [other, item];
-  }));
-  const accepted = new Set(connections.filter((item) => item.status === "accepted").map((item) => item.requester_id === user.id ? item.recipient_id : item.requester_id));
+  const following = new Set(follows.filter((item) => item.follower_id === user.id).map((item) => item.following_id));
   const ownSkills = new Set(completeProfile?.skills?.map((item) => item.id) ?? []);
   const ownInterests = new Set(completeProfile?.interests?.map((item) => item.id) ?? []);
   const suggestions = students
-    .filter((student) => !accepted.has(student.id))
+    .filter((student) => !following.has(student.id))
     .map((student) => ({
       student,
       score:
@@ -65,7 +61,7 @@ export default async function FeedPage() {
         <section className="surface sticky top-4 p-4">
           <div className="flex items-center justify-between"><h2 className="text-sm font-bold">Suggested for you</h2><FiUsers className="text-muted" /></div>
           <div className="mt-2 divide-y divide-white/6">
-            {suggestions.length ? suggestions.map((student) => <SuggestedStudent connection={connectionMap.get(student.id)} currentId={user.id} key={student.id} student={student} />) : <p className="py-5 text-xs leading-5 text-muted">No new suggestions right now.</p>}
+            {suggestions.length ? suggestions.map((student) => <SuggestedStudent currentId={user.id} isFollowing={following.has(student.id)} key={student.id} student={student} />) : <p className="py-5 text-xs leading-5 text-muted">No new suggestions right now.</p>}
           </div>
           <Link className="mt-3 block border-t border-white/6 pt-3 text-xs font-bold text-primary" href="/discover">See more students</Link>
         </section>

@@ -30,10 +30,10 @@ export default function AppShell({ profile, children }: { profile: StudentProfil
               <summary aria-label="Open account menu" className="avatar !h-9 !w-9 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 {profile.avatar_url ? <AvatarImage alt={profile.full_name} src={profile.avatar_url} /> : initials(profile.full_name)}
               </summary>
-              <div className="surface absolute right-0 top-12 w-60 !rounded-xl p-2 shadow-2xl shadow-black/30">
+              <div className="surface absolute right-0 top-12 w-60 !rounded-xl !bg-panel p-2 shadow-2xl shadow-black/50">
                 <div className="border-b border-white/7 px-3 py-2.5"><p className="truncate text-sm font-bold">{profile.full_name}</p><p className="mt-0.5 truncate text-xs text-muted">@{profile.username}</p></div>
                 <Link className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-white/5 hover:text-font" href="/profile"><FiUser /> View profile</Link>
-                <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-white/5 hover:text-font" href="/connections"><FiUsers /> Connections</Link>
+                <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-white/5 hover:text-font" href="/connections"><FiUsers /> Followers &amp; following</Link>
                 <form action={signOut} className="mt-1 border-t border-white/7 pt-1"><button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-300 hover:bg-rose-400/8" type="submit"><FiLogOut /> Sign out</button></form>
               </div>
             </details>

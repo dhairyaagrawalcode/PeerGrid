@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
 import { initials } from "@/app/lib/format";
-import type { ConnectionRecord, StudentProfile } from "@/app/types";
+import type { StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
-import ConnectionControls from "./connection-controls";
+import FollowControls from "./follow-controls";
 
-export default function StudentCard({ student, currentId, connection }: { student: StudentProfile; currentId: string; connection?: ConnectionRecord }) {
+export default function StudentCard({ student, currentId, isFollowing }: { student: StudentProfile; currentId: string; isFollowing: boolean }) {
   return (
     <article className="surface flex h-full flex-col p-5">
       <div className="flex items-start gap-3">
@@ -14,7 +14,7 @@ export default function StudentCard({ student, currentId, connection }: { studen
       </div>
       <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-5 text-[#c5cad4]">{student.bio || student.goals || "Open to meeting other student builders."}</p>
       {(student.skills?.length || student.interests?.length) ? <div className="mt-4 flex flex-wrap gap-1.5">{student.skills?.slice(0, 3).map((item) => <span className="tag text-secondary" key={`skill-${item.id}`}>{item.name}</span>)}{student.interests?.slice(0, 2).map((item) => <span className="tag" key={`interest-${item.id}`}>{item.name}</span>)}</div> : null}
-      <div className="mt-auto flex items-center justify-between gap-3 pt-5"><ConnectionControls compact currentId={currentId} targetId={student.id} connection={connection} /><Link className="flex items-center gap-1 text-xs font-bold text-muted hover:text-font" href={`/students/${student.username}`}>Profile <FiArrowUpRight /></Link></div>
+      <div className="mt-auto flex items-center justify-between gap-3 pt-5"><FollowControls compact currentId={currentId} isFollowing={isFollowing} targetId={student.id} /><Link className="flex items-center gap-1 text-xs font-bold text-muted hover:text-font" href={`/students/${student.username}`}>Profile <FiArrowUpRight /></Link></div>
     </article>
   );
 }

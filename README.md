@@ -6,8 +6,8 @@ The current product is focused on five jobs:
 
 - create a useful verified student profile;
 - discover students by campus, skills, interests, and goals;
-- manage two-way connections;
-- publish text, image, video, and document posts;
+- follow students and track followers;
+- publish, like, and comment on text, image, video, and document posts;
 - publish and browse lightweight collaboration calls.
 
 ## Stack
@@ -20,7 +20,7 @@ The current product is focused on five jobs:
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key.
-3. Link the Supabase CLI project and run `supabase db push` to apply every migration. If you use the SQL Editor instead, run the files in `supabase/migrations` in filename order, including `20260830020000_social_posts.sql`.
+3. Link the Supabase CLI project and run `supabase db push` to apply every migration. If you use the SQL Editor instead, run the files in `supabase/migrations` in filename order, including `20260830020000_social_posts.sql`, `20260830030000_social_engagement_and_follows.sql`, and `20260830040000_fix_avatar_storage_policies.sql`.
 4. For the initial manual-approval phase, leave `public.allowed_email_domains` empty. Signup remains open, but no confirmed user can enter the network until an administrator approves them.
 5. Later, when the real NST domain is confirmed, add it to `public.allowed_email_domains`:
 
@@ -76,13 +76,13 @@ The public client uses only the Supabase publishable key. Never add a service-ro
 - Campus values are normalized and seeded as four rows.
 - Profiles use the Auth user ID as their primary key and do not expose student emails.
 - Skills and interests use normalized many-to-many tables.
-- A unique unordered-pair index prevents duplicate or reversed connection requests.
-- Social posts are chronological and support one private image, video, or document attachment up to 25 MB. Feed links use short-lived signed URLs.
+- Follows are immediate, directional, cannot target the same user, and use a composite primary key to prevent duplicates. Existing accepted connections are migrated to mutual follows.
+- Social posts are chronological and support one private image, video, or document attachment up to 25 MB. Feed links use short-lived signed URLs; indexed likes and comments provide accurate engagement counts.
 - Collaboration posts are chronological, campus-scoped or NST-wide, and owned by their authors.
-- RLS limits networking data to email-confirmed, manually approved profiles; mutations are restricted to owners or request participants.
+- RLS limits networking data to email-confirmed, manually approved profiles; likes, comments, follows, posts, and uploads are restricted to the authenticated owner where appropriate.
 - Avatar and post uploads are limited to authenticated users' own folders and explicit file types. Avatars allow 3 MB; post attachments allow 25 MB.
 
-Messaging was not present in the original prototype and is intentionally outside the V1 UI. The prioritized profile → discovery → connections → collaboration flow is complete without introducing an unused chat surface.
+Messaging was not present in the original prototype and is intentionally outside the current UI. The prioritized profile → discovery → follows → posts flow is complete without introducing an unused chat surface.
 
 ## Validation
 

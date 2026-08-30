@@ -2,17 +2,17 @@ import { FiSearch, FiUsers } from "react-icons/fi";
 import EmptyState from "@/app/components/empty-state";
 import StudentCard from "@/app/components/student-card";
 import { requireStudent } from "@/app/lib/auth";
-import { getCampuses, getConnections, getStudents } from "@/app/lib/data";
+import { getCampuses, getFollows, getStudents } from "@/app/lib/data";
 
 type Search = { q?: string; campus?: string; skill?: string; interest?: string; year?: string };
 
 export default async function DiscoverPage({ searchParams }: { searchParams: Promise<Search> }) {
   const filters = await searchParams;
   const { supabase, user } = await requireStudent();
-  const [students, campuses, connections] = await Promise.all([
+  const [students, campuses, follows] = await Promise.all([
     getStudents(supabase, user.id),
     getCampuses(supabase),
-    getConnections(supabase, user.id),
+    getFollows(supabase, user.id),
   ]);
   const normalized = Object.fromEntries(Object.entries(filters).map(([key, value]) => [key, value?.trim().toLowerCase()])) as Search;
   const filtered = students.filter((student) => {
@@ -22,7 +22,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
       && (!normalized.skill || student.skills?.some((item) => item.name.toLowerCase().includes(normalized.skill!)))
       && (!normalized.interest || student.interests?.some((item) => item.name.toLowerCase().includes(normalized.interest!)));
   });
-  const connectionMap = new Map(connections.map((item) => [item.requester_id === user.id ? item.recipient_id : item.requester_id, item]));
+  const following = new Set(follows.filter((item) => item.follower_id === user.id).map((item) => item.following_id));
   const academicYear = new Date().getFullYear();
   const studyYears = [1, 2, 3, 4].map((year) => ({
     value: String(year),
@@ -46,7 +46,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
         <button className="button button-primary" type="submit">Search</button>
       </form>
       <div className="mt-6 flex items-center justify-between"><p className="text-sm font-semibold">{refined.length} student{refined.length === 1 ? "" : "s"}</p>{Object.values(filters).some(Boolean) && <a className="text-xs font-bold text-muted hover:text-font" href="/discover">Clear filters</a>}</div>
-      {refined.length ? <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{refined.map((student) => <StudentCard key={student.id} student={student} currentId={user.id} connection={connectionMap.get(student.id)} />)}</div> : <div className="mt-4"><EmptyState icon={<FiUsers size={21} />} title="No students match yet" copy="Try a broader search, remove one filter, or check back as more verified students join." /></div>}
+      {refined.length ? <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{refined.map((student) => <StudentCard key={student.id} student={student} currentId={user.id} isFollowing={following.has(student.id)} />)}</div> : <div className="mt-4"><EmptyState icon={<FiUsers size={21} />} title="No students match yet" copy="Try a broader search, remove one filter, or check back as more verified students join." /></div>}
     </div>
   );
 }

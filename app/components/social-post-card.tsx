@@ -3,6 +3,8 @@ import { FiDownload, FiFileText, FiMapPin } from "react-icons/fi";
 import { initials, timeAgo } from "@/app/lib/format";
 import type { SocialPost } from "@/app/types";
 import AvatarImage from "./avatar-image";
+import PostBody from "./post-body";
+import PostEngagement from "./post-engagement";
 
 export default function SocialPostCard({ post }: { post: SocialPost }) {
   const profileHref = `/students/${post.author.username}`;
@@ -18,7 +20,7 @@ export default function SocialPostCard({ post }: { post: SocialPost }) {
             </span>
           </span>
         </Link>
-        {post.body && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-[#d3d7df]">{post.body}</p>}
+        {post.body && <PostBody className="mt-4 text-sm leading-6 text-[#d3d7df]" text={post.body} />}
       </div>
 
       {post.attachment_kind === "image" && post.attachment_url && (
@@ -39,6 +41,7 @@ export default function SocialPostCard({ post }: { post: SocialPost }) {
       <div className="flex items-center border-t border-white/7 px-4 py-3 text-xs text-muted sm:px-5">
         <span className="flex items-center gap-1.5"><FiMapPin /> {post.author.campus?.name ?? "NST"}</span>
       </div>
+      <PostEngagement initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
     </article>
   );
 }

@@ -1,7 +1,8 @@
 import type {
   Campus,
   CollaborationPost,
-  ConnectionRecord,
+  FollowRecord,
+  FollowSummary,
   SocialPost,
   StudentProfile,
 } from "@/app/types";
@@ -68,15 +69,6 @@ export async function getStudent(
   } as StudentProfile;
 }
 
-export async function getConnections(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select("id, requester_id, recipient_id, status, created_at")
-    .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
-  if (error) throw error;
-  return (data ?? []) as ConnectionRecord[];
-}
-
 export async function getCollaborations(
   supabase: SupabaseClient,
   options: { status?: "open" | "closed"; limit?: number } = {},
@@ -98,7 +90,7 @@ export async function getCollaborations(
 
 export async function getSocialPosts(
   supabase: SupabaseClient,
-  options: { limit?: number } = {},
+  options: { limit?: number; authorId?: string } = {},
 ) {
   let query = supabase
     .from("social_posts")
@@ -107,6 +99,7 @@ export async function getSocialPosts(
     )
     .order("created_at", { ascending: false });
 
+  if (options.authorId) query = query.eq("author_id", options.authorId);
   if (options.limit) query = query.limit(options.limit);
   const { data, error } = await query;
   if (error) {
@@ -114,9 +107,26 @@ export async function getSocialPosts(
     throw error;
   }
 
+  const postIds = (data ?? []).map((row) => String(row.id));
+  const engagement = new Map<string, { like_count: number; comment_count: number; viewer_liked: boolean }>();
+  if (postIds.length) {
+    const { data: rows, error: engagementError } = await supabase.rpc(
+      "get_post_engagement",
+      { candidate_post_ids: postIds },
+    );
+    if (engagementError && !["42883", "PGRST202"].includes(engagementError.code)) throw engagementError;
+    for (const row of rows ?? []) {
+      engagement.set(String(row.post_id), {
+        like_count: Number(row.like_count ?? 0),
+        comment_count: Number(row.comment_count ?? 0),
+        viewer_liked: Boolean(row.viewer_liked),
+      });
+    }
+  }
+
   return Promise.all(
     (data ?? []).map(async (row) => {
-      const post = row as unknown as Omit<SocialPost, "attachment_url">;
+      const post = row as unknown as Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked">;
       let attachmentUrl: string | null = null;
       if (post.attachment_path) {
         const { data: signed } = await supabase.storage
@@ -124,7 +134,42 @@ export async function getSocialPosts(
           .createSignedUrl(post.attachment_path, 60 * 60);
         attachmentUrl = signed?.signedUrl ?? null;
       }
-      return { ...post, attachment_url: attachmentUrl } as SocialPost;
+      return {
+        ...post,
+        attachment_url: attachmentUrl,
+        ...(engagement.get(post.id) ?? { like_count: 0, comment_count: 0, viewer_liked: false }),
+      } as SocialPost;
     }),
   );
+}
+
+export async function getFollows(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from("follows")
+    .select("follower_id, following_id, created_at")
+    .or(`follower_id.eq.${userId},following_id.eq.${userId}`)
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (["42P01", "PGRST205"].includes(error.code)) return [];
+    throw error;
+  }
+  return (data ?? []) as FollowRecord[];
+}
+
+export async function getFollowSummary(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .rpc("get_follow_summary", { candidate_user_id: userId })
+    .maybeSingle();
+  if (error) {
+    if (["42883", "PGRST202"].includes(error.code)) {
+      return { follower_count: 0, following_count: 0, viewer_follows: false } as FollowSummary;
+    }
+    throw error;
+  }
+  const summary = data as unknown as { follower_count?: number; following_count?: number; viewer_follows?: boolean } | null;
+  return {
+    follower_count: Number(summary?.follower_count ?? 0),
+    following_count: Number(summary?.following_count ?? 0),
+    viewer_follows: Boolean(summary?.viewer_follows),
+  } as FollowSummary;
 }
