@@ -10,5 +10,5 @@ export default async function ProfilePage() {
     getFollowSummary(supabase, user.id),
   ]);
   if (!profile) return null;
-  return <ProfileView currentId={user.id} followSummary={followSummary} own posts={posts} profile={profile} />;
+  return <div className="mx-auto max-w-4xl"><ProfileView currentId={user.id} followSummary={followSummary} own posts={posts} profile={profile} /></div>;
 }

@@ -50,6 +50,30 @@ export type FollowSummary = {
   viewer_follows: boolean;
 };
 
+export type ConversationSummary = {
+  conversation_id: string;
+  other_user_id: string;
+  other_username: string;
+  other_full_name: string;
+  other_avatar_url: string | null;
+  other_program: string | null;
+  created_at: string;
+  last_activity_at: string;
+  last_message_body: string | null;
+  last_message_sender_id: string | null;
+  last_message_created_at: string | null;
+  unread_count: number;
+};
+
+export type DirectMessage = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+};
+
 export type PostComment = {
   id: string;
   post_id: string;

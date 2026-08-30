@@ -60,9 +60,9 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
 
   return (
     <div className="border-t border-white/7">
-      <div className="grid grid-cols-2 px-2 py-1.5 sm:px-3">
-        <button aria-pressed={liked} className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold hover:bg-white/5 ${liked ? "text-rose-300" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount} {likeCount === 1 ? "Like" : "Likes"}</button>
-        <button aria-expanded={expanded} className="flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-muted hover:bg-white/5 hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount} {commentCount === 1 ? "Comment" : "Comments"}</button>
+      <div className="flex items-center gap-1 px-3 py-2 sm:px-4">
+        <button aria-pressed={liked} className={`flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-white/5 ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount} {likeCount === 1 ? "Like" : "Likes"}</button>
+        <button aria-expanded={expanded} className="flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-white/5 hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount} {commentCount === 1 ? "Comment" : "Comments"}</button>
       </div>
 
       {expanded && (

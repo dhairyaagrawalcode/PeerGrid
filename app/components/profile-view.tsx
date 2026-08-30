@@ -4,8 +4,10 @@ import {
   FiGithub,
   FiLinkedin,
   FiMapPin,
+  FiMessageCircle,
   FiShield,
 } from "react-icons/fi";
+import { startConversation } from "@/app/actions/messages";
 import { initials } from "@/app/lib/format";
 import type { FollowSummary, SocialPost, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
@@ -43,11 +45,19 @@ export default function ProfileView({
                 Edit profile
               </Link>
             ) : (
-              <FollowControls
-                currentId={currentId}
-                isFollowing={followSummary.viewer_follows}
-                targetId={profile.id}
-              />
+              <div className="flex items-center gap-2">
+                <form action={startConversation}>
+                  <input name="otherUserId" type="hidden" value={profile.id} />
+                  <button className="button button-primary" type="submit">
+                    <FiMessageCircle /> Message
+                  </button>
+                </form>
+                <FollowControls
+                  currentId={currentId}
+                  isFollowing={followSummary.viewer_follows}
+                  targetId={profile.id}
+                />
+              </div>
             )}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">

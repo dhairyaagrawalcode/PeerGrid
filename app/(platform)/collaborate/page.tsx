@@ -10,7 +10,7 @@ export default async function CollaboratePage() {
   const [campuses, posts, follows] = await Promise.all([getCampuses(supabase), getCollaborations(supabase), getFollows(supabase, user.id)]);
   const following = new Set(follows.filter((item) => item.follower_id === user.id).map((item) => item.following_id));
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="mx-auto grid max-w-[1120px] gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 xl:order-1">
         <div><p className="eyebrow">Collaboration board</p><h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Build with people, not alone</h1><p className="mt-2 text-sm text-muted">Open calls for hackathons, projects, open source, and startup experiments.</p></div>
         <div className="mt-6 space-y-4">{posts.length ? posts.map((post) => <CollaborationCard key={post.id} post={post} currentId={user.id} isFollowing={following.has(post.author_id)} />) : <EmptyState icon={<FiUsers size={21} />} title="No collaboration posts yet" copy="Share the first open call with students across NST." />}</div>

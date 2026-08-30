@@ -35,7 +35,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     : filtered;
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1160px]">
       <div><p className="eyebrow">Student discovery</p><h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Find the right peer</h1><p className="mt-2 text-sm text-muted">Search verified NST students by what they know, enjoy, and want to build.</p></div>
       <form className="surface mt-6 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5" method="get">
         <div className="relative sm:col-span-2 lg:col-span-5"><FiSearch className="absolute left-3.5 top-3.5 text-muted" /><input className="field !pl-10" name="q" defaultValue={filters.q} placeholder="Name, username, skill, or goal" /></div>

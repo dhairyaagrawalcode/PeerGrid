@@ -1,6 +1,8 @@
 import type {
   Campus,
   CollaborationPost,
+  ConversationSummary,
+  DirectMessage,
   FollowRecord,
   FollowSummary,
   SocialPost,
@@ -172,4 +174,47 @@ export async function getFollowSummary(supabase: SupabaseClient, userId: string)
     following_count: Number(summary?.following_count ?? 0),
     viewer_follows: Boolean(summary?.viewer_follows),
   } as FollowSummary;
+}
+
+export async function getConversationSummaries(supabase: SupabaseClient) {
+  const { data, error } = await supabase.rpc("get_conversation_summaries");
+  if (error) {
+    if (["42883", "PGRST202"].includes(error.code)) return [];
+    throw error;
+  }
+  const rows = (data ?? []) as Array<
+    Omit<ConversationSummary, "unread_count"> & {
+      unread_count: number | string | null;
+    }
+  >;
+  return rows.map((row) => ({
+    ...row,
+    unread_count: Number(row.unread_count ?? 0),
+  })) as ConversationSummary[];
+}
+
+export async function getDirectMessages(
+  supabase: SupabaseClient,
+  conversationId: string,
+) {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, conversation_id, sender_id, body, created_at, read_at")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true })
+    .limit(500);
+  if (error) {
+    if (["42P01", "PGRST205"].includes(error.code)) return [];
+    throw error;
+  }
+  return (data ?? []) as DirectMessage[];
+}
+
+export async function getUnreadMessageCount(supabase: SupabaseClient) {
+  const { data, error } = await supabase.rpc("get_unread_message_count");
+  if (error) {
+    if (["42883", "PGRST202"].includes(error.code)) return 0;
+    throw error;
+  }
+  return Number(data ?? 0);
 }
