@@ -61,3 +61,19 @@ export type CollaborationPost = {
   >;
   campus: Campus | null;
 };
+
+export type SocialPost = {
+  id: string;
+  author_id: string;
+  body: string;
+  attachment_path: string | null;
+  attachment_kind: "image" | "video" | "document" | null;
+  attachment_name: string | null;
+  attachment_mime: string | null;
+  attachment_url: string | null;
+  created_at: string;
+  author: Pick<
+    StudentProfile,
+    "id" | "username" | "full_name" | "avatar_url" | "program" | "campus"
+  >;
+};

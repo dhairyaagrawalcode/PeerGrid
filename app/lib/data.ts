@@ -2,6 +2,7 @@ import type {
   Campus,
   CollaborationPost,
   ConnectionRecord,
+  SocialPost,
   StudentProfile,
 } from "@/app/types";
 
@@ -93,4 +94,37 @@ export async function getCollaborations(
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as unknown as CollaborationPost[];
+}
+
+export async function getSocialPosts(
+  supabase: SupabaseClient,
+  options: { limit?: number } = {},
+) {
+  let query = supabase
+    .from("social_posts")
+    .select(
+      "id, author_id, body, attachment_path, attachment_kind, attachment_name, attachment_mime, created_at, author:profiles!social_posts_author_id_fkey(id, username, full_name, avatar_url, program, campus:campuses(id, slug, name, city))",
+    )
+    .order("created_at", { ascending: false });
+
+  if (options.limit) query = query.limit(options.limit);
+  const { data, error } = await query;
+  if (error) {
+    if (["42P01", "PGRST205"].includes(error.code)) return [];
+    throw error;
+  }
+
+  return Promise.all(
+    (data ?? []).map(async (row) => {
+      const post = row as unknown as Omit<SocialPost, "attachment_url">;
+      let attachmentUrl: string | null = null;
+      if (post.attachment_path) {
+        const { data: signed } = await supabase.storage
+          .from("post-media")
+          .createSignedUrl(post.attachment_path, 60 * 60);
+        attachmentUrl = signed?.signedUrl ?? null;
+      }
+      return { ...post, attachment_url: attachmentUrl } as SocialPost;
+    }),
+  );
 }

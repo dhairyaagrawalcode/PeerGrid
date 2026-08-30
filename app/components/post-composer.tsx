@@ -1,0 +1,174 @@
+"use client";
+
+/* eslint-disable @next/next/no-img-element -- Preview URLs are local object URLs selected by the user. */
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FiFileText, FiImage, FiLoader, FiSend, FiUploadCloud, FiVideo, FiX } from "react-icons/fi";
+import { createSocialPost } from "@/app/actions/posts";
+import { createClient } from "@/app/lib/supabase/client";
+import { initials } from "@/app/lib/format";
+import type { StudentProfile } from "@/app/types";
+import AvatarImage from "./avatar-image";
+
+const maxFileSize = 25 * 1024 * 1024;
+const documentTypes = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+]);
+
+function fileKind(file: File): "image" | "video" | "document" | null {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (documentTypes.has(file.type)) return "document";
+  return null;
+}
+
+function readableSize(bytes: number) {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.ceil(bytes / 1024)} KB`;
+}
+
+export default function PostComposer({ profile }: { profile: StudentProfile }) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
+
+  function updateFile(selected: File | null) {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const nextPreview = selected && fileKind(selected) !== "document"
+      ? URL.createObjectURL(selected)
+      : null;
+    previewUrlRef.current = nextPreview;
+    setPreviewUrl(nextPreview);
+    setFile(selected);
+  }
+
+  function selectFile(selected: File | null) {
+    setError(null);
+    if (!selected) return updateFile(null);
+    if (!fileKind(selected)) {
+      updateFile(null);
+      return setError("Choose an image, MP4/WebM/MOV video, PDF, Word, PowerPoint, Excel, or text file.");
+    }
+    if (selected.size > maxFileSize) {
+      updateFile(null);
+      return setError("Attachments can be up to 25 MB.");
+    }
+    updateFile(selected);
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    const form = new FormData(event.currentTarget);
+    const body = String(form.get("body") ?? "").trim();
+    let uploadedPath = "";
+
+    try {
+      if (!body && !file) throw new Error("Write something or attach a file.");
+      if (file) {
+        const kind = fileKind(file);
+        if (!kind) throw new Error("That file type is not supported.");
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
+        uploadedPath = `${profile.id}/${crypto.randomUUID()}-${safeName}`;
+        const supabase = createClient();
+        const { error: uploadError } = await supabase.storage
+          .from("post-media")
+          .upload(uploadedPath, file, { contentType: file.type, upsert: false });
+        if (uploadError) throw uploadError;
+        form.set("attachmentPath", uploadedPath);
+        form.set("attachmentKind", kind);
+        form.set("attachmentName", file.name);
+        form.set("attachmentMime", file.type);
+      }
+
+      form.delete("attachment");
+      const result = await createSocialPost(form);
+      if (result.error) {
+        if (uploadedPath) await createClient().storage.from("post-media").remove([uploadedPath]);
+        throw new Error(result.error);
+      }
+
+      formRef.current?.reset();
+      updateFile(null);
+      router.push("/feed");
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not publish your post.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const kind = file ? fileKind(file) : null;
+
+  return (
+    <form className="surface overflow-hidden" onSubmit={submit} ref={formRef}>
+      <div className="flex gap-3 p-4 sm:p-5">
+        <div className="avatar !h-11 !w-11">
+          {profile.avatar_url ? <AvatarImage alt={profile.full_name} src={profile.avatar_url} /> : initials(profile.full_name)}
+        </div>
+        <textarea
+          aria-label="Post text"
+          className="min-h-32 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
+          maxLength={5000}
+          name="body"
+          placeholder="Share something with the NST community…"
+        />
+      </div>
+
+      {file && (
+        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-white/8 sm:mx-5">
+          <div className="flex items-center justify-between border-b border-white/7 bg-white/[0.025] px-4 py-3">
+            <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-0.5 text-xs text-muted">{readableSize(file.size)}</p></div>
+            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-white/7 hover:text-font" onClick={() => updateFile(null)} type="button"><FiX /></button>
+          </div>
+          {kind === "image" && previewUrl && <img alt="Selected post attachment" className="max-h-[460px] w-full object-contain" src={previewUrl} />}
+          {kind === "video" && previewUrl && <video className="max-h-[460px] w-full bg-black" controls preload="metadata" src={previewUrl} />}
+          {kind === "document" && <div className="flex items-center gap-3 p-5 text-sm text-muted"><FiFileText className="text-primary" size={24} /> Document ready to upload</div>}
+        </div>
+      )}
+
+      {error && <p className="mx-4 mb-4 rounded-xl border border-rose-400/15 bg-rose-400/8 p-3 text-sm text-rose-200 sm:mx-5" role="alert">{error}</p>}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/7 px-4 py-3 sm:px-5">
+        <div className="flex items-center gap-1 text-xs text-muted">
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiVideo className="text-primary" /> Video</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-white/5 hover:text-font" htmlFor="attachment"><FiFileText /> Document</label>
+          <input
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
+            className="sr-only"
+            id="attachment"
+            name="attachment"
+            onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+            type="file"
+          />
+        </div>
+        <button className="button button-primary !min-h-9 !px-4" disabled={submitting} type="submit">
+          {submitting ? <><FiLoader className="animate-spin" /> Publishing</> : <><FiSend /> Post</>}
+        </button>
+      </div>
+      <p className="flex items-center gap-1.5 px-5 pb-4 text-[11px] text-muted"><FiUploadCloud /> One attachment, up to 25 MB.</p>
+    </form>
+  );
+}

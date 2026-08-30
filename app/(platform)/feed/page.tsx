@@ -1,37 +1,75 @@
 import Link from "next/link";
-import { FiArrowRight, FiPlus, FiUsers } from "react-icons/fi";
-import CollaborationCard from "@/app/components/collaboration-card";
+import { FiFileText, FiImage, FiPlus, FiUsers, FiVideo } from "react-icons/fi";
 import EmptyState from "@/app/components/empty-state";
+import SocialPostCard from "@/app/components/social-post-card";
+import SuggestedStudent from "@/app/components/suggested-student";
+import { initials } from "@/app/lib/format";
 import { requireStudent } from "@/app/lib/auth";
-import { getCollaborations, getConnections } from "@/app/lib/data";
+import { getConnections, getSocialPosts, getStudent, getStudents } from "@/app/lib/data";
+import AvatarImage from "@/app/components/avatar-image";
 
 export default async function FeedPage() {
   const { supabase, user, profile } = await requireStudent();
-  const [posts, connections] = await Promise.all([
-    getCollaborations(supabase, { limit: 20 }),
+  const [posts, connections, students, completeProfile] = await Promise.all([
+    getSocialPosts(supabase, { limit: 30 }),
     getConnections(supabase, user.id),
+    getStudents(supabase, user.id),
+    getStudent(supabase, { id: user.id }),
   ]);
+
   const connectionMap = new Map(connections.map((item) => {
     const other = item.requester_id === user.id ? item.recipient_id : item.requester_id;
     return [other, item];
   }));
+  const accepted = new Set(connections.filter((item) => item.status === "accepted").map((item) => item.requester_id === user.id ? item.recipient_id : item.requester_id));
+  const ownSkills = new Set(completeProfile?.skills?.map((item) => item.id) ?? []);
+  const ownInterests = new Set(completeProfile?.interests?.map((item) => item.id) ?? []);
+  const suggestions = students
+    .filter((student) => !accepted.has(student.id))
+    .map((student) => ({
+      student,
+      score:
+        (student.campus_id === profile.campus_id ? 5 : 0)
+        + (student.skills?.filter((item) => ownSkills.has(item.id)).length ?? 0)
+        + (student.interests?.filter((item) => ownInterests.has(item.id)).length ?? 0) * 2,
+    }))
+    .sort((a, b) => b.score - a.score || a.student.full_name.localeCompare(b.student.full_name))
+    .slice(0, 4)
+    .map((item) => item.student);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_250px]">
+    <div className="mx-auto grid max-w-[980px] gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
       <div className="min-w-0">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div><p className="eyebrow">Your grid</p><h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Good to see you, {profile.full_name.split(" ")[0]}</h1><p className="mt-2 text-sm text-muted">Recent collaboration activity across NST.</p></div>
-          <Link className="button button-primary hidden sm:inline-flex" href="/collaborate#new"><FiPlus /> Post a need</Link>
-        </div>
+        <div className="mb-5 flex items-center justify-between"><h1 className="text-2xl font-black tracking-tight">Home</h1><Link className="button button-primary !min-h-9 !px-3 !text-xs sm:hidden" href="/post"><FiPlus /> Post</Link></div>
+
+        <section className="surface mb-4 p-4">
+          <div className="flex items-center gap-3">
+            <div className="avatar !h-10 !w-10">{profile.avatar_url ? <AvatarImage alt={profile.full_name} src={profile.avatar_url} /> : initials(profile.full_name)}</div>
+            <Link className="field flex !min-h-10 flex-1 items-center !rounded-full !py-0 text-sm text-muted hover:border-white/15" href="/post">Start a post</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-3 border-t border-white/6 pt-2 text-xs font-semibold text-muted">
+            <Link className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font" href="/post"><FiImage className="text-secondary" /> Photo</Link>
+            <Link className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font" href="/post"><FiVideo className="text-primary" /> Video</Link>
+            <Link className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-white/5 hover:text-font" href="/post"><FiFileText /> Document</Link>
+          </div>
+        </section>
+
         <div className="space-y-4">
-          {posts.length ? posts.map((post) => <CollaborationCard key={post.id} post={post} currentId={user.id} connection={connectionMap.get(post.author_id)} />) : <EmptyState icon={<FiUsers size={21} />} title="The grid is quiet—for now" copy="Be the first student to share what you are building and who you need." action={<Link className="button button-primary" href="/collaborate#new">Create a collaboration post</Link>} />}
+          {posts.length ? posts.map((post) => <SocialPostCard key={post.id} post={post} />) : (
+            <EmptyState icon={<FiFileText size={21} />} title="No posts yet" copy="Share the first update with the NST community." action={<Link className="button button-primary" href="/post">Create a post</Link>} />
+          )}
         </div>
       </div>
-      <aside className="hidden space-y-4 lg:block">
-        <section className="surface p-5"><p className="eyebrow">Campus</p><h2 className="mt-3 font-bold">{profile.campus?.name}</h2><p className="mt-2 text-xs leading-5 text-muted">Explore peers on your campus or open your search to all of NST.</p><Link className="mt-4 flex items-center gap-1 text-xs font-bold text-secondary" href={`/discover?campus=${profile.campus?.slug}`}>Find campus peers <FiArrowRight /></Link></section>
-        <section className="surface p-5"><p className="eyebrow">Network</p><p className="mt-3 text-3xl font-black">{connections.filter((item) => item.status === "accepted").length}</p><p className="text-xs text-muted">connections</p><Link className="mt-4 flex items-center gap-1 text-xs font-bold text-primary" href="/connections">Manage connections <FiArrowRight /></Link></section>
+
+      <aside className="hidden lg:block">
+        <section className="surface sticky top-4 p-4">
+          <div className="flex items-center justify-between"><h2 className="text-sm font-bold">Suggested for you</h2><FiUsers className="text-muted" /></div>
+          <div className="mt-2 divide-y divide-white/6">
+            {suggestions.length ? suggestions.map((student) => <SuggestedStudent connection={connectionMap.get(student.id)} currentId={user.id} key={student.id} student={student} />) : <p className="py-5 text-xs leading-5 text-muted">No new suggestions right now.</p>}
+          </div>
+          <Link className="mt-3 block border-t border-white/6 pt-3 text-xs font-bold text-primary" href="/discover">See more students</Link>
+        </section>
       </aside>
     </div>
   );
 }
-
