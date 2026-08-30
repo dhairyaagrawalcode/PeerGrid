@@ -15,14 +15,16 @@ function messageTime(value: string) {
 export default function MessageThread({
   conversationId,
   currentId,
+  initialDraft = "",
   initialMessages,
 }: {
   conversationId: string;
   currentId: string;
+  initialDraft?: string;
   initialMessages: DirectMessage[];
 }) {
   const [messages, setMessages] = useState(initialMessages);
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(initialDraft);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -126,9 +128,9 @@ export default function MessageThread({
 
   return (
     <>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-4">
         {messages.length ? (
-          <div className="mx-auto flex max-w-2xl flex-col gap-3">
+          <div className="flex w-full flex-col gap-3">
             {messages.map((message) => {
               const own = message.sender_id === currentId;
               return (
@@ -137,7 +139,7 @@ export default function MessageThread({
                   key={message.id}
                 >
                   <div
-                    className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-5 ${
+                    className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-5 lg:max-w-[72%] ${
                       own
                         ? "rounded-br-md border border-line bg-card text-font"
                         : "rounded-bl-md border border-line bg-panel text-subtle"
@@ -158,17 +160,20 @@ export default function MessageThread({
           <div className="grid h-full place-items-center text-center">
             <div>
               <p className="text-sm font-bold">Start the conversation</p>
-              <p className="mt-1 text-xs text-muted">Send a message to say hello.</p>
+              <p className="mt-1 text-xs text-muted">
+                Send a message to say hello.
+              </p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="border-t border-line p-3 sm:p-4">
-        <form className="mx-auto flex max-w-2xl items-center gap-2" onSubmit={send}>
+      <div className="border-line p-3 sm:p-4">
+        <form className="flex w-full items-center gap-2" onSubmit={send}>
           <input
             aria-label="Message"
             autoComplete="off"
+            autoFocus={Boolean(initialDraft)}
             className="field !min-h-11 flex-1 !rounded-full !px-4"
             maxLength={2000}
             onChange={(event) => setBody(event.target.value)}
@@ -184,7 +189,7 @@ export default function MessageThread({
             {sending ? <FiLoader className="animate-spin" /> : <FiSend />}
           </button>
         </form>
-        {error && <p className="mx-auto mt-2 max-w-2xl px-2 text-xs text-danger">{error}</p>}
+        {error && <p className="mt-2 px-2 text-xs text-danger">{error}</p>}
       </div>
     </>
   );

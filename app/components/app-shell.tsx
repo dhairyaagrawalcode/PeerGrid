@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -26,6 +26,65 @@ const navigation = [
   { href: "/post", label: "Post", icon: FiPlusSquare },
   { href: "/messages", label: "Messages", icon: FiMessageSquare },
 ];
+
+function AccountMenu({ profile }: { profile: StudentProfile }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function dismissOutside(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function dismissWithEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("keydown", dismissWithEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("keydown", dismissWithEscape);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Open account menu"
+        className="avatar !h-9 !w-9 !cursor-pointer !rounded-full ring-2 ring-transparent transition hover:ring-primary/40"
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        {profile.avatar_url ? (
+          <AvatarImage alt={profile.full_name} src={profile.avatar_url} />
+        ) : (
+          initials(profile.full_name)
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-12 w-60 rounded-xl border border-line bg-panel p-2" role="menu">
+          <div className="border-b border-line px-3 py-2.5">
+            <p className="truncate text-sm font-bold">{profile.full_name}</p>
+            <p className="mt-0.5 truncate text-xs text-muted">@{profile.username}</p>
+          </div>
+          <Link className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/profile" role="menuitem">
+            <FiUser /> View profile
+          </Link>
+          <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/connections" role="menuitem">
+            <FiUsers /> Followers &amp; following
+          </Link>
+          <form action={signOut} className="mt-1 border-t border-line pt-1">
+            <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger/10" role="menuitem" type="submit">
+              <FiLogOut /> Sign out
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AppShell({
   profile,
@@ -99,7 +158,7 @@ export default function AppShell({
   return (
     <div className="h-dvh overflow-hidden bg-bg text-font">
       <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-full max-w-[1320px] items-center gap-6 px-4 sm:px-6">
+        <div className="app-frame flex h-full items-center gap-6">
           <Brand href="/feed" />
 
           <nav className="ml-auto hidden items-center gap-1 md:flex" aria-label="Application navigation">
@@ -107,39 +166,11 @@ export default function AppShell({
           </nav>
           <div className="hidden h-7 w-px bg-line md:block" />
 
-          <details className="group relative">
-            <summary
-              aria-label="Open account menu"
-              className="avatar !h-9 !w-9 !cursor-pointer !rounded-full list-none ring-2 ring-transparent transition hover:ring-primary/40 [&::-webkit-details-marker]:hidden"
-            >
-              {profile.avatar_url ? (
-                <AvatarImage alt={profile.full_name} src={profile.avatar_url} />
-              ) : (
-                initials(profile.full_name)
-              )}
-            </summary>
-            <div className="absolute right-0 top-12 w-60 rounded-xl border border-line bg-panel p-2">
-              <div className="border-b border-line px-3 py-2.5">
-                <p className="truncate text-sm font-bold">{profile.full_name}</p>
-                <p className="mt-0.5 truncate text-xs text-muted">@{profile.username}</p>
-              </div>
-              <Link className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/profile">
-                <FiUser /> View profile
-              </Link>
-              <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/connections">
-                <FiUsers /> Followers &amp; following
-              </Link>
-              <form action={signOut} className="mt-1 border-t border-line pt-1">
-                <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger/10" type="submit">
-                  <FiLogOut /> Sign out
-                </button>
-              </form>
-            </div>
-          </details>
+          <AccountMenu key={pathname} profile={profile} />
         </div>
       </header>
 
-      <main className="mx-auto h-dvh max-w-[1320px] overflow-y-auto overscroll-contain px-4 pb-24 pt-[5.5rem] [scrollbar-gutter:stable] sm:px-6 md:pb-8">
+      <main className="app-frame h-dvh overflow-y-auto overscroll-contain pb-24 pt-[5.5rem] [scrollbar-gutter:stable] md:pb-8">
         {children}
       </main>
 

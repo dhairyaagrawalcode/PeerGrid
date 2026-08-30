@@ -15,21 +15,25 @@ export default function MessagesView({
   conversations,
   selected,
   messages = [],
+  draft = "",
 }: {
   profile: StudentProfile;
   conversations: ConversationSummary[];
   selected?: ConversationSummary;
   messages?: DirectMessage[];
+  draft?: string;
 }) {
   return (
-    <section className="surface flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden !rounded-2xl !bg-panel/95">
+    <section className="app-page flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden  border-line">
       <ConversationList
         currentId={profile.id}
         initialConversations={conversations}
         selectedId={selected?.conversation_id}
       />
 
-      <div className={`${selected ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}>
+      <div
+        className={`${selected ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}
+      >
         {selected ? (
           <>
             <header className="flex h-17 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-5">
@@ -55,8 +59,12 @@ export default function MessagesView({
                   )}
                 </span>
                 <span className="min-w-0">
-                  <strong className="block truncate text-sm">{selected.other_full_name}</strong>
-                  <small className="block truncate text-[10px] text-muted">@{selected.other_username}</small>
+                  <strong className="block truncate text-sm">
+                    {selected.other_full_name}
+                  </strong>
+                  <small className="block truncate text-[10px] text-muted">
+                    @{selected.other_username}
+                  </small>
                 </span>
               </Link>
               <Link
@@ -69,7 +77,9 @@ export default function MessagesView({
             <MessageThread
               conversationId={selected.conversation_id}
               currentId={profile.id}
+              initialDraft={draft}
               initialMessages={messages}
+              key={selected.conversation_id}
             />
           </>
         ) : (
@@ -80,7 +90,8 @@ export default function MessagesView({
               </div>
               <h1 className="mt-5 text-lg font-bold">Your messages</h1>
               <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
-                Choose a conversation or visit a student profile to start a private chat.
+                Choose a conversation or visit a student profile to start a
+                private chat.
               </p>
               <Link className="button button-primary mt-5" href="/discover">
                 Discover students

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { FiMapPin, FiMoreHorizontal } from "react-icons/fi";
 import { deleteCollaboration, setCollaborationStatus } from "@/app/actions/collaborations";
+import { connectForCollaboration } from "@/app/actions/messages";
 import { initials, timeAgo } from "@/app/lib/format";
 import type { CollaborationPost } from "@/app/types";
 import AvatarImage from "./avatar-image";
-import FollowControls from "./follow-controls";
 
-export default function CollaborationCard({ post, currentId, isFollowing }: { post: CollaborationPost; currentId: string; isFollowing: boolean }) {
+export default function CollaborationCard({ post, currentId }: { post: CollaborationPost; currentId: string }) {
   const own = post.author_id === currentId;
   return (
     <article className="surface p-5 sm:p-6">
@@ -22,7 +22,7 @@ export default function CollaborationCard({ post, currentId, isFollowing }: { po
       <div className="mt-4 flex flex-wrap gap-2">{post.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
         <p className="flex items-center gap-1.5 text-xs text-muted"><FiMapPin className="text-secondary" />{post.campus?.name ?? "All NST campuses"}</p>
-        {own ? <div className="flex gap-2"><form action={setCollaborationStatus}><input name="id" type="hidden" value={post.id} /><input name="status" type="hidden" value={post.status === "open" ? "closed" : "open"} /><button className="button button-secondary !min-h-9 !px-3 !text-xs" type="submit">Mark {post.status === "open" ? "closed" : "open"}</button></form><form action={deleteCollaboration}><input name="id" type="hidden" value={post.id} /><button aria-label="Delete collaboration post" className="button button-danger !min-h-9 !px-3" type="submit"><FiMoreHorizontal /></button></form></div> : <div className="flex items-center gap-2"><Link className="button button-secondary !min-h-9 !px-3 !text-xs" href={`/students/${post.author.username}`}>View student</Link><FollowControls compact currentId={currentId} isFollowing={isFollowing} targetId={post.author_id} /></div>}
+        {own ? <div className="flex gap-2"><form action={setCollaborationStatus}><input name="id" type="hidden" value={post.id} /><input name="status" type="hidden" value={post.status === "open" ? "closed" : "open"} /><button className="button button-secondary !min-h-9 !px-3 !text-xs" type="submit">Mark {post.status === "open" ? "closed" : "open"}</button></form><form action={deleteCollaboration}><input name="id" type="hidden" value={post.id} /><button aria-label="Delete collaboration post" className="button button-danger !min-h-9 !px-3" type="submit"><FiMoreHorizontal /></button></form></div> : <form action={connectForCollaboration}><input name="otherUserId" type="hidden" value={post.author_id} /><input name="title" type="hidden" value={post.title} /><button className="button button-primary !min-h-9 !px-3 !text-xs" type="submit">Connect for this</button></form>}
       </div>
     </article>
   );

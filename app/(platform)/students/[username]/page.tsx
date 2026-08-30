@@ -12,5 +12,5 @@ export default async function StudentPage({ params }: { params: Promise<{ userna
     getSocialPosts(supabase, { authorId: profile.id }),
     getFollowSummary(supabase, profile.id),
   ]);
-  return <div className="mx-auto max-w-4xl"><ProfileView currentId={user.id} followSummary={followSummary} own={profile.id === user.id} posts={posts} profile={profile} /></div>;
+  return <div className="app-page"><ProfileView currentId={user.id} followSummary={followSummary} own={profile.id === user.id} posts={posts} profile={profile} /></div>;
 }

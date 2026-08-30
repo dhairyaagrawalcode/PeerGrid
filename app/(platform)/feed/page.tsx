@@ -56,25 +56,17 @@ export default async function FeedPage() {
     .map((item) => item.student);
 
   return (
-    <div className="mx-auto grid max-w-[1240px] gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
+    <div className="app-page grid gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
       <aside className="hidden xl:block">
-        <section className="surface sticky top-0 overflow-hidden !rounded-2xl">
-          <div className="relative h-40 border-b border-line bg-panel">
-            <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
-            <div className="absolute inset-x-0 bottom-[-2.6rem] flex justify-center">
-              <span className="avatar !h-21 !w-21 !rounded-2xl !border-[3px] !border-panel text-lg">
-                {profile.avatar_url ? (
-                  <AvatarImage
-                    alt={profile.full_name}
-                    src={profile.avatar_url}
-                  />
-                ) : (
-                  initials(profile.full_name)
-                )}
-              </span>
-            </div>
-          </div>
-          <div className="px-5 pb-5 pt-13 text-center">
+        <section className="surface sticky top-0 p-5 text-center !rounded-2xl">
+          <Link className="avatar mx-auto !h-20 !w-20 !rounded-full text-lg transition hover:ring-2 hover:ring-primary/25" href="/profile">
+            {profile.avatar_url ? (
+              <AvatarImage alt={profile.full_name} src={profile.avatar_url} />
+            ) : (
+              initials(profile.full_name)
+            )}
+          </Link>
+          <div className="mt-4">
             <h2 className="truncate text-base font-bold">
               {profile.full_name}
             </h2>

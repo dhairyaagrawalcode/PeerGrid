@@ -8,10 +8,13 @@ import {
 
 export default async function ConversationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ conversationId: string }>;
+  searchParams: Promise<{ draft?: string }>;
 }) {
   const { conversationId } = await params;
+  const { draft } = await searchParams;
   const { supabase, profile } = await requireStudent();
   const conversations = await getConversationSummaries(supabase);
   const selected = conversations.find(
@@ -25,6 +28,7 @@ export default async function ConversationPage({
       messages={messages}
       profile={profile}
       selected={selected}
+      draft={typeof draft === "string" ? draft.slice(0, 2000) : ""}
     />
   );
 }
