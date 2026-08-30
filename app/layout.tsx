@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Navbar from "@/app/components/layout/navbar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PeerGrid",
-  description: "",
+  title: {
+    default: "PeerGrid — The verified NST student network",
+    template: "%s · PeerGrid",
+  },
+  description:
+    "Discover and connect with verified NST students by campus, skills, interests, projects, and goals.",
 };
 
 export default function RootLayout({
@@ -28,9 +31,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">        
-        {children}
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

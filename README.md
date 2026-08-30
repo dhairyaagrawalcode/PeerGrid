@@ -1,225 +1,90 @@
 # PeerGrid
 
-PeerGrid is a modern student-focused social platform built for ambitious college students, builders, hackers, and startup-minded communities.
+PeerGrid is a mobile-first, verified student network for Newton School of Technology students in Bangalore, Pune, Delhi NCR, and Hyderabad.
 
-The platform allows students to explore real college culture, showcase projects, connect with like-minded peers, and learn from verified student experiences.
+The V1 is intentionally focused on four jobs:
 
----
+- create a useful verified student profile;
+- discover students by campus, skills, interests, and goals;
+- manage two-way connections;
+- publish and browse lightweight collaboration calls.
 
-# Vision
+## Stack
 
-PeerGrid aims to become the digital ecosystem for ambitious students where people can:
+- Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4
+- Supabase Auth, Postgres, Row Level Security, and Storage
+- `@supabase/ssr` for cookie-backed browser/server sessions
 
-- build together
-- learn publicly
-- discover opportunities
-- showcase projects
-- network with peers
-- explore real college culture
+## Local setup
 
----
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key.
+3. Link the Supabase CLI project and apply `supabase/migrations/20260830000000_peergrid_v1.sql` (or run `supabase db push`).
+4. For the initial manual-approval phase, leave `public.allowed_email_domains` empty. Signup remains open, but no confirmed user can enter the network until an administrator approves them.
+5. Later, when the real NST domain is confirmed, add it to `public.allowed_email_domains`:
 
-# Core Concept
+   ```sql
+   insert into public.allowed_email_domains (domain)
+   values ('the-confirmed-student-domain.edu');
+   ```
 
-Anyone can:
+6. In hosted Supabase Auth Hooks, enable the **Before User Created** Postgres hook and select `public.hook_restrict_signup_by_email_domain`. The included `supabase/config.toml` enables it automatically for local Supabase.
+7. Keep email confirmation enabled and add `/auth/callback` to the allowed redirect URLs.
+8. Start the app with `npm run dev`.
 
-- explore colleges
-- read reviews
-- view student projects
-- browse student profiles
-- discover communities
+No email domain is hardcoded or seeded. With no active domain rows, email-confirmed accounts enter the manual review queue.
 
-Only verified students from listed colleges can:
+## Manual student approval
 
-- create posts
-- review their college
-- upload projects
-- participate in communities
-- guide juniors
+New accounts follow this flow:
 
-This creates a trusted and authentic student ecosystem.
-
----
-
-# Main Features
-
-## Student Feed
-
-A modern social feed where students share:
-
-- coding journeys
-- projects
-- hackathon wins
-- resources
-- startup ideas
-- achievements
-
----
-
-## College Pages
-
-Each college includes:
-
-- student feed
-- verified reviews
-- projects
-- coding culture insights
-- peer ecosystem
-
----
-
-## Student Profiles
-
-Profiles showcase:
-
-- skills
-- tech stack
-- projects
-- achievements
-- interests
-- learning journey
-
----
-
-## Communities
-
-Students can join communities like:
-
-- Web Development
-- AI/ML
-- Open Source
-- Startups
-- Hackathons
-
----
-
-## Verification System
-
-Only verified students can post content.
-
-Verification methods:
-
-- college email
-- student ID verification
-
----
-
-# Tech Stack
-
-## Frontend
-
-- Next.js
-- React
-- Tailwind CSS
-
-## Backend
-
-- Supabase
-
-## Deployment
-
-- Vercel
-
----
-
-# Brand Colors
-
-| Purpose          | Color   |
-| ---------------- | ------- |
-| Background       | #070B14 |
-| Primary Text     | #F5F7FA |
-| Primary Accent   | #6C63FF |
-| Secondary Accent | #4FD1C5 |
-
----
-
-# Folder Structure
-
-```bash
-app/
-│
-├── auth/
-├── colleges/
-├── profile/
-├── feed/
-├── projects/
-├── community/
-├── admin/
-│
-├── components/
-│   ├── layout/
-│   ├── feed/
-│   ├── post/
-│   ├── profile/
-│   ├── college/
-│   ├── community/
-│   └── common/
-│
-├── services/
-├── lib/
-├── data/
-├── styles/
-└── types/
+```text
+sign up → confirm email → pending approval → profile onboarding → PeerGrid
 ```
 
----
+To approve a student in the Supabase Dashboard:
 
-# Setup
+1. Open **Table Editor → student_approvals**.
+2. Confirm the email belongs to an NST student.
+3. Change `status` from `pending` to `approved` and save. The database fills `reviewed_at` automatically.
 
-## Install Dependencies
+To reject an account, set `status` to `rejected` and optionally add a short `review_note`.
 
-```bash
-npm install
+The equivalent SQL is:
+
+```sql
+update public.student_approvals
+set status = 'approved'
+where email = 'student@example.edu';
 ```
 
-## Install Supabase
+Later automation only needs to update this same approval row; application authorization does not need to change.
+
+## Application structure
+
+- `app/(platform)` contains the protected V1 routes and shared application shell.
+- `app/auth` contains login, signup, email verification, and PKCE callback routes.
+- `app/actions` contains authenticated server mutations.
+- `app/lib/supabase` contains separate browser, server, and session-refresh clients.
+- `supabase/migrations` is the source of truth for tables, indexes, constraints, hooks, grants, RLS, and avatar storage policies.
+
+The public client uses only the Supabase publishable key. Never add a service-role key to a `NEXT_PUBLIC_` environment variable or browser code.
+
+## Data and security model
+
+- Campus values are normalized and seeded as four rows.
+- Profiles use the Auth user ID as their primary key and do not expose student emails.
+- Skills and interests use normalized many-to-many tables.
+- A unique unordered-pair index prevents duplicate or reversed connection requests.
+- Collaboration posts are chronological, campus-scoped or NST-wide, and owned by their authors.
+- RLS limits networking data to email-confirmed, manually approved profiles; mutations are restricted to owners or request participants.
+- Avatar uploads are limited to authenticated users' own folders, supported image types, and 3 MB.
+
+Messaging was not present in the original prototype and is intentionally outside the V1 UI. The prioritized profile → discovery → connections → collaboration flow is complete without introducing an unused chat surface.
+
+## Validation
 
 ```bash
-npm install @supabase/supabase-js
+npm run lint
+npm run build
 ```
-
-## Run Development Server
-
-```bash
-npm run dev
-```
-
-Open:
-
-```bash
-http://localhost:3000
-```
-
----
-
-# Future Goals
-
-- AI-powered recommendations
-- Hackathon teammate matching
-- Internship opportunities
-- Student startup networking
-- Real-time chat system
-- Cross-college collaboration
-- Project discovery ecosystem
-
----
-
-# Inspiration
-
-PeerGrid is inspired by:
-
-- LinkedIn
-- Reddit
-- Discord
-- Linear
-- modern startup communities
-
-Focused specifically on:
-
-> ambitious student builders and modern tech campuses.
-
----
-
-# Status
-
-Currently in MVP development phase.
