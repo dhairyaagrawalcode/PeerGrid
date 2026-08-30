@@ -1,108 +1,250 @@
 import Link from "next/link";
 import {
   FiArrowRight,
-  FiCheckCircle,
+  FiBell,
   FiCompass,
-  FiLayers,
-  FiShield,
+  FiHome,
+  FiPlusSquare,
+  FiSearch,
   FiUsers,
 } from "react-icons/fi";
-import Brand from "@/app/components/brand";
+import styles from "./landing.module.css";
 
 const campuses = ["Bangalore", "Pune", "Delhi NCR", "Hyderabad"];
 
-export default function HomePage() {
-  return (
-    <main className="min-h-screen overflow-hidden bg-bg text-font">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_50%_0%,rgba(108,99,255,0.2),transparent_58%)]" />
-      <header className="relative z-10 mx-auto flex h-18 max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Brand />
-        
-      </header>
+const features = [
+  {
+    title: "Student discovery",
+    copy: "Find verified students by campus, year, skills, or interests.",
+  },
+  {
+    title: "A useful feed",
+    copy: "Share updates, ideas, opportunities, and the work you are building.",
+  },
+  {
+    title: "Build together",
+    copy: "Meet people with complementary skills and turn ideas into projects.",
+  },
+];
 
-      <section className="relative z-10 mx-auto grid max-w-6xl gap-12 px-5 pb-20 pt-14 sm:px-8 md:pt-24 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
-        <div>
-          <div className="eyebrow mb-5">
-            <FiShield /> Verified NST students only
+function FeatureVisual({ index }: { index: number }) {
+  if (index === 0) {
+    return (
+      <div className={`${styles.featureVisual} ${styles.discoveryVisual}`} aria-hidden="true">
+        <div className={styles.visualSearch}><FiSearch /> Search students</div>
+        {["AS", "MK", "RV"].map((initials, itemIndex) => (
+          <div className={styles.visualPerson} key={initials}>
+            <i>{initials}</i>
+            <span><b>{["Aditi Sharma", "Manav Kumar", "Riya Verma"][itemIndex]}</b><small>{["Product design", "Full-stack", "Machine learning"][itemIndex]}</small></span>
+            <em>View</em>
           </div>
-          <h1 className="max-w-3xl text-5xl font-black leading-[1.02] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-            Find your people. <span className="gradient-text">Build what&apos;s next.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-7 text-muted sm:text-lg">
-            PeerGrid helps NST students discover peers by campus, skills,
-            interests, projects, and the goals they are chasing right now.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link className="button button-primary" href="/auth/signup">
-              Join with college email <FiArrowRight />
-            </Link>
-            <Link className="button button-secondary" href="/auth/login">
-              I already have an account
-            </Link>
+        ))}
+      </div>
+    );
+  }
+
+  if (index === 1) {
+    return (
+      <div className={`${styles.featureVisual} ${styles.feedVisual}`} aria-hidden="true">
+        <div className={styles.visualPost}>
+          <div className={styles.visualPostAuthor}><i>NK</i><span><b>Naina Khurana</b><small>NST Pune · 2h</small></span></div>
+          <p>Sharing a first look at the project our team has been building this semester.</p>
+          <div className={styles.visualMedia}><span>PROJECT<br /><strong>01</strong></span></div>
+          <div className={styles.visualActions}><span>♡ 24</span><span>◯ 7</span><span>↗</span></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.featureVisual} ${styles.networkVisual}`} aria-hidden="true">
+      <span className={styles.networkLineA} />
+      <span className={styles.networkLineB} />
+      <span className={styles.networkLineC} />
+      <i className={styles.networkCenter}>PG</i>
+      <i className={styles.networkNode}>DA</i>
+      <i className={styles.networkNode}>SR</i>
+      <i className={styles.networkNode}>AM</i>
+      <div><FiUsers /><strong>Find your team</strong><small>Skills that fit together</small></div>
+    </div>
+  );
+}
+
+function ProductPreview() {
+  return (
+    <div className={styles.previewShell} aria-hidden="true">
+      <div className={styles.previewWindow}>
+        <div className={styles.windowBar}>
+          <span className="bg-[#ff605c]" />
+          <span className="bg-[#ffbd44]" />
+          <span className="bg-[#00ca4e]" />
+          <div className={styles.previewSearch}>
+            <FiSearch />
+            <span>Search PeerGrid</span>
           </div>
-          <div className="mt-8 flex flex-wrap gap-2">
-            {campuses.map((campus) => (
-              <span className="chip" key={campus}>
-                <FiCheckCircle /> NST {campus}
-              </span>
-            ))}
-          </div>
+          <FiBell className="ml-auto" />
         </div>
 
-        <div className="relative mx-auto w-full max-w-lg">
-          <div className="absolute -inset-8 rounded-full bg-primary/10 blur-3xl" />
-          <div className="surface relative overflow-hidden p-5 sm:p-7">
-            <div className="mb-6 flex items-center justify-between">
+        <div className={styles.previewBody}>
+          <aside className={styles.previewNav}>
+            <span className={styles.previewBrand}>PG</span>
+            <FiHome />
+            <FiCompass />
+            <FiPlusSquare />
+            <FiUsers />
+          </aside>
+
+          <div className={styles.previewFeed}>
+            <div className={styles.previewHeading}>
               <div>
-                <p className="eyebrow !mb-0">Discovery preview</p>
-                <h2 className="mt-2 text-xl font-bold">React builders in Bangalore</h2>
+                <span>YOUR NETWORK</span>
+                <strong>Good morning, Dhairya</strong>
               </div>
-              <FiCompass className="text-secondary" size={24} />
+              <button type="button">Create post</button>
             </div>
-            <div className="space-y-3">
-              {[
-                ["01", "React developers", "NST Bangalore", "React", "Frontend"],
-                ["02", "Students interested in GSoC", "All NST campuses", "Open source", "GSoC"],
-                ["03", "People exploring startups", "NST Pune", "Startups", "Product"],
-              ].map(([initial, name, detail, tagA, tagB]) => (
-                <div className="rounded-2xl border border-white/6 bg-white/[0.025] p-4" key={name}>
-                  <div className="flex items-center gap-3">
-                    <div className="avatar">{initial}</div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{name}</p>
-                      <p className="truncate text-xs text-muted">{detail}</p>
-                    </div>
-                    <span className="status-dot" />
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <span className="tag">{tagA}</span>
-                    <span className="tag">{tagB}</span>
+            <div className={styles.peopleRow}>
+              {["AK", "MS", "RS"].map((initials, index) => (
+                <div className={styles.personCard} key={initials}>
+                  <span className={styles.personAvatar}>{initials}</span>
+                  <div>
+                    <strong>
+                      {["Aarav Kapoor", "Mira Shah", "Rohan Singh"][index]}
+                    </strong>
+                    <small>
+                      {["Design", "Engineering", "Startups"][index]}
+                    </small>
                   </div>
                 </div>
               ))}
             </div>
+            <div className={styles.previewColumns}>
+              <div className={styles.miniPost}>
+                <div className={styles.postAuthor}>
+                  <span>NT</span>
+                  <div>
+                    <strong>Neha Tiwari</strong>
+                    <small>NST Bangalore</small>
+                  </div>
+                </div>
+                <p>
+                  Looking for a teammate to build an accessibility-first campus
+                  app.
+                </p>
+                <div className={styles.postActions}>
+                  <span>♡ 18</span>
+                  <span>◯ 4</span>
+                </div>
+              </div>
+              <div className={styles.miniSidebar}>
+                <span>People to follow</span>
+                {["VD", "SZ", "AM"].map((initials) => (
+                  <div key={initials}>
+                    <i>{initials}</i>
+                    <b />
+                    <em>Follow</em>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link className={styles.brand} href="/" aria-label="PeerGrid home">
+            <span>PG</span>
+            <strong>PeerGrid</strong>
+          </Link>
+        </div>
+      </header>
+
+      <section className={styles.hero} id="network">
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>The verified NST network</p>
+          <h1>
+            Find your people.
+            <br />
+            Build what&apos;s next.
+          </h1>
+          <p className={styles.intro}>
+            Discover verified students across NST campuses. Follow their work,
+            share what you are building, and find the right people to build
+            with.
+          </p>
+          <div className={styles.heroActions}>
+            <Link href="/auth/signup">
+              Join PeerGrid <FiArrowRight />
+            </Link>
+            <Link href="/auth/login">Sign in</Link>
+          </div>
+        </div>
+        <ProductPreview />
+      </section>
+
+      <div className={styles.campusStrip} id="campuses">
+        <div>
+          {[...campuses, ...campuses].map((campus, index) => (
+            <span key={`${campus}-${index}`}>
+              NST {campus}
+              <i>—</i>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <section className={styles.features} id="about">
+        {features.map((feature, index) => (
+          <article className={styles.feature} key={feature.title}>
+            <FeatureVisual index={index} />
+            <h2>{feature.title}</h2>
+            <p>{feature.copy}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className={styles.proof}>
+        <p className={styles.eyebrow}>One network. Four campuses.</p>
+        <h2>
+          Meet students already
+          <br />
+          building what&apos;s next.
+        </h2>
+        <div className={styles.avatarStack} aria-hidden="true">
+          {["DA", "AS", "NK", "RM", "SK"].map((initials) => (
+            <span key={initials}>{initials}</span>
+          ))}
+        </div>
+        <p className={styles.proofCopy}>
+          Manually verified NST student profiles only.
+        </p>
+        <div className={styles.liveStatus}>
+          <i /> Live across 4 campuses
         </div>
       </section>
 
-      <section className="border-y border-white/6 bg-white/[0.015]">
-        <div className="mx-auto grid max-w-6xl gap-5 px-5 py-12 sm:px-8 md:grid-cols-3">
-          {[
-            [FiUsers, "Discover peers", "Search verified students by campus, skill, interest, or goal."],
-            [FiLayers, "Find collaborators", "Post what you are building and the teammates you need."],
-            [FiShield, "Trust the network", "College-email verification keeps PeerGrid focused and useful."],
-          ].map(([Icon, title, copy]) => {
-            const ItemIcon = Icon as typeof FiUsers;
-            return (
-              <article className="rounded-2xl p-5" key={String(title)}>
-                <ItemIcon className="mb-4 text-secondary" size={22} />
-                <h3 className="font-bold">{String(title)}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted">{String(copy)}</p>
-              </article>
-            );
-          })}
-        </div>
+      <section className={styles.cta}>
+        <h2>Build what&apos;s next.</h2>
+        <p>
+          Create your profile and start meeting peers across the NST network.
+        </p>
+        <Link href="/auth/signup">
+          Join PeerGrid <FiArrowRight />
+        </Link>
       </section>
+
+      <footer className={styles.footer}>
+        <div>
+          <span>© 2026 PeerGrid. Built for NST.</span>
+          <span>Verified students. Useful connections.</span>
+        </div>
+      </footer>
     </main>
   );
 }
