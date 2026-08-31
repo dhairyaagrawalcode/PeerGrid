@@ -191,6 +191,7 @@ textarea.field {
   padding: 0.3rem 0.55rem;
 }
 .avatar {
+  position: relative;
   display: grid;
   height: 2.7rem;
   width: 2.7rem;

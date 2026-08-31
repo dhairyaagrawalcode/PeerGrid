@@ -109,6 +109,7 @@ export default function AppShell({
           if (payload.new.sender_id !== profile.id) {
             setUnreadCount((count) => count + 1);
           }
+          window.dispatchEvent(new CustomEvent("peergrid:message-change"));
         },
       )
       .subscribe();

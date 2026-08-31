@@ -16,16 +16,20 @@ export default function MessageThread({
   conversationId,
   currentId,
   initialDraft = "",
+  initialHasMore = false,
   initialMessages,
 }: {
   conversationId: string;
   currentId: string;
   initialDraft?: string;
+  initialHasMore?: boolean;
   initialMessages: DirectMessage[];
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState(initialDraft);
   const [sending, setSending] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
@@ -96,12 +100,45 @@ export default function MessageThread({
     });
   }, [initialMessages.length, messages]);
 
+  async function loadOlder() {
+    const oldest = messages[0];
+    if (!oldest || loadingOlder || !hasMore) return;
+    setLoadingOlder(true);
+    setError(null);
+    const { data, error: loadError } = await supabase
+      .from("messages")
+      .select("id, conversation_id, sender_id, body, created_at, read_at")
+      .eq("conversation_id", conversationId)
+      .lt("created_at", oldest.created_at)
+      .order("created_at", { ascending: false })
+      .limit(51);
+    if (loadError) {
+      setError("Older messages could not be loaded. Please try again.");
+    } else {
+      const rows = (data ?? []) as DirectMessage[];
+      setMessages((current) => [...rows.slice(0, 50).reverse(), ...current]);
+      setHasMore(rows.length > 50);
+    }
+    setLoadingOlder(false);
+  }
+
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = body.trim();
     if (!message || sending) return;
+    const optimisticId = `optimistic-${crypto.randomUUID()}`;
+    const optimisticMessage: DirectMessage = {
+      id: optimisticId,
+      conversation_id: conversationId,
+      sender_id: currentId,
+      body: message,
+      created_at: new Date().toISOString(),
+      read_at: null,
+    };
     setSending(true);
     setError(null);
+    setBody("");
+    setMessages((current) => [...current, optimisticMessage]);
 
     const { data, error: sendError } = await supabase
       .from("messages")
@@ -114,14 +151,17 @@ export default function MessageThread({
       .single();
 
     if (sendError) {
-      setError(sendError.message);
+      setMessages((current) => current.filter((item) => item.id !== optimisticId));
+      setBody(message);
+      setError(sendError.message === "RATE_LIMIT_EXCEEDED" ? "You are sending messages too quickly. Wait a moment and try again." : "Your message could not be sent. Please try again.");
     } else if (data) {
-      setMessages((current) =>
-        current.some((item) => item.id === data.id)
-          ? current
-          : [...current, data as DirectMessage],
-      );
-      setBody("");
+      setMessages((current) => {
+        const withoutOptimistic = current.filter((item) => item.id !== optimisticId);
+        return withoutOptimistic.some((item) => item.id === data.id)
+          ? withoutOptimistic
+          : [...withoutOptimistic, data as DirectMessage];
+      });
+      window.dispatchEvent(new CustomEvent("peergrid:message-change"));
     }
     setSending(false);
   }
@@ -131,6 +171,11 @@ export default function MessageThread({
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-4">
         {messages.length ? (
           <div className="flex w-full flex-col gap-3">
+            {hasMore && (
+              <button className="mx-auto mb-2 text-xs font-semibold text-muted hover:text-font disabled:opacity-50" disabled={loadingOlder} onClick={loadOlder} type="button">
+                {loadingOlder ? "Loading older messages…" : "Load older messages"}
+              </button>
+            )}
             {messages.map((message) => {
               const own = message.sender_id === currentId;
               return (
@@ -149,6 +194,7 @@ export default function MessageThread({
                   </div>
                   <span className="mt-1 px-1 text-[9px] text-muted">
                     {messageTime(message.created_at)}
+                    {message.id.startsWith("optimistic-") ? " · Sending" : ""}
                     {own && message.read_at ? " · Read" : ""}
                   </span>
                 </div>

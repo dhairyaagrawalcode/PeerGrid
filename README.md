@@ -20,7 +20,7 @@ The current product is focused on five jobs:
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key.
-3. Link the Supabase CLI project and run `supabase db push` to apply every migration. If you use the SQL Editor instead, run the files in `supabase/migrations` in filename order, including `20260830020000_social_posts.sql`, `20260830030000_social_engagement_and_follows.sql`, `20260830040000_fix_avatar_storage_policies.sql`, and `20260830050000_direct_messages.sql`.
+3. Link the Supabase CLI project and run `supabase db push` to apply every migration. If you use the SQL Editor instead, run the files in `supabase/migrations` in filename order, including `20260831000000_production_readiness.sql`.
 4. For the initial manual-approval phase, leave `public.allowed_email_domains` empty. Signup remains open, but no confirmed user can enter the network until an administrator approves them.
 5. Later, when the real NST domain is confirmed, add it to `public.allowed_email_domains`:
 
@@ -83,7 +83,27 @@ The public client uses only the Supabase publishable key. Never add a service-ro
 - RLS limits networking data to email-confirmed, manually approved profiles; likes, comments, follows, posts, and uploads are restricted to the authenticated owner where appropriate.
 - Avatar and post uploads are limited to authenticated users' own folders and explicit file types. Avatars allow 3 MB; post attachments allow 25 MB.
 
-Messaging was not present in the original prototype and is intentionally outside the current UI. The prioritized profile → discovery → follows → posts flow is complete without introducing an unused chat surface.
+## Development load testing
+
+The optional seed script can create 10–1,000 users plus posts, follows, collaborations, conversations, and messages. It requires a server-only service-role key and an explicit confirmation flag, refuses `NODE_ENV=production`, and refuses remote projects unless separately confirmed.
+
+```bash
+PEERGRID_SEED_CONFIRM=yes \
+PEERGRID_SEED_USERS=250 \
+PEERGRID_SEED_EMAIL_DOMAIN=your-allowed-development-domain.test \
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-key \
+npm run seed:dev
+```
+
+Use a disposable local or staging Supabase project. For a remote staging project, also set `PEERGRID_ALLOW_REMOTE_SEED=yes`. Never expose the service-role key through a `NEXT_PUBLIC_` variable.
+
+## Production notes
+
+- Set a stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` across all production instances.
+- Keep the service-role key out of the Next.js client and normal web runtime.
+- Apply all migrations before deploying the matching application build.
+- Configure Supabase Auth redirect URLs for the production origin and `/auth/callback`.
+- The app bounds feed, profile, collaboration, discovery, conversation, comment, follower, and message reads; messages load the latest page first and fetch older history on demand.
 
 ## Validation
 

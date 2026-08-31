@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:dev": "node scripts/seed-development.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

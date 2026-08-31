@@ -12,7 +12,8 @@ async function getOrCreateConversation(otherUserId: string) {
     other_user_id: otherUserId,
   });
   if (error || !data) {
-    throw new Error(error?.message || "Could not open this conversation.");
+    console.error("[PeerGrid] conversation open failed", { code: error?.code });
+    throw new Error("Could not open this conversation. Please try again.");
   }
   return String(data);
 }

@@ -15,17 +15,26 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
   const [commentCount, setCommentCount] = useState(initialCommentCount);
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState<PostComment[] | null>(null);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function like() {
     setError(null);
+    const previousLiked = liked;
+    const previousCount = likeCount;
+    setLiked(!previousLiked);
+    setLikeCount(Math.max(0, previousCount + (previousLiked ? -1 : 1)));
     startTransition(async () => {
       const result = await togglePostLike(postId);
-      if (result.error) return setError(result.error);
+      if (result.error) {
+        setLiked(previousLiked);
+        setLikeCount(previousCount);
+        return setError(result.error);
+      }
       setLiked(result.liked);
-      setLikeCount(result.count);
+      if (result.count !== null) setLikeCount(result.count);
     });
   }
 
@@ -38,6 +47,18 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
       const result = await getPostComments(postId);
       if (result.error) return setError(result.error);
       setComments(result.comments);
+      setHasMoreComments(result.hasMore);
+    });
+  }
+
+  function loadOlderComments() {
+    const oldest = comments?.[0];
+    if (!oldest || isPending) return;
+    startTransition(async () => {
+      const result = await getPostComments(postId, oldest.created_at);
+      if (result.error) return setError(result.error);
+      setComments((current) => [...result.comments, ...(current ?? [])]);
+      setHasMoreComments(result.hasMore);
     });
   }
 
@@ -49,10 +70,8 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
     startTransition(async () => {
       const result = await addPostComment(postId, body);
       if (result.error) return setError(result.error);
-      const refreshed = await getPostComments(postId);
-      if (refreshed.error) return setError(refreshed.error);
-      setComments(refreshed.comments);
-      setCommentCount(result.count);
+      if (result.comment) setComments((current) => [...(current ?? []), result.comment]);
+      setCommentCount((current) => result.count ?? current + 1);
       setComment("");
       setExpanded(true);
     });
@@ -68,6 +87,11 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
       {expanded && (
         <div className="border-t border-line px-4 py-4 sm:px-5">
           <div className="space-y-4">
+            {hasMoreComments && comments?.length ? (
+              <button className="text-xs font-semibold text-muted hover:text-font" disabled={isPending} onClick={loadOlderComments} type="button">
+                Load older comments
+              </button>
+            ) : null}
             {comments?.map((item) => (
               <div className="flex gap-2.5" key={item.id}>
                 <Link className="avatar !h-8 !w-8" href={`/students/${item.author.username}`}>{item.author.avatar_url ? <AvatarImage alt={item.author.full_name} src={item.author.avatar_url} /> : initials(item.author.full_name)}</Link>

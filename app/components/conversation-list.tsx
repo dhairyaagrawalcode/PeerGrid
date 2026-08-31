@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FiLoader } from "react-icons/fi";
 import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
@@ -11,51 +12,68 @@ export default function ConversationList({
   initialConversations,
   currentId,
   selectedId,
+  initialHasMore = false,
 }: {
   initialConversations: ConversationSummary[];
   currentId: string;
   selectedId?: string;
+  initialHasMore?: boolean;
 }) {
   const [conversations, setConversations] = useState(initialConversations);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const nextOffset = useRef(Math.min(initialConversations.length, 50));
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function refreshConversations() {
-      const { data } = await supabase.rpc("get_conversation_summaries");
+      const { data } = await supabase.rpc("get_conversation_summaries", {
+        result_limit: 50,
+        result_offset: 0,
+      });
       if (!data) return;
       const rows = data as Array<
         Omit<ConversationSummary, "unread_count"> & {
           unread_count: number | string | null;
         }
       >;
-      setConversations(
-        rows.map((row) => ({
+      const refreshed = rows.map((row) => ({
           ...row,
           unread_count: Number(row.unread_count ?? 0),
-        })) as ConversationSummary[],
-      );
+        })) as ConversationSummary[];
+      setConversations((current) => {
+        const refreshedIds = new Set(refreshed.map((item) => item.conversation_id));
+        return [...refreshed, ...current.filter((item) => !refreshedIds.has(item.conversation_id))];
+      });
     }
 
-    const channel = supabase
-      .channel(`conversation-list:${currentId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        refreshConversations,
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "messages" },
-        refreshConversations,
-      )
-      .subscribe();
-
+    window.addEventListener("peergrid:message-change", refreshConversations);
     window.addEventListener("peergrid:messages-read", refreshConversations);
     return () => {
+      window.removeEventListener("peergrid:message-change", refreshConversations);
       window.removeEventListener("peergrid:messages-read", refreshConversations);
-      void supabase.removeChannel(channel);
     };
   }, [currentId, supabase]);
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    const { data, error } = await supabase.rpc("get_conversation_summaries", {
+      result_limit: 51,
+      result_offset: nextOffset.current,
+    });
+    if (!error) {
+      const rows = (data ?? []) as Array<Omit<ConversationSummary, "unread_count"> & { unread_count: number | string | null }>;
+      const page = rows.slice(0, 50).map((row) => ({ ...row, unread_count: Number(row.unread_count ?? 0) })) as ConversationSummary[];
+      nextOffset.current += page.length;
+      setConversations((current) => {
+        const existing = new Set(current.map((item) => item.conversation_id));
+        return [...current, ...page.filter((item) => !existing.has(item.conversation_id))];
+      });
+      setHasMore(rows.length > 50);
+    }
+    setLoadingMore(false);
+  }
 
   return (
     <aside
@@ -70,7 +88,8 @@ export default function ConversationList({
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
         {conversations.length ? (
-          conversations.map((conversation) => {
+          <>
+          {conversations.map((conversation) => {
             const active = conversation.conversation_id === selectedId;
             const unread = active ? 0 : conversation.unread_count;
             return (
@@ -113,7 +132,13 @@ export default function ConversationList({
                 </span>
               </Link>
             );
-          })
+          })}
+          {hasMore && (
+            <button className="mx-auto my-3 flex items-center gap-2 text-xs font-semibold text-muted hover:text-font" disabled={loadingMore} onClick={loadMore} type="button">
+              {loadingMore && <FiLoader className="animate-spin" />} More conversations
+            </button>
+          )}
+          </>
         ) : (
           <div className="grid h-full min-h-72 place-items-center px-7 text-center">
             <div>

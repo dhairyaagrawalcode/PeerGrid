@@ -33,7 +33,7 @@ async function syncTags(
 }
 
 export async function saveProfile(_: ProfileFormState, formData: FormData): Promise<ProfileFormState> {
-  const { supabase, user } = await requireApprovedUser();
+  const { supabase, user, profile } = await requireApprovedUser();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim().toLowerCase().replace(/^@/, "");
   const campusId = String(formData.get("campusId") ?? "");
@@ -43,19 +43,31 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
   if (fullName.length < 2 || fullName.length > 80) return { error: "Enter your full name." };
   if (!/^[a-z0-9][a-z0-9_-]{2,29}$/.test(username)) return { error: "Username must be 3–30 characters using letters, numbers, _ or -." };
   if (!campusId) return { error: "Select your NST campus." };
+  const graduationYear = graduationYearRaw ? Number(graduationYearRaw) : null;
+  if (graduationYear !== null && (!Number.isInteger(graduationYear) || graduationYear < 2024 || graduationYear > 2040)) {
+    return { error: "Enter a valid graduation year." };
+  }
+  const program = String(formData.get("program") ?? "").trim();
+  if (program.length > 100) return { error: "Program can contain up to 100 characters." };
 
   const { data: verified, error: verifyError } = await supabase.rpc("refresh_profile_verification");
   if (verifyError || !verified) return { error: "Verify an approved NST college email before completing your profile." };
 
   let avatarUrl: string | null | undefined;
+  let uploadedAvatarPath: string | null = null;
   const avatar = formData.get("avatar");
   if (avatar instanceof File && avatar.size > 0) {
     if (avatar.size > 3 * 1024 * 1024) return { error: "Profile photo must be smaller than 3 MB." };
     if (!["image/jpeg", "image/png", "image/webp"].includes(avatar.type)) return { error: "Use a JPG, PNG, or WebP profile photo." };
     const extension = avatar.type.split("/")[1].replace("jpeg", "jpg");
-    const path = `${user.id}/avatar.${extension}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, avatar, { upsert: true, contentType: avatar.type });
-    if (error) return { error: error.message };
+    const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, avatar, {
+      cacheControl: "31536000",
+      upsert: false,
+      contentType: avatar.type,
+    });
+    if (error) return { error: "Your profile photo could not be uploaded. Please try again." };
+    uploadedAvatarPath = path;
     avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   }
 
@@ -63,8 +75,8 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
     full_name: fullName,
     username,
     campus_id: campusId,
-    graduation_year: graduationYearRaw ? Number(graduationYearRaw) : null,
-    program: String(formData.get("program") ?? "").trim() || null,
+    graduation_year: graduationYear,
+    program: program || null,
     bio: String(formData.get("bio") ?? "").trim() || null,
     goals: String(formData.get("goals") ?? "").trim() || null,
     github_url: safeExternalUrl(formData.get("githubUrl")),
@@ -74,13 +86,34 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
   if (avatarUrl) payload.avatar_url = avatarUrl;
 
   const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
-  if (error) return { error: error.code === "23505" ? "That username is already taken." : error.message };
+  if (error) {
+    if (uploadedAvatarPath) await supabase.storage.from("avatars").remove([uploadedAvatarPath]);
+    return { error: error.code === "23505" ? "That username is already taken." : "Your profile could not be saved. Please try again." };
+  }
+
+  if (uploadedAvatarPath && profile?.avatar_url) {
+    try {
+      const marker = "/storage/v1/object/public/avatars/";
+      const pathname = new URL(profile.avatar_url).pathname;
+      const previousPath = pathname.includes(marker)
+        ? decodeURIComponent(pathname.split(marker)[1] ?? "")
+        : "";
+      if (previousPath.startsWith(`${user.id}/`) && previousPath !== uploadedAvatarPath) {
+        await supabase.storage.from("avatars").remove([previousPath]);
+      }
+    } catch {
+      // A legacy external avatar should not block saving the new profile photo.
+    }
+  }
 
   try {
     await syncTags(supabase, user.id, "skills", "profile_skills", "skill_id", String(formData.get("skills") ?? ""));
     await syncTags(supabase, user.id, "interests", "profile_interests", "interest_id", String(formData.get("interests") ?? ""));
   } catch (tagError) {
-    return { error: tagError instanceof Error ? tagError.message : "Could not save skills and interests." };
+    console.error("[PeerGrid] profile taxonomy sync failed", {
+      name: tagError instanceof Error ? tagError.name : "UnknownError",
+    });
+    return { error: "Your profile was saved, but skills and interests could not be updated. Please try again." };
   }
 
   revalidatePath("/", "layout");

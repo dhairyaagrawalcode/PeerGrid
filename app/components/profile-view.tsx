@@ -11,6 +11,7 @@ import { startConversation } from "@/app/actions/messages";
 import { initials } from "@/app/lib/format";
 import type { FollowSummary, SocialPost, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
+import PageNavigation from "./page-navigation";
 import FollowControls from "./follow-controls";
 import SocialPostCard from "./social-post-card";
 
@@ -20,12 +21,16 @@ export default function ProfileView({
   followSummary,
   posts,
   own = false,
+  page = 0,
+  hasMorePosts = false,
 }: {
   profile: StudentProfile;
   currentId: string;
   followSummary: FollowSummary;
   posts: SocialPost[];
   own?: boolean;
+  page?: number;
+  hasMorePosts?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-[920px]">
@@ -144,6 +149,11 @@ export default function ProfileView({
             No posts yet.
           </div>
         )}
+        <PageNavigation
+          hasMore={hasMorePosts}
+          page={page}
+          path={own ? "/profile" : `/students/${profile.username}`}
+        />
       </section>
     </div>
   );

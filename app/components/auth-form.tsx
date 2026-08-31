@@ -45,7 +45,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         },
       });
       if (error) {
-        setMessage(error.message);
+        setMessage(error.code === "over_email_send_rate_limit"
+          ? "Too many verification emails were requested. Please wait and try again."
+          : "Your account could not be created. Check the details and try again.");
       } else if (!data.session) {
         router.push(`/auth/check-email?email=${encodeURIComponent(email)}`);
       } else {
@@ -55,7 +57,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setMessage(error.message);
+        setMessage("The email or password is incorrect, or the account is not ready yet.");
       } else {
         router.push("/feed");
         router.refresh();

@@ -4,6 +4,6 @@ import { getConversationSummaries } from "@/app/lib/data";
 
 export default async function MessagesPage() {
   const { supabase, profile } = await requireStudent();
-  const conversations = await getConversationSummaries(supabase);
-  return <MessagesView conversations={conversations} profile={profile} />;
+  const conversationPage = await getConversationSummaries(supabase);
+  return <MessagesView conversations={conversationPage.conversations} hasMoreConversations={conversationPage.hasMore} profile={profile} />;
 }

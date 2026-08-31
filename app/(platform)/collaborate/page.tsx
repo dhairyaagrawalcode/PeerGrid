@@ -1,18 +1,27 @@
 import { FiEdit3, FiUsers } from "react-icons/fi";
 import CollaborationCard from "@/app/components/collaboration-card";
 import EmptyState from "@/app/components/empty-state";
+import PageNavigation from "@/app/components/page-navigation";
 import { createCollaboration } from "@/app/actions/collaborations";
 import { requireStudent } from "@/app/lib/auth";
-import { getCampuses, getCollaborations } from "@/app/lib/data";
+import { COLLABORATION_PAGE_SIZE, getCampuses, getCollaborations } from "@/app/lib/data";
 
-export default async function CollaboratePage() {
+export default async function CollaboratePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const rawPage = Number((await searchParams).page ?? 0);
+  const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
   const { supabase, user } = await requireStudent();
-  const [campuses, posts] = await Promise.all([getCampuses(supabase), getCollaborations(supabase)]);
+  const [campuses, posts] = await Promise.all([
+    getCampuses(supabase),
+    getCollaborations(supabase, { limit: COLLABORATION_PAGE_SIZE + 1, offset: page * COLLABORATION_PAGE_SIZE }),
+  ]);
+  const hasMore = posts.length > COLLABORATION_PAGE_SIZE;
+  const visiblePosts = posts.slice(0, COLLABORATION_PAGE_SIZE);
   return (
     <div className="app-page grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 xl:order-1">
         <div><p className="eyebrow">Collaboration board</p><h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Build with people, not alone</h1><p className="mt-2 text-sm text-muted">Open calls for hackathons, projects, open source, and startup experiments.</p></div>
-        <div className="mt-6 space-y-4">{posts.length ? posts.map((post) => <CollaborationCard key={post.id} post={post} currentId={user.id} />) : <EmptyState icon={<FiUsers size={21} />} title="No collaboration posts yet" copy="Share the first open call with students across NST." />}</div>
+        <div className="mt-6 space-y-4">{visiblePosts.length ? visiblePosts.map((post) => <CollaborationCard key={post.id} post={post} currentId={user.id} />) : <EmptyState icon={<FiUsers size={21} />} title="No collaboration posts yet" copy="Share the first open call with students across NST." />}</div>
+        <PageNavigation hasMore={hasMore} page={page} path="/collaborate" />
       </div>
       <aside className="xl:order-2">
         <form action={createCollaboration} className="surface scroll-mt-24 p-5 xl:sticky xl:top-20" id="new">

@@ -5,7 +5,9 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const next = url.searchParams.get("next");
-  const safeNext = next?.startsWith("/") ? next : "/onboarding";
+  const safeNext = next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\")
+    ? next
+    : "/onboarding";
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -13,4 +15,3 @@ export async function GET(request: Request) {
   }
   return NextResponse.redirect(new URL("/auth/login?error=verification", url.origin));
 }
-

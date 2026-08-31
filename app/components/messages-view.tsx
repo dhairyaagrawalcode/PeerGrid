@@ -16,17 +16,22 @@ export default function MessagesView({
   selected,
   messages = [],
   draft = "",
+  hasMoreMessages = false,
+  hasMoreConversations = false,
 }: {
   profile: StudentProfile;
   conversations: ConversationSummary[];
   selected?: ConversationSummary;
   messages?: DirectMessage[];
   draft?: string;
+  hasMoreMessages?: boolean;
+  hasMoreConversations?: boolean;
 }) {
   return (
     <section className="app-page flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden  border-line">
       <ConversationList
         currentId={profile.id}
+        initialHasMore={hasMoreConversations}
         initialConversations={conversations}
         selectedId={selected?.conversation_id}
       />
@@ -78,6 +83,7 @@ export default function MessagesView({
               conversationId={selected.conversation_id}
               currentId={profile.id}
               initialDraft={draft}
+              initialHasMore={hasMoreMessages}
               initialMessages={messages}
               key={selected.conversation_id}
             />

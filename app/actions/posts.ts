@@ -39,7 +39,11 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
     if (["42P01", "PGRST205"].includes(error.code)) {
       return { error: "The social posts migration has not been applied yet." };
     }
-    return { error: error.message };
+    if (error.message === "RATE_LIMIT_EXCEEDED") {
+      return { error: "You are posting too quickly. Wait a few minutes and try again." };
+    }
+    console.error("[PeerGrid] social post insert failed", { code: error.code });
+    return { error: "Your post could not be published. Please try again." };
   }
 
   revalidatePath("/feed");

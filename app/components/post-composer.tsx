@@ -94,7 +94,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         const { error: uploadError } = await supabase.storage
           .from("post-media")
           .upload(uploadedPath, file, { contentType: file.type, upsert: false });
-        if (uploadError) throw uploadError;
+        if (uploadError) throw new Error("The attachment could not be uploaded. Please try again.");
         form.set("attachmentPath", uploadedPath);
         form.set("attachmentKind", kind);
         form.set("attachmentName", file.name);

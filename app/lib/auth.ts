@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createClient } from "@/app/lib/supabase/server";
 import type { StudentApproval, StudentProfile } from "@/app/types";
 
-export async function getAuthContext() {
+export const getAuthContext = cache(async function getAuthContext() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,7 +32,7 @@ export async function getAuthContext() {
     profile: data as StudentProfile | null,
     approval: approval as StudentApproval | null,
   };
-}
+});
 
 export async function requireUser() {
   const context = await getAuthContext();

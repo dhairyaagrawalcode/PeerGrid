@@ -4,6 +4,7 @@ import AvatarImage from "@/app/components/avatar-image";
 import EmptyState from "@/app/components/empty-state";
 import SocialPostCard from "@/app/components/social-post-card";
 import SuggestedStudent from "@/app/components/suggested-student";
+import PageNavigation from "@/app/components/page-navigation";
 import { requireStudent } from "@/app/lib/auth";
 import {
   getFollowSummary,
@@ -11,19 +12,24 @@ import {
   getSocialPosts,
   getStudent,
   getStudents,
+  POST_PAGE_SIZE,
 } from "@/app/lib/data";
 import { initials } from "@/app/lib/format";
 
-export default async function FeedPage() {
+export default async function FeedPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const rawPage = Number((await searchParams).page ?? 0);
+  const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
   const { supabase, user, profile } = await requireStudent();
   const [posts, follows, students, completeProfile, followSummary] =
     await Promise.all([
-      getSocialPosts(supabase, { limit: 30 }),
+      getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE }),
       getFollows(supabase, user.id),
-      getStudents(supabase, user.id),
+      getStudents(supabase, user.id, { limit: 50 }),
       getStudent(supabase, { id: user.id }),
       getFollowSummary(supabase, user.id),
     ]);
+  const hasMorePosts = posts.length > POST_PAGE_SIZE;
+  const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
 
   const following = new Set(
     follows
@@ -152,8 +158,8 @@ export default async function FeedPage() {
         </section>
 
         <div className="divide-y divide-line border-y border-line">
-          {posts.length ? (
-            posts.map((post) => <SocialPostCard flat key={post.id} post={post} />)
+          {visiblePosts.length ? (
+            visiblePosts.map((post) => <SocialPostCard flat key={post.id} post={post} />)
           ) : (
             <EmptyState
               action={
@@ -167,6 +173,7 @@ export default async function FeedPage() {
             />
           )}
         </div>
+        <PageNavigation hasMore={hasMorePosts} page={page} path="/feed" />
       </div>
 
       <aside className="hidden xl:block">
