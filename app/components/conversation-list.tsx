@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiLoader } from "react-icons/fi";
+import { FiLoader, FiUsers } from "react-icons/fi";
 import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
-import type { ConversationSummary } from "@/app/types";
+import type { ConversationSummary, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
+import CreateGroupButton from "./create-group-button";
 
 export default function ConversationList({
   initialConversations,
   currentId,
   selectedId,
   initialHasMore = false,
+  groupCandidates,
 }: {
   initialConversations: ConversationSummary[];
   currentId: string;
   selectedId?: string;
   initialHasMore?: boolean;
+  groupCandidates: StudentProfile[];
 }) {
   const [conversations, setConversations] = useState(initialConversations);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -82,8 +85,9 @@ export default function ConversationList({
       <div className="flex h-17 items-center border-b border-line px-5">
         <div>
           <p className="text-base font-bold">Messages</p>
-          <p className="mt-0.5 text-[11px] text-muted">Private student conversations</p>
+          <p className="mt-0.5 text-[11px] text-muted">Direct and group conversations</p>
         </div>
+        <div className="ml-auto"><CreateGroupButton students={groupCandidates} /></div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
@@ -99,7 +103,7 @@ export default function ConversationList({
                 key={conversation.conversation_id}
               >
                 <span className="avatar !h-11 !w-11 !rounded-full">
-                  {conversation.other_avatar_url ? (
+                  {conversation.is_group ? <FiUsers size={18} /> : conversation.other_avatar_url ? (
                     <AvatarImage
                       alt={conversation.other_full_name}
                       src={conversation.other_avatar_url}
@@ -121,7 +125,7 @@ export default function ConversationList({
                     <span className={`truncate text-xs ${unread ? "font-semibold text-subtle" : "text-muted"}`}>
                       {conversation.last_message_body
                         ? `${conversation.last_message_sender_id === currentId ? "You: " : ""}${conversation.last_message_body}`
-                        : `Start a conversation with @${conversation.other_username}`}
+                        : conversation.is_group ? `${conversation.member_count} members` : `Start a conversation with @${conversation.other_username}`}
                     </span>
                     {unread > 0 && (
                       <i className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold not-italic text-white">
@@ -144,7 +148,7 @@ export default function ConversationList({
             <div>
               <p className="text-sm font-bold">No messages yet</p>
               <p className="mt-2 text-xs leading-5 text-muted">
-                Open a student profile and choose Message to start chatting.
+                Message a student or create an encrypted group.
               </p>
               <Link className="button button-primary mt-5 !min-h-9 !text-xs" href="/discover">
                 Find students

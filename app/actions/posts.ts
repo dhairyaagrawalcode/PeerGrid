@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireStudent } from "@/app/lib/auth";
+import { moderateContent } from "@/app/lib/moderation";
 
-export type CreatePostResult = { success?: boolean; error?: string };
+export type CreatePostResult = { success?: boolean; error?: string; moderation?: "published" | "held" };
 
 const allowedKinds = new Set(["image", "video", "document"]);
 
@@ -17,6 +18,8 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
 
   if (!body && !attachmentPath) return { error: "Write something or attach a file." };
   if (body.length > 5000) return { error: "Posts can contain up to 5,000 characters." };
+  const moderation = moderateContent(body);
+  if (moderation.status === "rejected") return { error: "This post violates PeerGrid's community rules and cannot be published." };
 
   const hasAttachment = Boolean(attachmentPath);
   if (hasAttachment) {
@@ -26,14 +29,14 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
     }
   }
 
-  const { error } = await supabase.from("social_posts").insert({
+  const { data: created, error } = await supabase.from("social_posts").insert({
     author_id: user.id,
     body,
     attachment_path: hasAttachment ? attachmentPath : null,
     attachment_kind: hasAttachment ? attachmentKind : null,
     attachment_name: hasAttachment ? attachmentName.slice(0, 255) : null,
     attachment_mime: hasAttachment ? attachmentMime.slice(0, 120) : null,
-  });
+  }).select("moderation_status").single();
 
   if (error) {
     if (["42P01", "PGRST205"].includes(error.code)) {
@@ -46,6 +49,9 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
     return { error: "Your post could not be published. Please try again." };
   }
 
-  revalidatePath("/feed");
-  return { success: true };
+  if (created?.moderation_status === "rejected") {
+    return { error: "This post violates PeerGrid's community rules and cannot be published." };
+  }
+  if (created?.moderation_status === "published") revalidatePath("/feed");
+  return { success: true, moderation: created?.moderation_status === "held" ? "held" : "published" };
 }

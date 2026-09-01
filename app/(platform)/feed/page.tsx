@@ -8,10 +8,9 @@ import PageNavigation from "@/app/components/page-navigation";
 import { requireStudent } from "@/app/lib/auth";
 import {
   getFollowSummary,
-  getFollows,
+  getCollaborations,
+  getProfileMatches,
   getSocialPosts,
-  getStudent,
-  getStudents,
   POST_PAGE_SIZE,
 } from "@/app/lib/data";
 import { initials } from "@/app/lib/format";
@@ -20,46 +19,18 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const rawPage = Number((await searchParams).page ?? 0);
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
   const { supabase, user, profile } = await requireStudent();
-  const [posts, follows, students, completeProfile, followSummary] =
+  const [posts, suggestions, followSummary, rankedCollaborations] =
     await Promise.all([
-      getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE }),
-      getFollows(supabase, user.id),
-      getStudents(supabase, user.id, { limit: 50 }),
-      getStudent(supabase, { id: user.id }),
+      getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, ranked: true }),
+      getProfileMatches(supabase, 4),
       getFollowSummary(supabase, user.id),
+      getCollaborations(supabase, { status: "open", limit: 6, ranked: true }),
     ]);
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
-
-  const following = new Set(
-    follows
-      .filter((item) => item.follower_id === user.id)
-      .map((item) => item.following_id),
-  );
-  const ownSkills = new Set(
-    completeProfile?.skills?.map((item) => item.id) ?? [],
-  );
-  const ownInterests = new Set(
-    completeProfile?.interests?.map((item) => item.id) ?? [],
-  );
-  const suggestions = students
-    .filter((student) => !following.has(student.id))
-    .map((student) => ({
-      student,
-      score:
-        (student.campus_id === profile.campus_id ? 5 : 0) +
-        (student.skills?.filter((item) => ownSkills.has(item.id)).length ?? 0) +
-        (student.interests?.filter((item) => ownInterests.has(item.id))
-          .length ?? 0) *
-          2,
-    }))
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        a.student.full_name.localeCompare(b.student.full_name),
-    )
-    .slice(0, 4)
-    .map((item) => item.student);
+  const collaborationSuggestions = rankedCollaborations
+    .filter((collaboration) => collaboration.author_id !== user.id)
+    .slice(0, 3);
 
   return (
     <div className="app-page grid gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
@@ -80,7 +51,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               {profile.program || `@${profile.username}`} ·{" "}
               {profile.campus?.name}
             </p>
-            <div className="mt-5 grid grid-cols-2 border-y border-line py-3">
+            <div className="mt-5 grid grid-cols-2 border-t border-line pt-3">
               <div>
                 <strong className="block text-sm">
                   {followSummary.follower_count}
@@ -89,7 +60,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   Followers
                 </span>
               </div>
-              <div className="border-l border-line">
+              <div className="border-l border-line pl-5">
                 <strong className="block text-sm">
                   {followSummary.following_count}
                 </strong>
@@ -132,10 +103,10 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               className="field flex !min-h-11 flex-1 items-center !rounded-xl !py-0 text-sm text-muted hover:border-primary/25"
               href="/post"
             >
-              Share something with the NST community…
+              What are you building or learning?
             </Link>
           </div>
-          <div className="mt-4 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
+          <div className="mt-3 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
             <Link
               className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
               href="/post"
@@ -157,9 +128,9 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           </div>
         </section>
 
-        <div className="divide-y divide-line border-y border-line">
+        <div className="space-y-4">
           {visiblePosts.length ? (
-            visiblePosts.map((post) => <SocialPostCard flat key={post.id} post={post} />)
+            visiblePosts.map((post) => <SocialPostCard key={post.id} post={post} />)
           ) : (
             <EmptyState
               action={
@@ -167,7 +138,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   Create a post
                 </Link>
               }
-              copy="Share the first update with the NST community."
+              copy="Share a project, learning milestone, opportunity, or update with the NST community."
               icon={<FiFileText size={21} />}
               title="No posts yet"
             />
@@ -179,7 +150,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <aside className="hidden xl:block">
         <section className="surface sticky top-0 !rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold">Suggested for you</h2>
+            <h2 className="text-sm font-bold">People you should meet</h2>
             <Link
               className="text-[10px] font-bold text-primary hover:text-primary-hover"
               href="/discover"
@@ -189,11 +160,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           </div>
           <div className="mt-2 divide-y divide-line">
             {suggestions.length ? (
-              suggestions.map((student) => (
+              suggestions.map(({ student, reason }) => (
                 <SuggestedStudent
                   currentId={user.id}
-                  isFollowing={following.has(student.id)}
+                  isFollowing={false}
                   key={student.id}
+                  reason={reason}
                   student={student}
                 />
               ))
@@ -204,11 +176,29 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
             )}
           </div>
           <Link
-            className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-xs font-bold text-primary"
+            className="mt-3 flex items-center gap-2 pt-2 text-xs font-bold text-primary"
             href="/discover"
           >
             <FiUsers /> Explore the network
           </Link>
+          <div className="mt-5 border-t border-line pt-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold">Collaborations for you</h2>
+              <Link className="text-[10px] font-bold text-primary hover:text-primary-hover" href="/collaborate">See all</Link>
+            </div>
+            {collaborationSuggestions.length ? <div className="mt-3 space-y-4">
+              {collaborationSuggestions.map((collaboration) => {
+                const openings = collaboration.team_capacity === null ? null : Math.max(collaboration.team_capacity - collaboration.team_current, 0);
+                const type = collaboration.collaboration_type === "study" ? "Study group" : collaboration.collaboration_type.replace("_", " ");
+                return <Link className="block group" href={`/collaborate#collaboration-${collaboration.id}`} key={collaboration.id}>
+                  <p className="line-clamp-2 text-xs font-bold leading-5 group-hover:text-primary">{collaboration.title}</p>
+                  <p className="mt-1 text-[10px] capitalize text-muted">{type}{openings !== null ? ` · ${openings} opening${openings === 1 ? "" : "s"}` : ""}</p>
+                  {collaboration.required_skills.length > 0 && <p className="mt-1 truncate text-[10px] text-subtle">{collaboration.required_skills.slice(0, 2).join(" · ")}</p>}
+                  {collaboration.recommendation_reason && <p className="mt-1 text-[10px] text-primary">{collaboration.recommendation_reason}</p>}
+                </Link>;
+              })}
+            </div> : <p className="mt-3 text-xs leading-5 text-muted">No matching open collaborations right now.</p>}
+          </div>
         </section>
       </aside>
     </div>

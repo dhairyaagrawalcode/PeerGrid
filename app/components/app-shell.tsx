@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  FiBell,
   FiGrid,
   FiLogOut,
   FiMessageSquare,
@@ -15,9 +16,11 @@ import {
 import { signOut } from "@/app/actions/auth";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials } from "@/app/lib/format";
-import type { StudentProfile } from "@/app/types";
+import type { PeerGridNotification, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import Brand from "./brand";
+import CryptoDeviceBootstrap from "./crypto-device-bootstrap";
+import NotificationDropdown from "./notification-dropdown";
 
 const navigation = [
   { href: "/feed", label: "Home", icon: FiGrid },
@@ -25,6 +28,7 @@ const navigation = [
   { href: "/collaborate", label: "Collaborate", icon: FiUsers },
   { href: "/post", label: "Post", icon: FiPlusSquare },
   { href: "/messages", label: "Messages", icon: FiMessageSquare },
+  { href: "/notifications", label: "Notifications", icon: FiBell },
 ];
 
 function AccountMenu({ profile }: { profile: StudentProfile }) {
@@ -89,18 +93,26 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
 export default function AppShell({
   profile,
   initialUnreadCount,
+  initialCollaborationUnreadCount,
+  initialNotificationUnreadCount,
+  initialNotifications,
   children,
 }: {
   profile: StudentProfile;
   initialUnreadCount: number;
+  initialCollaborationUnreadCount: number;
+  initialNotificationUnreadCount: number;
+  initialNotifications: PeerGridNotification[];
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [collaborationUnreadCount, setCollaborationUnreadCount] = useState(initialCollaborationUnreadCount);
+  const [notificationUnreadCount, setNotificationUnreadCount] = useState(initialNotificationUnreadCount);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const channel = supabase
+    const messageChannel = supabase
       .channel(`navigation-messages:${profile.id}`)
       .on(
         "postgres_changes",
@@ -114,14 +126,46 @@ export default function AppShell({
       )
       .subscribe();
 
+    const collaborationChannel = supabase
+      .channel(`navigation-collaborations:${profile.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "collaboration_activity_events" }, () => {
+        void supabase.rpc("get_unread_collaboration_count").then(({ data }) => {
+          setCollaborationUnreadCount(Number(data ?? 0));
+        });
+      })
+      .subscribe();
+
+    const notificationChannel = supabase
+      .channel(`navigation-notifications:${profile.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, () => {
+        void supabase.rpc("get_unread_notification_count").then(({ data }) => {
+          setNotificationUnreadCount(Number(data ?? 0));
+        });
+        window.dispatchEvent(new CustomEvent("peergrid:notification-change"));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, () => {
+        void supabase.rpc("get_unread_notification_count").then(({ data }) => {
+          setNotificationUnreadCount(Number(data ?? 0));
+        });
+      })
+      .subscribe();
+
     function messagesRead(event: Event) {
       const count = Number((event as CustomEvent<number>).detail ?? 0);
       setUnreadCount((current) => Math.max(0, current - count));
     }
     window.addEventListener("peergrid:messages-read", messagesRead);
+    const collaborationsSeen = () => setCollaborationUnreadCount(0);
+    const notificationsRead = () => setNotificationUnreadCount(0);
+    window.addEventListener("peergrid:collaboration-seen", collaborationsSeen);
+    window.addEventListener("peergrid:notifications-read", notificationsRead);
     return () => {
       window.removeEventListener("peergrid:messages-read", messagesRead);
-      void supabase.removeChannel(channel);
+      window.removeEventListener("peergrid:collaboration-seen", collaborationsSeen);
+      window.removeEventListener("peergrid:notifications-read", notificationsRead);
+      void supabase.removeChannel(messageChannel);
+      void supabase.removeChannel(collaborationChannel);
+      void supabase.removeChannel(notificationChannel);
     };
   }, [profile.id, supabase]);
 
@@ -132,7 +176,16 @@ export default function AppShell({
     mobile = false,
   }: (typeof navigation)[number] & { mobile?: boolean }) {
     const active = pathname === href || pathname.startsWith(`${href}/`);
-    const count = label === "Messages" ? unreadCount : 0;
+    const count = label === "Messages"
+      ? unreadCount
+      : label === "Collaborate"
+        ? collaborationUnreadCount
+        : label === "Notifications"
+          ? notificationUnreadCount
+          : 0;
+    if (label === "Notifications" && !mobile) {
+      return <NotificationDropdown active={active} count={notificationUnreadCount} initialNotifications={initialNotifications} key={href} onRead={() => setNotificationUnreadCount(0)} />;
+    }
     return (
       <Link
         aria-label={label}
@@ -158,6 +211,7 @@ export default function AppShell({
 
   return (
     <div className="h-dvh overflow-hidden bg-bg text-font">
+      <CryptoDeviceBootstrap userId={profile.id} />
       <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="app-frame flex h-full items-center gap-6">
           <Brand href="/feed" />
@@ -175,7 +229,7 @@ export default function AppShell({
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-5 border-t border-line bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-6 border-t border-line bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {navigation.map((item) => navigationLink({ ...item, mobile: true }))}
       </nav>
     </div>

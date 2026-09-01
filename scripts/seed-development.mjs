@@ -24,6 +24,7 @@ const firstNames = ["Aarav", "Aditi", "Arjun", "Diya", "Ishaan", "Kavya", "Meera
 const lastNames = ["Agarwal", "Gupta", "Iyer", "Jain", "Kapoor", "Mehta", "Nair", "Patel", "Rao", "Sharma"];
 const programs = ["BTech CSE", "BTech AI ML", "BTech Data Science", "BTech Cybersecurity"];
 const skills = ["React", "TypeScript", "Python", "UI Design", "FastAPI", "PostgreSQL", "Machine Learning", "Flutter"];
+const statuses = ["Open to projects", "Looking for a hackathon team", "Learning in public", "Open to open-source collaboration"];
 const runId = Date.now().toString(36);
 
 const { data: campusRows, error: campusError } = await supabase.from("campuses").select("id").eq("is_active", true);
@@ -50,6 +51,7 @@ const profileRows = users.map(({ id, fullName, index }) => ({
   campus_id: campusRows[index % campusRows.length].id,
   graduation_year: 2027 + (index % 4),
   program: programs[index % programs.length],
+  current_status: statuses[index % statuses.length],
   bio: `Interested in ${skills[index % skills.length]} and student-led projects.`,
   goals: "Looking for peers to build practical projects with.",
   is_verified: true,
@@ -66,6 +68,32 @@ for (let index = 0; index < profileRows.length; index += 200) {
   if (profileError) throw profileError;
   const { error: approvalError } = await supabase.from("student_approvals").upsert(approvalRows.slice(index, index + 200));
   if (approvalError) throw approvalError;
+}
+
+const { error: skillUpsertError } = await supabase
+  .from("skills")
+  .upsert(skills.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
+if (skillUpsertError) throw skillUpsertError;
+const { data: skillRows, error: skillReadError } = await supabase.from("skills").select("id, name").in("name", skills);
+if (skillReadError) throw skillReadError;
+const skillIds = new Map((skillRows ?? []).map((skill) => [String(skill.name), skill.id]));
+const profileSkills = users.flatMap((user) => [0, 1].map((offset) => ({
+  profile_id: user.id,
+  skill_id: skillIds.get(skills[(user.index + offset) % skills.length]),
+})));
+const canHelp = users.map((user) => ({
+  profile_id: user.id,
+  skill_id: skillIds.get(skills[user.index % skills.length]),
+}));
+const needsHelp = users.map((user) => ({
+  profile_id: user.id,
+  skill_id: skillIds.get(skills[(user.index + 2) % skills.length]),
+}));
+for (const [table, rows] of [["profile_skills", profileSkills], ["profile_can_help", canHelp], ["profile_needs_help", needsHelp]]) {
+  for (let index = 0; index < rows.length; index += 500) {
+    const { error } = await supabase.from(table).insert(rows.slice(index, index + 500));
+    if (error) throw error;
+  }
 }
 
 const follows = [];
@@ -85,6 +113,11 @@ const collaborations = users.filter((_, index) => index % 5 === 0).map((user) =>
   title: `Looking for a ${skills[user.index % skills.length]} collaborator`,
   description: "Building a student project and looking for one or two peers to validate and ship the first version.",
   tags: [skills[user.index % skills.length], skills[(user.index + 1) % skills.length]],
+  collaboration_type: ["project", "hackathon", "open_source", "startup"][user.index % 4],
+  required_skills: [skills[user.index % skills.length], skills[(user.index + 1) % skills.length]],
+  team_current: 2,
+  team_capacity: 4,
+  commitment: "4 weeks · 4 hours/week",
 }));
 
 for (const [table, rows] of [["follows", follows], ["social_posts", posts], ["collaboration_posts", collaborations]]) {
@@ -105,17 +138,7 @@ const { data: conversations, error: conversationError } = await supabase
   .select("id, participant_low, participant_high");
 if (conversationError) throw conversationError;
 
-const messages = (conversations ?? []).flatMap((conversation, conversationIndex) =>
-  Array.from({ length: 20 }, (_, messageIndex) => ({
-    conversation_id: conversation.id,
-    sender_id: messageIndex % 2 ? conversation.participant_low : conversation.participant_high,
-    body: `Seed conversation ${conversationIndex + 1}, message ${messageIndex + 1}.`,
-    created_at: new Date(Date.now() - (20 - messageIndex) * 60000).toISOString(),
-  })),
-);
-for (let index = 0; index < messages.length; index += 500) {
-  const { error } = await supabase.from("messages").insert(messages.slice(index, index + 500));
-  if (error) throw error;
-}
-
-console.info(`Created ${users.length} development users, ${posts.length} posts, ${follows.length} follows, and ${messages.length} messages (run ${runId}).`);
+// Direct messages are intentionally not server-seeded. E2EE payloads must be
+// created and signed by a registered user device; generating them with the
+// service role would violate the product's encryption boundary.
+console.info(`Created ${users.length} development users, ${posts.length} posts, ${follows.length} follows, and ${(conversations ?? []).length} empty conversations (run ${runId}).`);

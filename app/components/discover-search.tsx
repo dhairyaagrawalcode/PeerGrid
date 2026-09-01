@@ -119,7 +119,7 @@ export default function DiscoverSearch({
         )}
       </div>
 
-      <div className="mt-7 flex items-end justify-between border-b border-line pb-3">
+      <div className="mt-8 flex items-end justify-between">
         <div>
           <h2 className="text-sm font-bold">People</h2>
           <p aria-live="polite" className="mt-0.5 text-xs text-muted">{students.length} result{students.length === 1 ? "" : "s"}{hasMore ? "+" : ""}</p>
@@ -128,7 +128,7 @@ export default function DiscoverSearch({
       </div>
 
       {students.length ? (
-        <div className="divide-y divide-line border-b border-line">
+        <div className="mt-2 divide-y divide-line">
           {students.map((student) => (
             <StudentResult key={student.id} student={student} currentId={currentId} isFollowing={following.has(student.id)} />
           ))}
@@ -137,7 +137,7 @@ export default function DiscoverSearch({
         <EmptyState icon={<FiUsers size={20} />} title="No students found" copy="Try a name, username, campus, graduation year, skill, or interest." />
       )}
       {hasMore && !loading && (
-        <div className="flex justify-center border-b border-line py-5">
+        <div className="flex justify-center py-5">
           <button className="button button-secondary !min-h-9 !text-xs" disabled={loadingMore} onClick={loadMore} type="button">
             {loadingMore ? <><FiLoader className="animate-spin" /> Loading</> : "Show more students"}
           </button>

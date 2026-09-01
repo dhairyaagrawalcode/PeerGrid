@@ -10,7 +10,7 @@ export default async function EditProfilePage() {
   ]);
   return (
     <div className="app-page">
-      <section className="mx-auto max-w-4xl border-line py-6 sm:py-8">
+      <section className="mx-auto max-w-4xl py-6 sm:py-8">
         <p className="eyebrow">Profile settings</p>
         <h1 className="mt-2 text-2xl font-black tracking-tight">
           Edit your profile
@@ -18,8 +18,7 @@ export default async function EditProfilePage() {
         <p className="mt-2 text-sm text-muted">
           Keep this current so the right students can discover you.
         </p>
-        <div className="my-7 h-px bg-line" />
-        <ProfileForm campuses={campuses} profile={profile} returnTo="/profile" />
+        <div className="mt-7 border-t border-line pt-7"><ProfileForm campuses={campuses} profile={profile} returnTo="/profile" /></div>
       </section>
     </div>
   );

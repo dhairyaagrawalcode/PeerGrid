@@ -43,6 +43,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
 
   function selectFile(selected: File | null) {
     setError(null);
+    setNotice(null);
     if (!selected) return updateFile(null);
     if (!fileKind(selected)) {
       updateFile(null);
@@ -110,6 +112,10 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
 
       formRef.current?.reset();
       updateFile(null);
+      if (result.moderation === "held") {
+        setNotice("Your post was submitted and is being reviewed before it appears in the feed.");
+        return;
+      }
       router.push("/feed");
       router.refresh();
     } catch (caught) {
@@ -132,7 +138,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
           className="min-h-32 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
           maxLength={5000}
           name="body"
-          placeholder="Share something with the NST community…"
+          placeholder="What are you building or learning?"
         />
       </div>
 
@@ -149,6 +155,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       )}
 
       {error && <p className="mx-4 mb-4 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger sm:mx-5" role="alert">{error}</p>}
+      {notice && <p className="mx-4 mb-4 rounded-xl border border-line bg-panel p-3 text-sm text-subtle sm:mx-5" role="status">{notice}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
         <div className="flex items-center gap-1 text-xs text-muted">

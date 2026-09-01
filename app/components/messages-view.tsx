@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { FiArrowLeft, FiMessageCircle } from "react-icons/fi";
+import { FiArrowLeft, FiMessageCircle, FiUsers } from "react-icons/fi";
 import { initials } from "@/app/lib/format";
 import type {
   ConversationSummary,
+  ConversationMember,
   DirectMessage,
   StudentProfile,
 } from "@/app/types";
@@ -15,25 +16,28 @@ export default function MessagesView({
   conversations,
   selected,
   messages = [],
-  draft = "",
   hasMoreMessages = false,
   hasMoreConversations = false,
+  groupCandidates,
+  members = [],
 }: {
   profile: StudentProfile;
   conversations: ConversationSummary[];
   selected?: ConversationSummary;
   messages?: DirectMessage[];
-  draft?: string;
   hasMoreMessages?: boolean;
   hasMoreConversations?: boolean;
+  groupCandidates: StudentProfile[];
+  members?: ConversationMember[];
 }) {
   return (
-    <section className="app-page flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden  border-line">
+    <section className="app-page flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden">
       <ConversationList
         currentId={profile.id}
         initialHasMore={hasMoreConversations}
         initialConversations={conversations}
         selectedId={selected?.conversation_id}
+        groupCandidates={groupCandidates}
       />
 
       <div
@@ -49,9 +53,12 @@ export default function MessagesView({
               >
                 <FiArrowLeft />
               </Link>
-              <Link
+              {selected.is_group ? <div className="flex min-w-0 items-center gap-3">
+                <span className="avatar !h-10 !w-10 !rounded-full"><FiUsers /></span>
+                <span className="min-w-0"><strong className="block truncate text-sm">{selected.group_title}</strong><small className="block text-[10px] text-muted">{selected.member_count} members · encrypted</small></span>
+              </div> : <Link
                 className="flex min-w-0 items-center gap-3"
-                href={`/students/${selected.other_username}`}
+                href={`/students/${selected.other_username!}`}
               >
                 <span className="avatar !h-10 !w-10 !rounded-full">
                   {selected.other_avatar_url ? (
@@ -71,27 +78,28 @@ export default function MessagesView({
                     @{selected.other_username}
                   </small>
                 </span>
-              </Link>
-              <Link
+              </Link>}
+              {!selected.is_group && <Link
                 className="button button-ghost ml-auto !min-h-9 !px-3 !text-xs"
-                href={`/students/${selected.other_username}`}
+                href={`/students/${selected.other_username!}`}
               >
                 View profile
-              </Link>
+              </Link>}
             </header>
             <MessageThread
               conversationId={selected.conversation_id}
               currentId={profile.id}
-              initialDraft={draft}
               initialHasMore={hasMoreMessages}
               initialMessages={messages}
+              isGroup={selected.is_group}
+              members={members}
               key={selected.conversation_id}
             />
           </>
         ) : (
           <div className="grid h-full place-items-center px-8 text-center">
             <div>
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-line bg-card text-subtle">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-card text-subtle">
                 <FiMessageCircle size={25} />
               </div>
               <h1 className="mt-5 text-lg font-bold">Your messages</h1>

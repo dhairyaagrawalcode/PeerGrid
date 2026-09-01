@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   FiArrowRight,
   FiBell,
@@ -9,6 +10,8 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import styles from "./landing.module.css";
+import { isSupabaseConfigured } from "@/app/lib/supabase/config";
+import { createClient } from "@/app/lib/supabase/server";
 
 const campuses = ["Bangalore", "Pune", "Delhi NCR", "Hyderabad"];
 
@@ -196,7 +199,12 @@ function ProductPreview() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) redirect("/feed");
+  }
   return (
     <main className={styles.page}>
       <header className={styles.header}>

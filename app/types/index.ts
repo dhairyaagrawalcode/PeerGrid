@@ -27,6 +27,7 @@ export type StudentProfile = {
   campus_id: string;
   graduation_year: number | null;
   program: string | null;
+  current_status: string | null;
   bio: string | null;
   goals: string | null;
   github_url: string | null;
@@ -36,6 +37,48 @@ export type StudentProfile = {
   campus?: Campus | null;
   skills?: TaxonomyItem[];
   interests?: TaxonomyItem[];
+  can_help_with?: TaxonomyItem[];
+  needs_help_with?: TaxonomyItem[];
+};
+
+export type ProfileMatch = {
+  student: StudentProfile;
+  reason: string;
+};
+
+export type ModerationStatus = "pending" | "published" | "held" | "rejected";
+
+export type CollaborationProofParticipant = Pick<
+  StudentProfile,
+  "id" | "username" | "full_name" | "avatar_url"
+> & { role: string };
+
+export type CollaborationProof = {
+  id: string;
+  project_name: string;
+  skills_used: string[];
+  duration: string;
+  project_url: string | null;
+  outcome: string | null;
+  completion_date: string;
+  participants: CollaborationProofParticipant[];
+};
+
+export type CollaborationParticipantOption = Pick<
+  StudentProfile,
+  "id" | "username" | "full_name" | "avatar_url"
+> & { campus_name: string | null };
+
+export type PendingCollaborationConfirmation = {
+  passport_id: string;
+  role: string;
+  created_at: string;
+  passport: {
+    id: string;
+    project_name: string;
+    duration: string;
+    creator: Pick<StudentProfile, "id" | "username" | "full_name" | "avatar_url">;
+  };
 };
 
 export type FollowRecord = {
@@ -52,8 +95,8 @@ export type FollowSummary = {
 
 export type ConversationSummary = {
   conversation_id: string;
-  other_user_id: string;
-  other_username: string;
+  other_user_id: string | null;
+  other_username: string | null;
   other_full_name: string;
   other_avatar_url: string | null;
   other_program: string | null;
@@ -63,15 +106,70 @@ export type ConversationSummary = {
   last_message_sender_id: string | null;
   last_message_created_at: string | null;
   unread_count: number;
+  is_group: boolean;
+  group_title: string | null;
+  member_count: number;
+};
+
+export type ConversationMember = {
+  conversation_id: string;
+  profile_id: string;
+  role: "owner" | "member";
+  joined_at: string;
+  profile: Pick<StudentProfile, "id" | "username" | "full_name" | "avatar_url">;
 };
 
 export type DirectMessage = {
   id: string;
   conversation_id: string;
   sender_id: string;
-  body: string;
+  ciphertext: string;
+  nonce: string;
+  key_envelopes: Record<string, string>;
+  encryption_version: 1;
+  sender_device_id: string;
+  signature: string;
   created_at: string;
   read_at: string | null;
+};
+
+export type DecryptedDirectMessage = DirectMessage & {
+  plaintext: string | null;
+  decryption_error: "missing_key" | "invalid_signature" | "decrypt_failed" | null;
+  optimistic?: boolean;
+};
+
+export type CryptoDevicePublic = {
+  device_id: string;
+  profile_id: string;
+  box_public_key: string;
+  signing_public_key: string;
+  revoked_at: string | null;
+};
+
+export type PeerGridNotification = {
+  id: string;
+  type:
+    | "collaboration_confirmation_required"
+    | "collaboration_confirmation_confirmed"
+    | "collaboration_confirmation_declined"
+    | "new_follower"
+    | "post_from_following"
+    | "new_collaboration"
+    | "post_liked"
+    | "post_commented"
+    | "added_to_group";
+  collaboration_id: string | null;
+  passport_id: string | null;
+  post_id: string | null;
+  conversation_id: string | null;
+  created_at: string;
+  read_at: string | null;
+  actor: Pick<StudentProfile, "id" | "username" | "full_name" | "avatar_url"> | null;
+  collaboration: { id: string; title: string } | null;
+  passport: { id: string; project_name: string } | null;
+  post: { id: string; body: string } | null;
+  conversation: { id: string; title: string | null } | null;
 };
 
 export type PostComment = {
@@ -90,7 +188,15 @@ export type CollaborationPost = {
   title: string;
   description: string;
   tags: string[];
-  status: "open" | "closed";
+  collaboration_type: "project" | "hackathon" | "open_source" | "startup" | "study" | "other";
+  required_skills: string[];
+  team_current: number;
+  team_capacity: number | null;
+  commitment: string | null;
+  status: "open" | "full" | "closed" | "completed";
+  moderation_status: ModerationStatus;
+  moderation_reason: string | null;
+  recommendation_reason?: string | null;
   created_at: string;
   author: Pick<
     StudentProfile,
@@ -111,6 +217,9 @@ export type SocialPost = {
   like_count: number;
   comment_count: number;
   viewer_liked: boolean;
+  moderation_status: ModerationStatus;
+  moderation_reason: string | null;
+  recommendation_reason?: string | null;
   created_at: string;
   author: Pick<
     StudentProfile,

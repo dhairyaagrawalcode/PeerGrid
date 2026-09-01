@@ -15,7 +15,7 @@ export const getAuthContext = cache(async function getAuthContext() {
     supabase
       .from("profiles")
       .select(
-        "id, username, full_name, avatar_url, campus_id, graduation_year, program, bio, goals, github_url, linkedin_url, portfolio_url, is_verified, campus:campuses(id, slug, name, city)",
+        "id, username, full_name, avatar_url, campus_id, graduation_year, program, current_status, bio, goals, github_url, linkedin_url, portfolio_url, is_verified, campus:campuses(id, slug, name, city)",
       )
       .eq("id", user.id)
       .maybeSingle(),

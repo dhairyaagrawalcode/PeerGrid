@@ -11,7 +11,7 @@ export default function PageNavigation({
 }) {
   if (page === 0 && !hasMore) return null;
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between border-b border-line py-5">
+    <nav aria-label="Pagination" className="flex items-center justify-between py-5">
       {page > 0 ? (
         <Link className="button button-secondary !min-h-9 !text-xs" href={`${path}?page=${page - 1}`}>
           Newer

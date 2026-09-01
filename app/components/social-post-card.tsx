@@ -9,7 +9,7 @@ import PostEngagement from "./post-engagement";
 export default function SocialPostCard({ post, flat = false }: { post: SocialPost; flat?: boolean }) {
   const profileHref = `/students/${post.author.username}`;
   return (
-    <article className={flat ? "overflow-hidden py-2" : "surface overflow-hidden"}>
+    <article className={flat ? "scroll-mt-24 overflow-hidden py-2" : "surface scroll-mt-24 overflow-hidden"} id={`post-${post.id}`}>
       <div className="p-4 sm:p-5">
         <Link className="flex min-w-0 items-center gap-3" href={profileHref}>
           <span className="avatar !rounded-full">{post.author.avatar_url ? <AvatarImage alt={post.author.full_name} src={post.author.avatar_url} /> : initials(post.author.full_name)}</span>
@@ -20,6 +20,7 @@ export default function SocialPostCard({ post, flat = false }: { post: SocialPos
             </span>
           </span>
         </Link>
+        {post.recommendation_reason && <p className="mt-3 text-[11px] text-muted">{post.recommendation_reason}</p>}
         {post.body && <PostBody className="mt-4 text-sm leading-6 text-subtle" text={post.body} />}
       </div>
 
@@ -42,7 +43,7 @@ export default function SocialPostCard({ post, flat = false }: { post: SocialPos
         </a>
       )}
 
-      <PostEngagement initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
+      <PostEngagement authorId={post.author_id} initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
     </article>
   );
 }

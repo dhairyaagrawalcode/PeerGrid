@@ -25,14 +25,3 @@ export async function startConversation(formData: FormData) {
 
   redirect(`/messages/${conversationId}`);
 }
-
-export async function connectForCollaboration(formData: FormData) {
-  const otherUserId = String(formData.get("otherUserId") ?? "");
-  const title = String(formData.get("title") ?? "").trim().slice(0, 100);
-  if (!title) return;
-  const conversationId = await getOrCreateConversation(otherUserId);
-  if (!conversationId) return;
-
-  const draft = `Hey, I'm interested in "${title}" and would like to work on this with you.`;
-  redirect(`/messages/${conversationId}?draft=${encodeURIComponent(draft)}`);
-}

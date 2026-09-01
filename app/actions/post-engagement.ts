@@ -86,3 +86,23 @@ export async function addPostComment(postId: string, rawBody: string) {
     count: countError ? null : count ?? 0,
   };
 }
+
+export async function reportPost(postId: string, reason: string, rawDetails: string) {
+  const { supabase, user } = await requireStudent();
+  const details = rawDetails.trim();
+  if (!uuidPattern.test(postId) || !["spam", "abuse", "inappropriate", "misleading", "other"].includes(reason)) {
+    return { error: "Invalid report." };
+  }
+  if (details.length > 500) return { error: "Report details can contain up to 500 characters." };
+  const { error } = await supabase.from("post_reports").insert({
+    post_id: postId,
+    reporter_id: user.id,
+    reason,
+    details: details || null,
+  });
+  if (error) {
+    if (error.code === "23505") return { error: "You already reported this post." };
+    return { error: "This report could not be submitted." };
+  }
+  return { success: true };
+}

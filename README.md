@@ -78,7 +78,8 @@ The public client uses only the Supabase publishable key. Never add a service-ro
 - Skills and interests use normalized many-to-many tables.
 - Follows are immediate, directional, cannot target the same user, and use a composite primary key to prevent duplicates. Existing accepted connections are migrated to mutual follows.
 - Social posts are chronological and support one private image, video, or document attachment up to 25 MB. Feed links use short-lived signed URLs; indexed likes and comments provide accurate engagement counts.
-- Direct messages use one unique conversation per student pair, indexed message history, participant-only RLS, read state, and Supabase Realtime delivery.
+- Direct and group messages use client-side XChaCha20-Poly1305 encryption, per-device sealed key envelopes for every conversation member, Ed25519 signatures, member-only RLS, per-user read state, and Supabase Realtime delivery. See [`docs/e2ee-direct-messages.md`](docs/e2ee-direct-messages.md).
+- The notification center covers new followers, followed-user posts and collaborations, likes, comments, group invitations, and collaboration-passport confirmations.
 - Collaboration posts are chronological, campus-scoped or NST-wide, and owned by their authors.
 - RLS limits networking data to email-confirmed, manually approved profiles; likes, comments, follows, posts, and uploads are restricted to the authenticated owner where appropriate.
 - Avatar and post uploads are limited to authenticated users' own folders and explicit file types. Avatars allow 3 MB; post attachments allow 25 MB.
@@ -102,6 +103,9 @@ Use a disposable local or staging Supabase project. For a remote staging project
 - Set a stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` across all production instances.
 - Keep the service-role key out of the Next.js client and normal web runtime.
 - Apply all migrations before deploying the matching application build.
+- Migration `20260901000000_e2ee_collaboration_activity_notifications.sql` permanently removes legacy plaintext DM rows (conversation shells remain), then enables ciphertext-only DMs. Back up only if you intentionally need an offline compliance archive before applying it.
+- Apply `20260901010000_groups_and_social_notifications.sql` immediately afterward to enable group membership, per-member unread state, general social notifications, and the notification dropdown.
+- Enable Realtime for `messages`, `collaboration_activity_events`, and `notifications`; the migration adds them to `supabase_realtime` when they are not already present.
 - Configure Supabase Auth redirect URLs for the production origin and `/auth/callback`.
 - The app bounds feed, profile, collaboration, discovery, conversation, comment, follower, and message reads; messages load the latest page first and fetch older history on demand.
 

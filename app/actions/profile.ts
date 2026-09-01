@@ -11,7 +11,7 @@ async function syncTags(
   supabase: Awaited<ReturnType<typeof import("@/app/lib/supabase/server").createClient>>,
   userId: string,
   table: "skills" | "interests",
-  junction: "profile_skills" | "profile_interests",
+  junction: "profile_skills" | "profile_interests" | "profile_can_help" | "profile_needs_help",
   foreignKey: "skill_id" | "interest_id",
   raw: string,
 ) {
@@ -49,6 +49,8 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
   }
   const program = String(formData.get("program") ?? "").trim();
   if (program.length > 100) return { error: "Program can contain up to 100 characters." };
+  const currentStatus = String(formData.get("currentStatus") ?? "").trim();
+  if (currentStatus.length > 120) return { error: "Current status can contain up to 120 characters." };
 
   const { data: verified, error: verifyError } = await supabase.rpc("refresh_profile_verification");
   if (verifyError || !verified) return { error: "Verify an approved NST college email before completing your profile." };
@@ -77,6 +79,7 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
     campus_id: campusId,
     graduation_year: graduationYear,
     program: program || null,
+    current_status: currentStatus || null,
     bio: String(formData.get("bio") ?? "").trim() || null,
     goals: String(formData.get("goals") ?? "").trim() || null,
     github_url: safeExternalUrl(formData.get("githubUrl")),
@@ -109,6 +112,8 @@ export async function saveProfile(_: ProfileFormState, formData: FormData): Prom
   try {
     await syncTags(supabase, user.id, "skills", "profile_skills", "skill_id", String(formData.get("skills") ?? ""));
     await syncTags(supabase, user.id, "interests", "profile_interests", "interest_id", String(formData.get("interests") ?? ""));
+    await syncTags(supabase, user.id, "skills", "profile_can_help", "skill_id", String(formData.get("canHelpWith") ?? ""));
+    await syncTags(supabase, user.id, "skills", "profile_needs_help", "skill_id", String(formData.get("needsHelpWith") ?? ""));
   } catch (tagError) {
     console.error("[PeerGrid] profile taxonomy sync failed", {
       name: tagError instanceof Error ? tagError.name : "UnknownError",

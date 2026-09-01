@@ -11,6 +11,8 @@ export default function ProfileForm({ campuses, profile, returnTo }: { campuses:
   const [state, action, pending] = useActionState(saveProfile, initialState);
   const skills = profile?.skills?.map((item) => item.name).join(", ") ?? "";
   const interests = profile?.interests?.map((item) => item.name).join(", ") ?? "";
+  const canHelpWith = profile?.can_help_with?.map((item) => item.name).join(", ") ?? "";
+  const needsHelpWith = profile?.needs_help_with?.map((item) => item.name).join(", ") ?? "";
   return (
     <form action={action} className="space-y-7">
       <input type="hidden" name="returnTo" value={returnTo} />
@@ -20,11 +22,14 @@ export default function ProfileForm({ campuses, profile, returnTo }: { campuses:
         <div><label className="label" htmlFor="campusId">Campus *</label><select className="field" id="campusId" name="campusId" defaultValue={profile?.campus_id ?? ""} required><option value="" disabled>Select campus</option>{campuses.map((campus) => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></div>
         <div><label className="label" htmlFor="graduationYear">Graduation year</label><input className="field" id="graduationYear" name="graduationYear" type="number" min={2024} max={2040} defaultValue={profile?.graduation_year ?? ""} /></div>
         <div className="sm:col-span-2"><label className="label" htmlFor="program">Program / branch</label><input className="field" id="program" name="program" maxLength={100} defaultValue={profile?.program ?? ""} placeholder="B.Tech Computer Science" /></div>
+        <div className="sm:col-span-2"><label className="label" htmlFor="currentStatus">Current status</label><input className="field" id="currentStatus" name="currentStatus" maxLength={120} defaultValue={profile?.current_status ?? ""} placeholder="Building a campus marketplace · Open to collaborators" /><p className="mt-1.5 text-xs text-muted">A short, current signal—not a permanent bio.</p></div>
         <div className="sm:col-span-2"><label className="label" htmlFor="avatar">Profile photo</label><input className="field file:mr-4 file:rounded-lg file:border-0 file:bg-primary/15 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-primary" id="avatar" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" /><p className="mt-1.5 text-xs text-muted">JPG, PNG or WebP. Maximum 3 MB.</p></div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div><label className="label" htmlFor="skills">Skills</label><input className="field" id="skills" name="skills" defaultValue={skills} placeholder="React, Python, UI design" /><p className="mt-1.5 text-xs text-muted">Separate with commas.</p></div>
         <div><label className="label" htmlFor="interests">Interests</label><input className="field" id="interests" name="interests" defaultValue={interests} placeholder="GSoC, startups, robotics" /><p className="mt-1.5 text-xs text-muted">Separate with commas.</p></div>
+        <div><label className="label" htmlFor="canHelpWith">I can help with</label><input className="field" id="canHelpWith" name="canHelpWith" defaultValue={canHelpWith} placeholder="React, pitching, UI design" /><p className="mt-1.5 text-xs text-muted">Concrete skills you can offer.</p></div>
+        <div><label className="label" htmlFor="needsHelpWith">I need help with</label><input className="field" id="needsHelpWith" name="needsHelpWith" defaultValue={needsHelpWith} placeholder="Backend, user research" /><p className="mt-1.5 text-xs text-muted">Skills you want to find in others.</p></div>
         <div className="sm:col-span-2"><label className="label" htmlFor="bio">Short bio</label><textarea className="field" id="bio" name="bio" maxLength={500} defaultValue={profile?.bio ?? ""} placeholder="What are you curious about?" /></div>
         <div className="sm:col-span-2"><label className="label" htmlFor="goals">What are you looking for?</label><textarea className="field" id="goals" name="goals" maxLength={500} defaultValue={profile?.goals ?? ""} placeholder="Hackathon teammates, open-source contributors, a design collaborator…" /></div>
       </div>
