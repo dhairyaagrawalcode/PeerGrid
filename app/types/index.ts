@@ -108,6 +108,7 @@ export type ConversationSummary = {
   unread_count: number;
   is_group: boolean;
   group_title: string | null;
+  group_avatar_path: string | null;
   member_count: number;
 };
 

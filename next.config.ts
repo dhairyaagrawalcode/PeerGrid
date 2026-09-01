@@ -1,22 +1,25 @@
 import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseRemotePattern = supabaseUrl
+const supabaseRemotePatterns = supabaseUrl
   ? (() => {
       const parsed = new URL(supabaseUrl);
-      return {
+      const base = {
         protocol: parsed.protocol.replace(":", "") as "http" | "https",
         hostname: parsed.hostname,
         port: parsed.port,
-        pathname: "/storage/v1/object/public/avatars/**",
       };
+      return [
+        { ...base, pathname: "/storage/v1/object/public/avatars/**" },
+        { ...base, pathname: "/storage/v1/object/public/group-avatars/**" },
+      ];
     })()
-  : null;
+  : [];
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
-    remotePatterns: supabaseRemotePattern ? [supabaseRemotePattern] : [],
+    remotePatterns: supabaseRemotePatterns,
   },
   experimental: {
     serverActions: {

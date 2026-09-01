@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FiArrowLeft, FiMessageCircle, FiUsers } from "react-icons/fi";
+import { FiArrowLeft, FiMessageCircle } from "react-icons/fi";
 import { initials } from "@/app/lib/format";
 import type {
   ConversationSummary,
@@ -9,6 +9,7 @@ import type {
 } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import ConversationList from "./conversation-list";
+import GroupDetailsButton from "./group-details-button";
 import MessageThread from "./message-thread";
 
 export default function MessagesView({
@@ -53,10 +54,13 @@ export default function MessagesView({
               >
                 <FiArrowLeft />
               </Link>
-              {selected.is_group ? <div className="flex min-w-0 items-center gap-3">
-                <span className="avatar !h-10 !w-10 !rounded-full"><FiUsers /></span>
-                <span className="min-w-0"><strong className="block truncate text-sm">{selected.group_title}</strong><small className="block text-[10px] text-muted">{selected.member_count} members · encrypted</small></span>
-              </div> : <Link
+              {selected.is_group ? <GroupDetailsButton
+                avatarPath={selected.group_avatar_path}
+                conversationId={selected.conversation_id}
+                currentId={profile.id}
+                members={members}
+                title={selected.group_title ?? "Group conversation"}
+              /> : <Link
                 className="flex min-w-0 items-center gap-3"
                 href={`/students/${selected.other_username!}`}
               >

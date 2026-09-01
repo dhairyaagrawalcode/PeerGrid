@@ -5,6 +5,7 @@ import { FiLoader, FiUsers } from "react-icons/fi";
 import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
+import { groupAvatarUrl } from "@/app/lib/group-avatar";
 import type { ConversationSummary, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import CreateGroupButton from "./create-group-button";
@@ -87,7 +88,7 @@ export default function ConversationList({
           <p className="text-base font-bold">Messages</p>
           <p className="mt-0.5 text-[11px] text-muted">Direct and group conversations</p>
         </div>
-        <div className="ml-auto"><CreateGroupButton students={groupCandidates} /></div>
+        <div className="ml-auto"><CreateGroupButton currentId={currentId} students={groupCandidates} /></div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
@@ -96,6 +97,7 @@ export default function ConversationList({
           {conversations.map((conversation) => {
             const active = conversation.conversation_id === selectedId;
             const unread = active ? 0 : conversation.unread_count;
+            const groupAvatar = groupAvatarUrl(conversation.group_avatar_path);
             return (
               <Link
                 className={`flex gap-3 rounded-xl p-3 transition ${active ? "bg-primary/10" : "hover:bg-card"}`}
@@ -103,7 +105,7 @@ export default function ConversationList({
                 key={conversation.conversation_id}
               >
                 <span className="avatar !h-11 !w-11 !rounded-full">
-                  {conversation.is_group ? <FiUsers size={18} /> : conversation.other_avatar_url ? (
+                  {conversation.is_group ? (groupAvatar ? <AvatarImage alt={conversation.other_full_name} src={groupAvatar} /> : <FiUsers size={18} />) : conversation.other_avatar_url ? (
                     <AvatarImage
                       alt={conversation.other_full_name}
                       src={conversation.other_avatar_url}

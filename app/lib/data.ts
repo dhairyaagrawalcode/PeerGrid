@@ -348,7 +348,7 @@ export async function getConversationSummary(
 ) {
   const { data: conversation, error } = await supabase
     .from("conversations")
-    .select("id, participant_low, participant_high, kind, title, created_at, last_message_at")
+    .select("id, participant_low, participant_high, kind, title, avatar_path, created_at, last_message_at")
     .eq("id", conversationId)
     .maybeSingle();
   if (error) throw error;
@@ -374,6 +374,7 @@ export async function getConversationSummary(
       unread_count: 0,
       is_group: true,
       group_title: conversation.title,
+      group_avatar_path: conversation.avatar_path,
       member_count: Number(count ?? 0),
     } as ConversationSummary;
   }
@@ -402,6 +403,7 @@ export async function getConversationSummary(
     unread_count: 0,
     is_group: false,
     group_title: null,
+    group_avatar_path: null,
     member_count: 2,
   } as ConversationSummary;
 }
