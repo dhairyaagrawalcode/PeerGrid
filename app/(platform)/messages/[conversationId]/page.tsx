@@ -28,7 +28,7 @@ export default async function ConversationPage({
   const [messagePage, members, students] = await Promise.all([
     getDirectMessages(supabase, conversationId),
     getConversationMembers(supabase, conversationId),
-    getStudents(supabase, profile.id, { limit: 50 }),
+    getStudents(supabase, profile.id, { limit: 100 }),
   ]);
   return (
     <MessagesView

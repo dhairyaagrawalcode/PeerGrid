@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FiFileText, FiImage, FiPlus, FiUsers, FiVideo } from "react-icons/fi";
+import { FiArrowUpRight, FiCalendar, FiFileText, FiImage, FiMapPin, FiPlus, FiUsers, FiVideo } from "react-icons/fi";
 import AvatarImage from "@/app/components/avatar-image";
 import EmptyState from "@/app/components/empty-state";
 import SocialPostCard from "@/app/components/social-post-card";
@@ -9,8 +9,10 @@ import { requireStudent } from "@/app/lib/auth";
 import {
   getFollowSummary,
   getCollaborations,
+  getMutualFollowContexts,
   getProfileMatches,
   getSocialPosts,
+  getStudent,
   POST_PAGE_SIZE,
 } from "@/app/lib/data";
 import { initials } from "@/app/lib/format";
@@ -19,13 +21,16 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const rawPage = Number((await searchParams).page ?? 0);
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
   const { supabase, user, profile } = await requireStudent();
-  const [posts, suggestions, followSummary, rankedCollaborations] =
+  const [posts, suggestions, followSummary, rankedCollaborations, completeProfile] =
     await Promise.all([
       getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, ranked: true }),
       getProfileMatches(supabase, 4),
       getFollowSummary(supabase, user.id),
       getCollaborations(supabase, { status: "open", limit: 6, ranked: true }),
+      getStudent(supabase, { id: user.id }),
     ]);
+  const mutualContexts = await getMutualFollowContexts(supabase, suggestions.map(({ student }) => student.id));
+  const feedProfile = completeProfile ?? profile;
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
   const collaborationSuggestions = rankedCollaborations
@@ -35,46 +40,30 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   return (
     <div className="app-page grid gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
       <aside className="hidden xl:block">
-        <section className="surface sticky top-0 p-5 text-center !rounded-2xl">
-          <Link className="avatar mx-auto !h-20 !w-20 !rounded-full text-lg transition hover:ring-2 hover:ring-primary/25" href="/profile">
-            {profile.avatar_url ? (
-              <AvatarImage alt={profile.full_name} src={profile.avatar_url} />
-            ) : (
-              initials(profile.full_name)
-            )}
-          </Link>
-          <div className="mt-4">
-            <h2 className="truncate text-base font-bold">
-              {profile.full_name}
-            </h2>
-            <p className="mt-1 truncate text-[11px] text-muted">
-              {profile.program || `@${profile.username}`} ·{" "}
-              {profile.campus?.name}
-            </p>
-            <div className="mt-5 grid grid-cols-2 border-t border-line pt-3">
-              <div>
-                <strong className="block text-sm">
-                  {followSummary.follower_count}
-                </strong>
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted">
-                  Followers
-                </span>
-              </div>
-              <div className="border-l border-line pl-5">
-                <strong className="block text-sm">
-                  {followSummary.following_count}
-                </strong>
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted">
-                  Following
-                </span>
-              </div>
-            </div>
-            <Link
-              className="button button-secondary mt-4 w-full !min-h-10 !text-xs !text-primary"
-              href="/profile"
-            >
-              View profile
+        <section className="surface sticky top-0 !rounded-2xl p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link className="avatar !h-16 !w-16 !shrink-0 !rounded-full text-base transition hover:ring-2 hover:ring-primary/25" href="/profile">
+              {feedProfile.avatar_url ? <AvatarImage alt={feedProfile.full_name} src={feedProfile.avatar_url} /> : initials(feedProfile.full_name)}
             </Link>
+            <div className="min-w-0">
+              <Link className="block truncate text-sm font-bold hover:text-primary" href="/profile">{feedProfile.full_name}</Link>
+              <p className="mt-0.5 truncate text-[11px] text-muted">@{feedProfile.username}</p>
+              <Link className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-subtle hover:text-font" href="/profile">View profile <FiArrowUpRight /></Link>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2 text-[11px] text-muted">
+            {feedProfile.campus?.name && <p className="flex items-center gap-2"><FiMapPin className="shrink-0 text-subtle" /><span className="truncate">{feedProfile.campus.name}</span></p>}
+            {feedProfile.graduation_year && <p className="flex items-center gap-2"><FiCalendar className="shrink-0 text-subtle" /><span>Class of {feedProfile.graduation_year}</span></p>}
+          </div>
+
+          {feedProfile.current_status && <div className="mt-4"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted">Current status</p><p className="mt-1.5 line-clamp-2 text-xs leading-5 text-subtle">{feedProfile.current_status}</p></div>}
+
+          {[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])].length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])].slice(0, 3).map((item, index) => <span className="chip !px-2 !py-1 !text-[9px]" key={`${index}-${item.id}-${item.name}`}>{item.name}</span>)}</div>}
+
+          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-line pt-3">
+            <Link className="rounded-lg px-2 py-1.5 transition hover:bg-card" href="/connections?view=followers#followers"><strong className="block text-sm text-font">{followSummary.follower_count}</strong><span className="text-[9px] font-semibold uppercase tracking-wider text-muted">Followers</span></Link>
+            <Link className="rounded-lg px-2 py-1.5 transition hover:bg-card" href="/connections?view=following#following"><strong className="block text-sm text-font">{followSummary.following_count}</strong><span className="text-[9px] font-semibold uppercase tracking-wider text-muted">Following</span></Link>
           </div>
         </section>
       </aside>
@@ -165,6 +154,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   currentId={user.id}
                   isFollowing={false}
                   key={student.id}
+                  mutualContext={mutualContexts.get(student.id)}
                   reason={reason}
                   student={student}
                 />

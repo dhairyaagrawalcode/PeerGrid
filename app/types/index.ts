@@ -93,6 +93,12 @@ export type FollowSummary = {
   viewer_follows: boolean;
 };
 
+export type MutualFollowContext = {
+  profile_id: string;
+  mutual_count: number;
+  mutual_names: string[];
+};
+
 export type ConversationSummary = {
   conversation_id: string;
   other_user_id: string | null;

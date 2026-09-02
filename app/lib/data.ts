@@ -7,6 +7,7 @@ import type {
   DirectMessage,
   FollowRecord,
   FollowSummary,
+  MutualFollowContext,
   ProfileMatch,
   PendingCollaborationConfirmation,
   PeerGridNotification,
@@ -320,6 +321,21 @@ export async function getFollowSummary(supabase: SupabaseClient, userId: string)
   } as FollowSummary;
 }
 
+export async function getMutualFollowContexts(supabase: SupabaseClient, profileIds: string[]): Promise<Map<string, MutualFollowContext>> {
+  const boundedIds = [...new Set(profileIds)].slice(0, 100);
+  if (!boundedIds.length) return new Map<string, MutualFollowContext>();
+  const { data, error } = await supabase.rpc("get_mutual_follow_contexts", { candidate_profile_ids: boundedIds });
+  if (error) {
+    if (!["42883", "PGRST202"].includes(error.code)) console.error("[PeerGrid] mutual follows unavailable", { code: error.code });
+    return new Map<string, MutualFollowContext>();
+  }
+  return new Map<string, MutualFollowContext>((data ?? []).map((row: { profile_id: string; mutual_count: number | string; mutual_names: string[] | null }) => [row.profile_id, {
+    profile_id: row.profile_id,
+    mutual_count: Number(row.mutual_count ?? 0),
+    mutual_names: row.mutual_names ?? [],
+  } satisfies MutualFollowContext] as const));
+}
+
 export async function getConversationSummaries(supabase: SupabaseClient) {
   const { data, error } = await supabase.rpc("get_conversation_summaries", {
     result_limit: CONVERSATION_PAGE_SIZE + 1,
@@ -475,6 +491,7 @@ export async function getNotifications(supabase: SupabaseClient, limit = 50) {
   const { data, error } = await supabase
     .from("notifications")
     .select("id, type, collaboration_id, passport_id, post_id, conversation_id, created_at, read_at, actor:profiles!notifications_actor_id_fkey(id, username, full_name, avatar_url), collaboration:collaboration_posts!notifications_collaboration_id_fkey(id, title), passport:collaboration_passports!notifications_passport_id_fkey(id, project_name), post:social_posts!notifications_post_id_fkey(id, body), conversation:conversations!notifications_conversation_id_fkey(id, title)")
+    .is("cleared_at", null)
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(limit, 1), 100));
   if (error) {

@@ -1,0 +1,13 @@
+export type AccountStatus = "active" | "suspended" | "disabled" | "removed";
+export type PlatformAccess = { is_admin: boolean; account_status: AccountStatus; maintenance_enabled: boolean; maintenance_message: string };
+export type ActivityPoint = { label: string; count: number };
+export type AdminOverview = { total_users: number; signups_today: number; signups_week: number; signups_month: number; daily_active: number; weekly_active: number; monthly_active: number; recently_active: number; posts: number; collaborations: number; active_collaborations: number; messages: number; reports: number; issues: number; new_issues: number; signups: ActivityPoint[]; active_days: ActivityPoint[]; active_hours: ActivityPoint[] };
+export type AdminUser = { id: string; email: string; full_name: string | null; username: string | null; avatar_url: string | null; campus: string | null; graduation_year: number | null; created_at: string; last_active_at: string | null; account_status: AccountStatus; approval_status: string | null; posts: number; collaborations: number; followers: number; following: number; is_admin: boolean };
+export type AdminOverviewSnapshot = AdminOverview & { profile_count: number; accounts_without_profile: number; refreshed_at: string };
+export type AdminDirectoryUser = AdminUser & { has_profile: boolean; profile_created_at: string | null; is_verified: boolean | null };
+export type AdminUserDirectory = { items: AdminDirectoryUser[]; total_accounts: number; profile_count: number; accounts_without_profile: number; matching_count: number; refreshed_at: string };
+export type IssueCategory = "bug" | "not_working" | "account" | "content" | "suggestion" | "other";
+export type IssueStatus = "new" | "investigating" | "resolved" | "closed";
+export type AdminIssue = { id: string; reporter_id: string; reporter_email: string; full_name: string | null; username: string | null; title: string; description: string; category: IssueCategory; status: IssueStatus; source_path: string; created_at: string };
+export type AuditEvent = { id: number; admin_id: string; admin_email: string; action: string; resource_id: string | null; reason: string | null; created_at: string };
+export type ModerationReport = { id: string; post_id: string; reason: string; details: string | null; created_at: string; reporter: string | null; body: string; moderation_status: string };

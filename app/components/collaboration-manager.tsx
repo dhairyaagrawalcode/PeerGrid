@@ -13,6 +13,8 @@ import {
 import { initials } from "@/app/lib/format";
 import type { Campus, CollaborationParticipantOption, CollaborationPost } from "@/app/types";
 import AvatarImage from "./avatar-image";
+import ConfirmedSubmitButton from "./confirmed-submit-button";
+import FormSubmitButton from "./form-submit-button";
 
 type SelectedParticipant = CollaborationParticipantOption & { role: string };
 
@@ -68,7 +70,7 @@ export default function CollaborationManager({ post, campuses }: { post: Collabo
                 <div><label className="label" htmlFor={`manage-campus-${post.id}`}>Campus reach</label><select className="field" defaultValue={post.campus_id ?? ""} id={`manage-campus-${post.id}`} name="campusId"><option value="">All NST campuses</option>{campuses.map((campus) => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></div>
                 <div><label className="label" htmlFor={`manage-skills-${post.id}`}>Required skills</label><input className="field" defaultValue={post.required_skills.join(", ")} id={`manage-skills-${post.id}`} name="requiredSkills" /></div>
                 <div><label className="label" htmlFor={`manage-commitment-${post.id}`}>Commitment / duration</label><input className="field" defaultValue={post.commitment ?? ""} id={`manage-commitment-${post.id}`} maxLength={80} name="commitment" /></div>
-                <button className="button button-secondary justify-self-start sm:col-span-2" type="submit">Save details</button>
+                <FormSubmitButton className="button button-secondary justify-self-start sm:col-span-2" pendingLabel="Saving…">Save details</FormSubmitButton>
               </form>
             </section>
 
@@ -79,7 +81,7 @@ export default function CollaborationManager({ post, campuses }: { post: Collabo
                 <input name="id" type="hidden" value={post.id} />
                 <label className="text-xs text-muted">Current members<input className="field mt-1 !w-28" defaultValue={post.team_current} max={50} min={1} name="teamCurrent" type="number" /></label>
                 <label className="text-xs text-muted">Total capacity<input className="field mt-1 !w-28" defaultValue={post.team_capacity ?? ""} max={50} min={1} name="teamCapacity" type="number" /></label>
-                <button className="button button-secondary" type="submit">Update team</button>
+                <FormSubmitButton className="button button-secondary" pendingLabel="Updating…">Update team</FormSubmitButton>
               </form>
             </section>
 
@@ -88,7 +90,7 @@ export default function CollaborationManager({ post, campuses }: { post: Collabo
               <p className="mt-1 text-xs text-muted">Open accepts new interest. Full and Closed hide the joining action.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {(["open", "full", "closed"] as const).map((status) => (
-                  <form action={setCollaborationStatus} key={status}><input name="id" type="hidden" value={post.id} /><input name="status" type="hidden" value={status} /><button className={`button !min-h-9 !px-3 !text-xs ${post.status === status ? "button-primary" : "button-secondary"}`} type="submit">{post.status === status ? `${status[0].toUpperCase()}${status.slice(1)} · current` : status === "open" ? "Open for joining" : status === "full" ? "Mark team full" : "Close collaboration"}</button></form>
+                  <form action={setCollaborationStatus} key={status}><input name="id" type="hidden" value={post.id} /><input name="status" type="hidden" value={status} /><FormSubmitButton className={`button !min-h-9 !px-3 !text-xs ${post.status === status ? "button-primary" : "button-secondary"}`} pendingLabel="Updating…">{post.status === status ? `${status[0].toUpperCase()}${status.slice(1)} · current` : status === "open" ? "Open for joining" : status === "full" ? "Mark team full" : "Close collaboration"}</FormSubmitButton></form>
                 ))}
               </div>
             </section>
@@ -103,7 +105,7 @@ export default function CollaborationManager({ post, campuses }: { post: Collabo
 
             <section className="flex items-center justify-between gap-4 border-t border-line pt-7">
               <div><h3 className="text-sm font-bold">Delete collaboration</h3><p className="mt-1 text-xs text-muted">This cannot be undone.</p></div>
-              <form action={deleteCollaboration} onSubmit={(event) => { if (!window.confirm("Delete this collaboration?")) event.preventDefault(); }}><input name="id" type="hidden" value={post.id} /><button aria-label="Delete collaboration" className="button button-danger !min-h-10 !px-3" title="Delete collaboration" type="submit"><FiTrash2 /></button></form>
+              <form action={deleteCollaboration}><input name="id" type="hidden" value={post.id} /><ConfirmedSubmitButton ariaLabel="Delete collaboration" className="button button-danger !min-h-10 !px-3" confirmLabel="Delete" description="This collaboration post will be permanently removed. This action cannot be undone." title={`Delete ${post.title}?`}><FiTrash2 /></ConfirmedSubmitButton></form>
             </section>
           </div>
         )}
@@ -155,7 +157,7 @@ export default function CollaborationManager({ post, campuses }: { post: Collabo
           </div>
           <div className="flex justify-end gap-2 border-t border-line pt-4 sm:col-span-2">
             <button className="button button-secondary" onClick={() => completionRef.current?.close()} type="button">Cancel</button>
-            <button className="button button-primary" disabled={!participants.length || participants.some((participant) => participant.role.trim().length < 2)} type="submit">Submit for confirmation</button>
+            <FormSubmitButton className="button button-primary disabled:opacity-40" disabled={!participants.length || participants.some((participant) => participant.role.trim().length < 2)} pendingLabel="Submitting…">Submit for confirmation</FormSubmitButton>
           </div>
         </form>
       </dialog>

@@ -56,6 +56,7 @@ export default function MessagesView({
               </Link>
               {selected.is_group ? <GroupDetailsButton
                 avatarPath={selected.group_avatar_path}
+                candidates={groupCandidates}
                 conversationId={selected.conversation_id}
                 currentId={profile.id}
                 members={members}

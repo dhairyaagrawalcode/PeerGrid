@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/app/lib/supabase/server";
 import type { StudentApproval, StudentProfile } from "@/app/types";
+import { accessDestination } from "@/app/lib/platform-access";
 
 export const getAuthContext = cache(async function getAuthContext() {
   const supabase = await createClient();
@@ -10,6 +11,10 @@ export const getAuthContext = cache(async function getAuthContext() {
   } = await supabase.auth.getUser();
 
   if (!user) return { supabase, user: null, profile: null, approval: null };
+
+  const { data: access, error: accessError } = await supabase.rpc("get_platform_access");
+  const destination = accessDestination(accessError ? null : access, true);
+  if (destination) redirect(destination);
 
   const [{ data }, { data: approval }] = await Promise.all([
     supabase

@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { adminQuery } from "@/app/lib/admin";
+import type { AdminOverviewSnapshot } from "@/app/types/admin";
+import AdminChart from "@/app/components/admin-chart";
+export default async function AdminPage() {
+  const overview = await adminQuery<AdminOverviewSnapshot>("admin_overview_snapshot");
+  const metrics: [string, number][] = [["Auth accounts",overview.total_users],["Profiles · public.profiles",overview.profile_count],["Accounts without a profile",overview.accounts_without_profile],["Joined today",overview.signups_today],["Joined this week",overview.signups_week],["Joined this month",overview.signups_month],["Active · last 24h",overview.daily_active],["Active · last 7 days",overview.weekly_active],["Active · last 30 days",overview.monthly_active],["Recently active · 15m",overview.recently_active],["Posts · all stored rows",overview.posts],["Collaborations · all stored rows",overview.collaborations],["Published open / full collaborations",overview.active_collaborations],["Messages · count only",overview.messages],["Content reports",overview.reports],["Issue reports",overview.issues]];
+  return <><h1 className="text-2xl font-bold">Overview</h1><p className="mt-2 text-sm text-muted">Platform health and usage. Activity is estimated from visible, recently used sessions.</p><div className="my-7 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">{metrics.map(([label,value]) => <div key={label}><p className="text-xs text-muted">{label}</p><strong className="mt-1 block text-2xl">{Number(value).toLocaleString("en-IN")}</strong></div>)}</div><Link className="text-sm text-primary" href="/admin/issues?status=new">{overview.new_issues} new issues to review →</Link><div className="mt-10 grid gap-8 md:grid-cols-2"><AdminChart title="Signups over time" points={overview.signups} /><AdminChart title="Daily active users" points={overview.active_days} /></div></>;
+}
