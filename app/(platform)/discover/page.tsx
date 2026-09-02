@@ -1,7 +1,7 @@
 import DiscoverSearch from "@/app/components/discover-search";
 import SuggestedStudent from "@/app/components/suggested-student";
 import { requireStudent } from "@/app/lib/auth";
-import { getProfileMatches, searchStudents } from "@/app/lib/data";
+import { getMutualFollowContexts, getProfileMatches, searchStudents } from "@/app/lib/data";
 
 export default async function DiscoverPage() {
   const { supabase, user } = await requireStudent();
@@ -9,6 +9,7 @@ export default async function DiscoverPage() {
     searchStudents(supabase, ""),
     getProfileMatches(supabase, 4),
   ]);
+  const mutualContexts = await getMutualFollowContexts(supabase, [...initial.students.map((student) => student.id), ...matches.map(({ student }) => student.id)]);
 
   return (
     <div className="app-page">
@@ -25,7 +26,7 @@ export default async function DiscoverPage() {
           </div>
           <div className="mt-2 grid gap-x-8 sm:grid-cols-2">
             {matches.map(({ student, reason }) => (
-              <SuggestedStudent currentId={user.id} isFollowing={false} key={student.id} reason={reason} student={student} />
+              <SuggestedStudent currentId={user.id} isFollowing={false} key={student.id} mutualContext={mutualContexts.get(student.id)} reason={reason} student={student} />
             ))}
           </div>
         </section>
@@ -34,6 +35,7 @@ export default async function DiscoverPage() {
         currentId={user.id}
         initialFollowingIds={initial.followingIds}
         initialHasMore={initial.hasMore}
+        initialMutualContexts={Object.fromEntries(mutualContexts)}
         initialStudents={initial.students}
       />
     </div>

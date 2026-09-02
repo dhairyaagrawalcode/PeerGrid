@@ -1,49 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiBell } from "react-icons/fi";
-import { createClient } from "@/app/lib/supabase/client";
+import { useNotifications } from "@/app/lib/use-notifications";
 import { timeAgo } from "@/app/lib/format";
 import { notificationPresentation } from "@/app/lib/notifications";
 import type { PeerGridNotification } from "@/app/types";
 
-const notificationSelect = "id, type, collaboration_id, passport_id, post_id, conversation_id, created_at, read_at, actor:profiles!notifications_actor_id_fkey(id, username, full_name, avatar_url), collaboration:collaboration_posts!notifications_collaboration_id_fkey(id, title), passport:collaboration_passports!notifications_passport_id_fkey(id, project_name), post:social_posts!notifications_post_id_fkey(id, body), conversation:conversations!notifications_conversation_id_fkey(id, title)";
-
-export default function NotificationDropdown({ count, initialNotifications, onRead, active }: {
+export default function NotificationDropdown({ count, initialNotifications, active }: {
   count: number;
   initialNotifications: PeerGridNotification[];
-  onRead: () => void;
   active: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const { notifications, busy, error, refresh, clear, markRead } = useNotifications(initialNotifications, 8);
   const menuRef = useRef<HTMLDivElement>(null);
-  const supabase = useMemo(() => createClient(), []);
-
-  async function refresh() {
-    const { data } = await supabase.from("notifications").select(notificationSelect).order("created_at", { ascending: false }).limit(8);
-    if (data) setNotifications(data as unknown as PeerGridNotification[]);
-  }
 
   async function toggle() {
     const next = !open;
     setOpen(next);
     if (!next) return;
     await refresh();
-    if (count > 0) {
-      await supabase.rpc("mark_notifications_read", { notification_ids: null });
-      const readAt = new Date().toISOString();
-      setNotifications((current) => current.map((notification) => ({ ...notification, read_at: notification.read_at ?? readAt })));
-      onRead();
-    }
   }
-
-  useEffect(() => {
-    const update = () => { void refresh(); };
-    window.addEventListener("peergrid:notification-change", update);
-    return () => window.removeEventListener("peergrid:notification-change", update);
-  });
 
   useEffect(() => {
     if (!open) return;
@@ -61,6 +40,8 @@ export default function NotificationDropdown({ count, initialNotifications, onRe
     </button>
     {open && <div className="absolute right-0 top-12 w-[min(380px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-panel shadow-2xl" role="menu">
       <div className="flex items-center justify-between px-4 py-3"><h2 className="text-sm font-bold">Notifications</h2><Link className="text-[10px] font-bold text-primary" href="/notifications" onClick={() => setOpen(false)}>View all</Link></div>
+      <div className="flex gap-4 px-4 pb-3 text-xs"><button className="text-muted hover:text-font disabled:opacity-40" disabled={busy || !count} onClick={() => void markRead()} type="button">Mark all as read</button><button className="ml-auto text-muted hover:text-font disabled:opacity-40" disabled={busy || !notifications.length} onClick={() => void clear()} type="button">Clear all</button></div>
+      {error && <p className="px-4 pb-3 text-xs text-danger" role="alert">{error}</p>}
       <div className="max-h-[440px] overflow-y-auto border-t border-line">
         {notifications.length ? notifications.map((notification) => {
           const presentation = notificationPresentation(notification);

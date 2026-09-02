@@ -45,6 +45,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submissionStage, setSubmissionStage] = useState<"idle" | "uploading" | "publishing">("idle");
 
   useEffect(() => {
     return () => {
@@ -79,8 +80,10 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setError(null);
     setSubmitting(true);
+    setSubmissionStage(file ? "uploading" : "publishing");
     const form = new FormData(event.currentTarget);
     const body = String(form.get("body") ?? "").trim();
     let uploadedPath = "";
@@ -103,6 +106,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         form.set("attachmentMime", file.type);
       }
 
+      setSubmissionStage("publishing");
       form.delete("attachment");
       const result = await createSocialPost(form);
       if (result.error) {
@@ -122,13 +126,14 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       setError(caught instanceof Error ? caught.message : "Could not publish your post.");
     } finally {
       setSubmitting(false);
+      setSubmissionStage("idle");
     }
   }
 
   const kind = file ? fileKind(file) : null;
 
   return (
-    <form className="surface overflow-hidden" onSubmit={submit} ref={formRef}>
+    <form aria-busy={submitting} className="surface overflow-hidden" onSubmit={submit} ref={formRef}>
       <div className="flex gap-3 p-4 sm:p-5">
         <div className="avatar !h-11 !w-11">
           {profile.avatar_url ? <AvatarImage alt={profile.full_name} src={profile.avatar_url} /> : initials(profile.full_name)}
@@ -136,6 +141,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         <textarea
           aria-label="Post text"
           className="min-h-32 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
+          disabled={submitting}
           maxLength={5000}
           name="body"
           placeholder="What are you building or learning?"
@@ -146,7 +152,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-line sm:mx-5">
           <div className="flex items-center justify-between border-b border-line bg-panel px-4 py-3">
             <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-0.5 text-xs text-muted">{readableSize(file.size)}</p></div>
-            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" onClick={() => updateFile(null)} type="button"><FiX /></button>
+            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={submitting} onClick={() => updateFile(null)} type="button"><FiX /></button>
           </div>
           {kind === "image" && previewUrl && <img alt="Selected post attachment" className="max-h-[460px] w-full object-contain" src={previewUrl} />}
           {kind === "video" && previewUrl && <video className="max-h-[460px] w-full bg-black" controls preload="metadata" src={previewUrl} />}
@@ -156,15 +162,17 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
 
       {error && <p className="mx-4 mb-4 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger sm:mx-5" role="alert">{error}</p>}
       {notice && <p className="mx-4 mb-4 rounded-xl border border-line bg-panel p-3 text-sm text-subtle sm:mx-5" role="status">{notice}</p>}
+      {submitting && <div className="mx-4 mb-4 sm:mx-5" role="status"><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-subtle"><FiLoader className="animate-spin" />{submissionStage === "uploading" ? "Uploading attachment…" : "Publishing post…"}</div><div className="h-1 overflow-hidden rounded-full bg-line"><div className="h-full w-2/3 animate-pulse rounded-full bg-primary" /></div></div>}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
         <div className="flex items-center gap-1 text-xs text-muted">
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiVideo className="text-subtle" /> Video</label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-card hover:text-font" htmlFor="attachment"><FiFileText /> Document</label>
+          <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
+          <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiVideo className="text-subtle" /> Video</label>
+          <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiFileText /> Document</label>
           <input
             accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
             className="sr-only"
+            disabled={submitting}
             id="attachment"
             name="attachment"
             onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
@@ -172,7 +180,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
           />
         </div>
         <button className="button button-primary !min-h-9 !px-4" disabled={submitting} type="submit">
-          {submitting ? <><FiLoader className="animate-spin" /> Publishing</> : <><FiSend /> Post</>}
+          {submitting ? <><FiLoader className="animate-spin" />{submissionStage === "uploading" ? "Uploading…" : "Publishing…"}</> : <><FiSend /> Post</>}
         </button>
       </div>
       <p className="flex items-center gap-1.5 px-5 pb-4 text-[11px] text-muted"><FiUploadCloud /> One attachment, up to 25 MB.</p>

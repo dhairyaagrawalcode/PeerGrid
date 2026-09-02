@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FiLoader, FiSearch, FiUsers, FiX } from "react-icons/fi";
 import { SEARCH_PAGE_SIZE } from "@/app/lib/data";
 import { createClient } from "@/app/lib/supabase/client";
-import type { StudentProfile } from "@/app/types";
+import type { MutualFollowContext, StudentProfile } from "@/app/types";
 import EmptyState from "./empty-state";
 import StudentResult from "./student-result";
 
@@ -13,16 +13,19 @@ export default function DiscoverSearch({
   currentId,
   initialFollowingIds,
   initialHasMore,
+  initialMutualContexts,
 }: {
   initialStudents: StudentProfile[];
   currentId: string;
   initialFollowingIds: string[];
   initialHasMore: boolean;
+  initialMutualContexts: Record<string, MutualFollowContext>;
 }) {
   const [query, setQuery] = useState("");
   const [students, setStudents] = useState(initialStudents);
   const [followingIds, setFollowingIds] = useState(initialFollowingIds);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [mutualContexts, setMutualContexts] = useState(initialMutualContexts);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +50,15 @@ export default function DiscoverSearch({
     }
     const rows = (data ?? []) as Array<StudentProfile & { viewer_follows: boolean }>;
     const page = rows.slice(0, SEARCH_PAGE_SIZE);
+    const { data: mutualRows } = await supabase.rpc("get_mutual_follow_contexts", { candidate_profile_ids: page.map((student) => student.id) });
+    if (currentRequest !== requestId.current) return false;
+    const pageMutuals = Object.fromEntries(((mutualRows ?? []) as Array<{ profile_id: string; mutual_count: number | string; mutual_names: string[] | null }>).map((row) => [row.profile_id, {
+      profile_id: row.profile_id,
+      mutual_count: Number(row.mutual_count ?? 0),
+      mutual_names: row.mutual_names ?? [],
+    } satisfies MutualFollowContext]));
     setStudents((current) => (offset ? [...current, ...page] : page));
+    setMutualContexts((current) => offset ? { ...current, ...pageMutuals } : pageMutuals);
     setFollowingIds((current) => {
       const next = new Set(offset ? current : []);
       page.forEach((student) => {
@@ -68,6 +79,7 @@ export default function DiscoverSearch({
       setStudents(initialStudents);
       setFollowingIds(initialFollowingIds);
       setHasMore(initialHasMore);
+      setMutualContexts(initialMutualContexts);
       setLoading(false);
     } else {
       setLoading(true);
@@ -130,7 +142,7 @@ export default function DiscoverSearch({
       {students.length ? (
         <div className="mt-2 divide-y divide-line">
           {students.map((student) => (
-            <StudentResult key={student.id} student={student} currentId={currentId} isFollowing={following.has(student.id)} />
+            <StudentResult key={student.id} student={student} currentId={currentId} isFollowing={following.has(student.id)} mutualContext={mutualContexts[student.id]} />
           ))}
         </div>
       ) : (

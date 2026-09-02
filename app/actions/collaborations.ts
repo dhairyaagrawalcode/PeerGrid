@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireStudent } from "@/app/lib/auth";
 import { splitTags } from "@/app/lib/format";
 import { moderateContent } from "@/app/lib/moderation";
+export type CreateCollaborationState = { error: string } | null;
 
 export async function createCollaboration(formData: FormData) {
   const { supabase, user } = await requireStudent();
@@ -17,12 +18,13 @@ export async function createCollaboration(formData: FormData) {
   const teamCurrent = Number(formData.get("teamCurrent") ?? 1);
   const capacityRaw = String(formData.get("teamCapacity") ?? "").trim();
   const teamCapacity = capacityRaw ? Number(capacityRaw) : null;
-  if (title.length < 5 || title.length > 100 || description.length < 10 || description.length > 1200) return;
-  if (!["project", "hackathon", "open_source", "startup", "study", "other"].includes(collaborationType)) return;
-  if (requiredSkills.length > 12 || commitment.length > 80) return;
-  if (!Number.isInteger(teamCurrent) || teamCurrent < 1 || teamCurrent > 50) return;
-  if (teamCapacity === null || !Number.isInteger(teamCapacity) || teamCapacity < teamCurrent || teamCapacity > 50) return;
-  if (moderateContent(`${title} ${description}`).status === "rejected") redirect("/collaborate?moderation=rejected");
+  if (title.length < 5 || title.length > 100) return { error: "Use a title between 5 and 100 characters." };
+  if (description.length < 10 || description.length > 1200) return { error: "Describe the collaboration in 10–1,200 characters." };
+  if (!["project", "hackathon", "open_source", "startup", "study", "other"].includes(collaborationType)) return { error: "Choose a valid collaboration type." };
+  if (requiredSkills.length > 12 || commitment.length > 80) return { error: "Check the required skills and commitment fields." };
+  if (!Number.isInteger(teamCurrent) || teamCurrent < 1 || teamCurrent > 50) return { error: "Current team size must be between 1 and 50." };
+  if (teamCapacity === null || !Number.isInteger(teamCapacity) || teamCapacity < teamCurrent || teamCapacity > 50) return { error: "Capacity must be at least the current team size and no more than 50." };
+  if (moderateContent(`${title} ${description}`).status === "rejected") return { error: "This collaboration violates PeerGrid's community rules and cannot be published." };
   const { data: created, error } = await supabase.from("collaboration_posts").insert({
     author_id: user.id,
     campus_id: campus || null,
@@ -38,9 +40,10 @@ export async function createCollaboration(formData: FormData) {
   if (!error) {
     revalidatePath("/feed");
     revalidatePath("/collaborate");
-    redirect(created?.moderation_status === "held" ? "/collaborate?moderation=held" : created?.moderation_status === "rejected" ? "/collaborate?moderation=rejected" : "/collaborate");
+    redirect(created?.moderation_status === "held" ? "/collaborate?moderation=held" : created?.moderation_status === "rejected" ? "/collaborate?moderation=rejected" : "/collaborate?create=published");
   }
-  redirect("/collaborate?create=error");
+  console.error("[PeerGrid] collaboration creation failed", { code: error?.code });
+  return { error: "The collaboration could not be published. Please try again." };
 }
 
 function parseParticipants(raw: string) {
@@ -188,7 +191,8 @@ export async function deleteCollaboration(formData: FormData) {
   const { supabase, user } = await requireStudent();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await supabase.from("collaboration_posts").delete().eq("id", id).eq("author_id", user.id);
+  const { error } = await supabase.from("collaboration_posts").delete().eq("id", id).eq("author_id", user.id);
   revalidatePath("/feed");
   revalidatePath("/collaborate");
+  redirect(error ? "/collaborate?delete=error" : "/collaborate?delete=success");
 }

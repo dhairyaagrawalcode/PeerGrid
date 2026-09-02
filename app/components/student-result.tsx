@@ -1,18 +1,21 @@
 import Link from "next/link";
 import { FiMapPin } from "react-icons/fi";
 import { initials } from "@/app/lib/format";
-import type { StudentProfile } from "@/app/types";
+import type { MutualFollowContext, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import FollowControls from "./follow-controls";
+import MutualConnections from "./mutual-connections";
 
 export default function StudentResult({
   student,
   currentId,
   isFollowing,
+  mutualContext,
 }: {
   student: StudentProfile;
   currentId: string;
   isFollowing: boolean;
+  mutualContext?: MutualFollowContext | null;
 }) {
   const secondary = [student.program, student.graduation_year ? `Class of ${student.graduation_year}` : null]
     .filter(Boolean)
@@ -52,6 +55,7 @@ export default function StudentResult({
             {secondary || student.skills?.slice(0, 3).map((item) => item.name).join(" · ")}
           </span>
         ) : null}
+        <MutualConnections className="mt-1" context={mutualContext} />
       </Link>
       <FollowControls compact currentId={currentId} isFollowing={isFollowing} targetId={student.id} />
     </article>

@@ -6,7 +6,7 @@ export default async function MessagesPage() {
   const { supabase, profile } = await requireStudent();
   const [conversationPage, students] = await Promise.all([
     getConversationSummaries(supabase),
-    getStudents(supabase, profile.id, { limit: 50 }),
+    getStudents(supabase, profile.id, { limit: 100 }),
   ]);
   return <MessagesView conversations={conversationPage.conversations} groupCandidates={students} hasMoreConversations={conversationPage.hasMore} profile={profile} />;
 }

@@ -11,11 +11,12 @@ import {
 import { confirmCollaborationParticipation } from "@/app/actions/collaborations";
 import { startConversation } from "@/app/actions/messages";
 import { initials } from "@/app/lib/format";
-import type { CollaborationProof, FollowSummary, PendingCollaborationConfirmation, SocialPost, StudentProfile } from "@/app/types";
+import type { CollaborationProof, FollowSummary, MutualFollowContext, PendingCollaborationConfirmation, SocialPost, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import PageNavigation from "./page-navigation";
 import FollowControls from "./follow-controls";
 import SocialPostCard from "./social-post-card";
+import MutualConnections from "./mutual-connections";
 
 export default function ProfileView({
   profile,
@@ -27,6 +28,7 @@ export default function ProfileView({
   hasMorePosts = false,
   proofs = [],
   pendingConfirmations = [],
+  mutualContext,
 }: {
   profile: StudentProfile;
   currentId: string;
@@ -37,6 +39,7 @@ export default function ProfileView({
   hasMorePosts?: boolean;
   proofs?: CollaborationProof[];
   pendingConfirmations?: PendingCollaborationConfirmation[];
+  mutualContext?: MutualFollowContext | null;
 }) {
   return (
     <div className="mx-auto max-w-[920px]">
@@ -61,12 +64,6 @@ export default function ProfileView({
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-muted">@{profile.username}</p>
-                {profile.current_status && (
-                  <p className="mt-3 flex max-w-2xl items-start gap-2 text-sm leading-5 text-subtle">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    {profile.current_status}
-                  </p>
-                )}
               </div>
               {own ? (
                 <Link className="button button-secondary self-start !min-h-10" href="/profile/edit">
@@ -89,15 +86,16 @@ export default function ProfileView({
               )}
             </div>
             <div className="mt-4 flex gap-6 text-sm text-muted">
-              <span><strong className="text-font">{followSummary.follower_count}</strong> follower{followSummary.follower_count === 1 ? "" : "s"}</span>
-              <span><strong className="text-font">{followSummary.following_count}</strong> following</span>
+              {own ? <Link className="hover:text-font" href="/connections?view=followers#followers"><strong className="text-font">{followSummary.follower_count}</strong> follower{followSummary.follower_count === 1 ? "" : "s"}</Link> : <span><strong className="text-font">{followSummary.follower_count}</strong> follower{followSummary.follower_count === 1 ? "" : "s"}</span>}
+              {own ? <Link className="hover:text-font" href="/connections?view=following#following"><strong className="text-font">{followSummary.following_count}</strong> following</Link> : <span><strong className="text-font">{followSummary.following_count}</strong> following</span>}
             </div>
+            {!own && <MutualConnections className="mt-2" context={mutualContext} />}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
               {profile.campus?.name && <span className="flex items-center gap-1.5"><FiMapPin className="text-secondary" />{profile.campus.name}</span>}
               {profile.program && <span>{profile.program}</span>}
               {profile.graduation_year && <span>Class of {profile.graduation_year}</span>}
             </div>
-            {profile.bio && <p className="mt-4 max-w-2xl text-sm leading-6 text-subtle">{profile.bio}</p>}
+            <div className="mt-5 grid max-w-2xl gap-5 sm:grid-cols-2"><div><p className="eyebrow">Current status</p><p className="mt-2 text-sm leading-6 text-subtle">{profile.current_status || "No current status shared."}</p></div><div><p className="eyebrow">Bio</p><p className="mt-2 text-sm leading-6 text-subtle">{profile.bio || "No bio added yet."}</p></div></div>
             {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
               <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-semibold">
                 {profile.github_url && <a className="flex items-center gap-1.5 text-muted hover:text-font" href={profile.github_url} target="_blank" rel="noreferrer"><FiGithub /> GitHub</a>}
@@ -109,7 +107,8 @@ export default function ProfileView({
         </div>
       </section>
 
-      <div className="mt-9 grid gap-8 md:grid-cols-2">
+      <section className="mt-9"><h2 className="text-lg font-bold">Skills &amp; interests</h2><p className="mt-1 text-xs text-muted">What {own ? "you know and want to explore" : `${profile.full_name} knows and wants to explore`}.</p></section>
+      <div className="mt-5 grid gap-8 md:grid-cols-2">
         <section>
           <p className="eyebrow">Skills</p>
           {profile.skills?.length ? (
@@ -139,7 +138,8 @@ export default function ProfileView({
           )}
         </section>
       </div>
-      <div className="mt-9 grid gap-8 md:grid-cols-2">
+      <section className="mt-10"><h2 className="text-lg font-bold">Ways to collaborate</h2><p className="mt-1 text-xs text-muted">Help offered, support needed, and current goals.</p></section>
+      <div className="mt-5 grid gap-8 md:grid-cols-2">
         <section>
           <p className="eyebrow">I can help with</p>
           {profile.can_help_with?.length ? (
@@ -157,7 +157,7 @@ export default function ProfileView({
           ) : <p className="mt-4 text-sm text-muted">Nothing shared yet.</p>}
         </section>
       </div>
-      <section className="mt-9">
+      <section className="mt-7">
         <p className="eyebrow">Currently looking for</p>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-subtle">
           {profile.goals || "Nothing specific shared yet."}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FiBell,
+  FiHelpCircle,
   FiGrid,
   FiLogOut,
   FiMessageSquare,
@@ -21,6 +22,7 @@ import AvatarImage from "./avatar-image";
 import Brand from "./brand";
 import CryptoDeviceBootstrap from "./crypto-device-bootstrap";
 import NotificationDropdown from "./notification-dropdown";
+import ActivityTracker from "./activity-tracker";
 
 const navigation = [
   { href: "/feed", label: "Home", icon: FiGrid },
@@ -32,6 +34,7 @@ const navigation = [
 ];
 
 function AccountMenu({ profile }: { profile: StudentProfile }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +82,9 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
           <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/connections" role="menuitem">
             <FiUsers /> Followers &amp; following
           </Link>
+          <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href={`/report-problem?from=${encodeURIComponent(pathname)}`} role="menuitem">
+            <FiHelpCircle /> Report a problem
+          </Link>
           <form action={signOut} className="mt-1 border-t border-line pt-1">
             <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger/10" role="menuitem" type="submit">
               <FiLogOut /> Sign out
@@ -112,6 +118,23 @@ export default function AppShell({
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    let notificationTimer: ReturnType<typeof setTimeout> | undefined;
+    let notificationRevision = 0;
+    let disposed = false;
+    async function refreshNotificationCount() {
+      const revision = ++notificationRevision;
+      const { data, error } = await supabase.rpc("get_unread_notification_count");
+      if (!disposed && revision === notificationRevision && !error) setNotificationUnreadCount(Number(data ?? 0));
+    }
+    function notificationChanged() {
+      // A clear-all operation may produce many row updates. Reconcile once per burst.
+      clearTimeout(notificationTimer);
+      notificationRevision++;
+      notificationTimer = setTimeout(() => {
+        void refreshNotificationCount();
+        window.dispatchEvent(new CustomEvent("peergrid:notification-change"));
+      }, 150);
+    }
     const messageChannel = supabase
       .channel(`navigation-messages:${profile.id}`)
       .on(
@@ -137,17 +160,8 @@ export default function AppShell({
 
     const notificationChannel = supabase
       .channel(`navigation-notifications:${profile.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, () => {
-        void supabase.rpc("get_unread_notification_count").then(({ data }) => {
-          setNotificationUnreadCount(Number(data ?? 0));
-        });
-        window.dispatchEvent(new CustomEvent("peergrid:notification-change"));
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, () => {
-        void supabase.rpc("get_unread_notification_count").then(({ data }) => {
-          setNotificationUnreadCount(Number(data ?? 0));
-        });
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, notificationChanged)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `recipient_id=eq.${profile.id}` }, notificationChanged)
       .subscribe();
 
     function messagesRead(event: Event) {
@@ -157,12 +171,20 @@ export default function AppShell({
     window.addEventListener("peergrid:messages-read", messagesRead);
     const collaborationsSeen = () => setCollaborationUnreadCount(0);
     const notificationsRead = () => setNotificationUnreadCount(0);
+    const notificationsUpdated = () => {
+      setNotificationUnreadCount(0);
+      void refreshNotificationCount();
+    };
     window.addEventListener("peergrid:collaboration-seen", collaborationsSeen);
     window.addEventListener("peergrid:notifications-read", notificationsRead);
+    window.addEventListener("peergrid:notifications-updated", notificationsUpdated);
     return () => {
+      disposed = true;
+      clearTimeout(notificationTimer);
       window.removeEventListener("peergrid:messages-read", messagesRead);
       window.removeEventListener("peergrid:collaboration-seen", collaborationsSeen);
       window.removeEventListener("peergrid:notifications-read", notificationsRead);
+      window.removeEventListener("peergrid:notifications-updated", notificationsUpdated);
       void supabase.removeChannel(messageChannel);
       void supabase.removeChannel(collaborationChannel);
       void supabase.removeChannel(notificationChannel);
@@ -184,7 +206,7 @@ export default function AppShell({
           ? notificationUnreadCount
           : 0;
     if (label === "Notifications" && !mobile) {
-      return <NotificationDropdown active={active} count={notificationUnreadCount} initialNotifications={initialNotifications} key={href} onRead={() => setNotificationUnreadCount(0)} />;
+      return <NotificationDropdown active={active} count={notificationUnreadCount} initialNotifications={initialNotifications} key={href} />;
     }
     return (
       <Link
@@ -211,6 +233,7 @@ export default function AppShell({
 
   return (
     <div className="h-dvh overflow-hidden bg-bg text-font">
+      <ActivityTracker />
       <CryptoDeviceBootstrap userId={profile.id} />
       <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="app-frame flex h-full items-center gap-6">
