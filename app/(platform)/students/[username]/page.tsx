@@ -1,20 +1,25 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import ProfileView from "@/app/components/profile-view";
+import { ProfileMutualSection, ProfilePostSection, ProfileProofSection } from "@/app/components/profile-sections";
+import { ProfilePostsSkeleton, ProfileProofsSkeleton } from "@/app/components/section-skeleton";
 import { requireStudent } from "@/app/lib/auth";
-import { getCollaborationProofs, getFollowSummary, getMutualFollowContexts, getSocialPosts, getStudent, POST_PAGE_SIZE } from "@/app/lib/data";
+import { getFollowSummary, getStudent } from "@/app/lib/data";
 
-export default async function StudentPage({ params, searchParams }: { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string }> }) {
+export default async function StudentPage({ params, searchParams }: { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; proofPage?: string }> }) {
   const { username } = await params;
-  const rawPage = Number((await searchParams).page ?? 0);
+  const query = await searchParams;
+  const rawPage = Number(query.page ?? 0);
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
-  const { supabase, user } = await requireStudent();
-  const profile = await getStudent(supabase, { username });
+  const rawProofPage = Number(query.proofPage ?? 0);
+  const proofPage = Number.isSafeInteger(rawProofPage) && rawProofPage > 0 ? rawProofPage : 0;
+  const { supabase, user, profile: viewer } = await requireStudent();
+  const profile = username.toLowerCase() === viewer.username.toLowerCase() ? viewer : await getStudent(supabase, { username });
   if (!profile?.is_verified) notFound();
-  const [posts, followSummary, proofs, mutualContexts] = await Promise.all([
-    getSocialPosts(supabase, { authorId: profile.id, limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE }),
-    getFollowSummary(supabase, profile.id),
-    getCollaborationProofs(supabase, profile.id),
-    getMutualFollowContexts(supabase, [profile.id]),
-  ]);
-  return <div className="app-page"><ProfileView currentId={user.id} followSummary={followSummary} hasMorePosts={posts.length > POST_PAGE_SIZE} mutualContext={mutualContexts.get(profile.id)} own={profile.id === user.id} page={page} posts={posts.slice(0, POST_PAGE_SIZE)} profile={profile} proofs={proofs} /></div>;
+  const followSummary = await getFollowSummary(supabase, profile.id);
+  return <div className="app-page"><ProfileView currentId={user.id} followSummary={followSummary} own={profile.id === user.id} profile={profile}
+    mutualContent={<Suspense fallback={null}><ProfileMutualSection profileId={profile.id} /></Suspense>}
+    proofsContent={<Suspense key={proofPage} fallback={<ProfileProofsSkeleton />}><ProfileProofSection profile={profile} page={proofPage} postPage={page} /></Suspense>}
+    postsContent={<Suspense key={page} fallback={<ProfilePostsSkeleton />}><ProfilePostSection profile={profile} page={page} proofPage={proofPage} /></Suspense>}
+  /></div>;
 }

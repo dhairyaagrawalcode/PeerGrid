@@ -7,13 +7,13 @@ import { FiCamera, FiCheck, FiChevronDown, FiLoader, FiSearch, FiUserMinus, FiUs
 import { createClient } from "@/app/lib/supabase/client";
 import { groupAvatarUrl, uploadGroupAvatar, validateGroupAvatar } from "@/app/lib/group-avatar";
 import { initials } from "@/app/lib/format";
-import type { ConversationMember, StudentProfile } from "@/app/types";
+import type { ConversationMember } from "@/app/types";
+import { useGroupCandidates } from "@/app/lib/use-group-candidates";
 import AvatarImage from "./avatar-image";
 import ConfirmationModal from "./confirmation-modal";
 
-export default function GroupDetailsButton({ avatarPath: initialAvatarPath, candidates, conversationId, currentId, members: initialMembers, title }: {
+export default function GroupDetailsButton({ avatarPath: initialAvatarPath, conversationId, currentId, members: initialMembers, title }: {
   avatarPath: string | null;
-  candidates: StudentProfile[];
   conversationId: string;
   currentId: string;
   members: ConversationMember[];
@@ -26,6 +26,7 @@ export default function GroupDetailsButton({ avatarPath: initialAvatarPath, cand
   const [uploading, setUploading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addMode, setAddMode] = useState(false);
+  const { students: candidates, loading: loadingStudents, error: candidatesError } = useGroupCandidates(open && addMode, currentId);
   const [addQuery, setAddQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -158,16 +159,16 @@ export default function GroupDetailsButton({ avatarPath: initialAvatarPath, cand
     </button>
 
     {open && <div aria-modal="true" className="fixed inset-0 z-[80] grid place-items-center bg-black/75 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }} role="dialog">
-      <div className="flex max-h-[min(720px,90dvh)] w-full max-w-md flex-col rounded-2xl border border-line bg-panel">
+      <div className="max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-panel">
         <div className="flex items-center justify-between px-5 py-4">
           <div><h2 className="text-base font-bold">Group details</h2><p className="mt-1 text-xs text-muted">{members.length} members</p></div>
           <button aria-label="Close group details" className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={uploading || Boolean(removingId) || adding} onClick={closeModal} type="button"><FiX /></button>
         </div>
 
-        <div className="flex items-center gap-4 px-5 pb-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-5 pb-5 sm:flex sm:gap-4">
           <span className="avatar relative !h-16 !w-16 !rounded-full">{avatarUrl ? <AvatarImage alt={title} src={avatarUrl} /> : <FiUsers size={23} />}</span>
           <div className="min-w-0 flex-1"><p className="truncate font-bold">{title}</p></div>
-          {canManage && <div className="flex shrink-0 items-center gap-1">
+          {canManage && <div className="col-span-2 flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-1">
             {remainingSlots > 0 && <button className="button button-ghost !min-h-9 !px-3 !text-xs" onClick={() => { setAddMode((current) => !current); setError(null); }} type="button"><FiUserPlus /> Add members</button>}
             <label className="button button-ghost cursor-pointer !min-h-9 !px-3 !text-xs">
               {uploading ? <FiLoader className="animate-spin" /> : <FiCamera />}<span className="sr-only">{uploading ? "Uploading group picture" : "Change group picture"}</span>
@@ -181,7 +182,8 @@ export default function GroupDetailsButton({ avatarPath: initialAvatarPath, cand
           <div className="relative mt-3"><FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={14} /><input aria-label="Search students to add" className="field !min-h-10 !pl-9" onChange={(event) => setAddQuery(event.target.value)} placeholder="Search verified students" value={addQuery} /></div>
           <div className="mt-2 max-h-48 overflow-y-auto">
             {availableCandidates.map((candidate) => { const checked = selectedIds.includes(candidate.id); return <button className={`flex w-full items-center gap-3 rounded-xl p-2 text-left ${checked ? "bg-primary/10" : "hover:bg-card"}`} key={candidate.id} onClick={() => toggleCandidate(candidate.id)} type="button"><span className="avatar !h-9 !w-9 !rounded-full">{candidate.avatar_url ? <AvatarImage alt={candidate.full_name} src={candidate.avatar_url} /> : initials(candidate.full_name)}</span><span className="min-w-0 flex-1"><strong className="block truncate text-xs">{candidate.full_name}</strong><small className="block truncate text-[10px] text-muted">@{candidate.username} · {candidate.campus?.name ?? "NST"}</small></span><span className={`grid h-5 w-5 place-items-center rounded-full border ${checked ? "border-primary bg-primary text-white" : "border-line text-transparent"}`}><FiCheck size={12} /></span></button>; })}
-            {!availableCandidates.length && <p className="py-6 text-center text-xs text-muted">No students available to add.</p>}
+            {candidatesError && <p className="py-3 text-xs text-danger" role="alert">{candidatesError}</p>}
+            {!availableCandidates.length && !candidatesError && <p className="py-6 text-center text-xs text-muted">{loadingStudents ? "Loading students…" : "No students available to add."}</p>}
           </div>
           <button className="button button-primary mt-3 w-full !min-h-10 !text-xs" disabled={!selectedIds.length || adding} onClick={() => void addMembers()} type="button">{adding ? <><FiLoader className="animate-spin" />Adding…</> : <><FiUserPlus />Add {selectedIds.length || "members"}</>}</button>
         </section>}

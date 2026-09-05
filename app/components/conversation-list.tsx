@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
 import { groupAvatarUrl } from "@/app/lib/group-avatar";
-import type { ConversationSummary, StudentProfile } from "@/app/types";
+import type { ConversationSummary } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import CreateGroupButton from "./create-group-button";
 
@@ -15,13 +15,11 @@ export default function ConversationList({
   currentId,
   selectedId,
   initialHasMore = false,
-  groupCandidates,
 }: {
   initialConversations: ConversationSummary[];
   currentId: string;
   selectedId?: string;
   initialHasMore?: boolean;
-  groupCandidates: StudentProfile[];
 }) {
   const [conversations, setConversations] = useState(initialConversations);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -30,12 +28,16 @@ export default function ConversationList({
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let disposed = false;
+    let revision = 0;
     async function refreshConversations() {
+      const version = ++revision;
       const { data } = await supabase.rpc("get_conversation_summaries", {
         result_limit: 50,
         result_offset: 0,
       });
-      if (!data) return;
+      if (!data || disposed || version !== revision) return;
       const rows = data as Array<
         Omit<ConversationSummary, "unread_count"> & {
           unread_count: number | string | null;
@@ -51,11 +53,18 @@ export default function ConversationList({
       });
     }
 
-    window.addEventListener("peergrid:message-change", refreshConversations);
-    window.addEventListener("peergrid:messages-read", refreshConversations);
+    function scheduleRefresh() {
+      revision++;
+      clearTimeout(timer);
+      timer = setTimeout(() => void refreshConversations(), 200);
+    }
+    window.addEventListener("peergrid:message-change", scheduleRefresh);
+    window.addEventListener("peergrid:messages-read", scheduleRefresh);
     return () => {
-      window.removeEventListener("peergrid:message-change", refreshConversations);
-      window.removeEventListener("peergrid:messages-read", refreshConversations);
+      disposed = true;
+      clearTimeout(timer);
+      window.removeEventListener("peergrid:message-change", scheduleRefresh);
+      window.removeEventListener("peergrid:messages-read", scheduleRefresh);
     };
   }, [currentId, supabase]);
 
@@ -81,17 +90,17 @@ export default function ConversationList({
 
   return (
     <aside
-      className={`${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col border-r border-line md:w-[340px] md:flex-none`}
+      className={`${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 w-full min-w-0 flex-col border-line md:w-[340px] md:flex-none md:border-r`}
     >
-      <div className="flex h-17 items-center border-b border-line px-5">
+      <div className="flex h-17 shrink-0 items-center gap-2 border-b border-line px-2 sm:px-5">
         <div>
           <p className="text-base font-bold">Messages</p>
           <p className="mt-0.5 text-[11px] text-muted">Direct and group conversations</p>
         </div>
-        <div className="ml-auto"><CreateGroupButton currentId={currentId} students={groupCandidates} /></div>
+        <div className="ml-auto"><CreateGroupButton currentId={currentId} /></div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+      <div className="min-h-0 flex-1 overflow-y-auto py-2.5 sm:px-2.5">
         {conversations.length ? (
           <>
           {conversations.map((conversation) => {

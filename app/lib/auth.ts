@@ -3,6 +3,7 @@ import { cache } from "react";
 import { createClient } from "@/app/lib/supabase/server";
 import type { StudentApproval, StudentProfile } from "@/app/types";
 import { accessDestination } from "@/app/lib/platform-access";
+import { normalizeStudent, studentSelect } from "@/app/lib/data";
 
 export const getAuthContext = cache(async function getAuthContext() {
   const supabase = await createClient();
@@ -12,15 +13,14 @@ export const getAuthContext = cache(async function getAuthContext() {
 
   if (!user) return { supabase, user: null, profile: null, approval: null };
 
-  const { data: access, error: accessError } = await supabase.rpc("get_platform_access");
-  const destination = accessDestination(accessError ? null : access, true);
-  if (destination) redirect(destination);
-
-  const [{ data }, { data: approval }] = await Promise.all([
+  // All three queries depend on the verified user, not on one another. Access is
+  // still checked before returning any profile data, and this cache is per render.
+  const [{ data: access, error: accessError }, { data, error: profileError }, { data: approval, error: approvalError }] = await Promise.all([
+    supabase.rpc("get_platform_access"),
     supabase
       .from("profiles")
       .select(
-        "id, username, full_name, avatar_url, campus_id, graduation_year, program, current_status, bio, goals, github_url, linkedin_url, portfolio_url, is_verified, campus:campuses(id, slug, name, city)",
+        studentSelect,
       )
       .eq("id", user.id)
       .maybeSingle(),
@@ -30,11 +30,15 @@ export const getAuthContext = cache(async function getAuthContext() {
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
+  const destination = accessDestination(accessError ? null : access, true);
+  if (destination) redirect(destination);
+  if (profileError) throw new Error("Unable to load your profile", { cause: profileError });
+  if (approvalError) throw new Error("Unable to check student approval", { cause: approvalError });
 
   return {
     supabase,
     user,
-    profile: data as StudentProfile | null,
+    profile: data ? normalizeStudent(data) : null,
     approval: approval as StudentApproval | null,
   };
 });

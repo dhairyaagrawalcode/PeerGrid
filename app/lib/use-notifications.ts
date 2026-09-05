@@ -5,7 +5,7 @@ import type { PeerGridNotification } from "../types";
 
 export const notificationSelect = "id, type, collaboration_id, passport_id, post_id, conversation_id, created_at, read_at, actor:profiles!notifications_actor_id_fkey(id, username, full_name, avatar_url), collaboration:collaboration_posts!notifications_collaboration_id_fkey(id, title), passport:collaboration_passports!notifications_passport_id_fkey(id, project_name), post:social_posts!notifications_post_id_fkey(id, body), conversation:conversations!notifications_conversation_id_fkey(id, title)";
 
-export function useNotifications(initial: PeerGridNotification[], limit: number) {
+export function useNotifications(initial: PeerGridNotification[], limit: number, enabled = true) {
   const [notifications, setNotifications] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -18,9 +18,11 @@ export function useNotifications(initial: PeerGridNotification[], limit: number)
     if (data && version === revision.current) setNotifications(data as unknown as PeerGridNotification[]);
   }, [limit, supabase]);
   useEffect(() => {
+    if (!enabled) return;
+    const revisionRef = revision;
     const update = () => { void refresh(); };
     const changed = (event: Event) => {
-      revision.current++;
+      revisionRef.current++;
       const kind = (event as CustomEvent<string>).detail;
       if (kind === "cleared") setNotifications([]);
       else if (kind === "read") setNotifications(current => current.map(item => ({ ...item, read_at: item.read_at || new Date().toISOString() })));
@@ -29,10 +31,11 @@ export function useNotifications(initial: PeerGridNotification[], limit: number)
     window.addEventListener("peergrid:notification-change", update);
     window.addEventListener("peergrid:notifications-updated", changed);
     return () => {
+      revisionRef.current++;
       window.removeEventListener("peergrid:notification-change", update);
       window.removeEventListener("peergrid:notifications-updated", changed);
     };
-  }, [refresh]);
+  }, [refresh, enabled]);
   async function act(kind: "cleared" | "read") {
     if (mutation.current) return;
     mutation.current = true; setBusy(true); setError("");

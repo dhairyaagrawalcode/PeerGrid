@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { FiFileText, FiImage, FiLoader, FiSend, FiUploadCloud, FiVideo, FiX } from "react-icons/fi";
 import { createSocialPost } from "@/app/actions/posts";
 import { createClient } from "@/app/lib/supabase/client";
+import { compressPostImage } from "@/app/lib/compress-post-image";
 import { initials } from "@/app/lib/format";
 import type { StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
@@ -93,17 +94,18 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       if (file) {
         const kind = fileKind(file);
         if (!kind) throw new Error("That file type is not supported.");
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
+        const uploadFile = await compressPostImage(file);
+        const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
         uploadedPath = `${profile.id}/${crypto.randomUUID()}-${safeName}`;
         const supabase = createClient();
         const { error: uploadError } = await supabase.storage
           .from("post-media")
-          .upload(uploadedPath, file, { contentType: file.type, upsert: false });
+          .upload(uploadedPath, uploadFile, { contentType: uploadFile.type, upsert: false });
         if (uploadError) throw new Error("The attachment could not be uploaded. Please try again.");
         form.set("attachmentPath", uploadedPath);
         form.set("attachmentKind", kind);
-        form.set("attachmentName", file.name);
-        form.set("attachmentMime", file.type);
+        form.set("attachmentName", uploadFile.name);
+        form.set("attachmentMime", uploadFile.type);
       }
 
       setSubmissionStage("publishing");
@@ -140,7 +142,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         </div>
         <textarea
           aria-label="Post text"
-          className="min-h-32 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
+          className="min-h-32 min-w-0 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
           disabled={submitting}
           maxLength={5000}
           name="body"
@@ -164,8 +166,8 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       {notice && <p className="mx-4 mb-4 rounded-xl border border-line bg-panel p-3 text-sm text-subtle sm:mx-5" role="status">{notice}</p>}
       {submitting && <div className="mx-4 mb-4 sm:mx-5" role="status"><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-subtle"><FiLoader className="animate-spin" />{submissionStage === "uploading" ? "Uploading attachment…" : "Publishing post…"}</div><div className="h-1 overflow-hidden rounded-full bg-line"><div className="h-full w-2/3 animate-pulse rounded-full bg-primary" /></div></div>}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-1 text-xs text-muted">
+      <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted sm:justify-start">
           <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiImage className="text-secondary" /> Photo</label>
           <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiVideo className="text-subtle" /> Video</label>
           <label aria-disabled={submitting} className={`flex items-center gap-2 rounded-lg px-2.5 py-2 ${submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-card hover:text-font"}`} htmlFor="attachment"><FiFileText /> Document</label>
@@ -179,7 +181,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
             type="file"
           />
         </div>
-        <button className="button button-primary !min-h-9 !px-4" disabled={submitting} type="submit">
+        <button className="button button-primary w-full !min-h-9 !px-4 sm:w-auto" disabled={submitting} type="submit">
           {submitting ? <><FiLoader className="animate-spin" />{submissionStage === "uploading" ? "Uploading…" : "Publishing…"}</> : <><FiSend /> Post</>}
         </button>
       </div>

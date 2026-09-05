@@ -64,7 +64,7 @@ export default function AdminLiveRefresh({ databaseHost }: { databaseHost: strin
     };
   }, [router, pathname, search]);
   return <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
-    <span title="Compare this host with the project open in Supabase">Database: {databaseHost}</span>
+    <span className="min-w-0 basis-full [overflow-wrap:anywhere] sm:basis-auto" title="Compare this host with the project open in Supabase">Database: {databaseHost}</span>
     <span role="status">{pending ? "Updating…" : state}{checkedAt && ` · checked ${checkedAt} IST`}</span>
     <button type="button" className="ml-auto text-subtle hover:text-font focus-visible:outline-2 focus-visible:outline-primary" disabled={pending} onClick={() => startTransition(() => router.refresh())}>Refresh now</button>
   </div>;

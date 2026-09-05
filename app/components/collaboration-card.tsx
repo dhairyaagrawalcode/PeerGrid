@@ -12,13 +12,13 @@ export default function CollaborationCard({ post, currentId, campuses }: { post:
   const typeLabel = post.collaboration_type === "study" ? "study group" : post.collaboration_type.replace("_", " ");
   const openings = post.team_capacity === null ? null : Math.max(post.team_capacity - post.team_current, 0);
   return (
-    <article className="surface scroll-mt-24 p-5 sm:p-6" id={`collaboration-${post.id}`}>
-      <div className="flex items-start justify-between gap-4">
+    <article className="surface scroll-mt-24 p-4 sm:p-6" id={`collaboration-${post.id}`}>
+      <div className="flex items-start justify-between gap-2 sm:gap-4">
         <Link className="flex min-w-0 items-center gap-3" href={own ? "/profile" : `/students/${post.author.username}`}>
           <span className="avatar">{post.author.avatar_url ? <AvatarImage alt={post.author.full_name} src={post.author.avatar_url} /> : initials(post.author.full_name)}</span>
           <span className="min-w-0"><span className="block truncate text-sm font-bold">{post.author.full_name}</span><span className="block truncate text-xs text-muted">@{post.author.username} · {timeAgo(post.created_at)}</span></span>
         </Link>
-        <span className={`chip capitalize ${post.status === "open" ? "!border-primary/20 !bg-primary/10 !text-primary" : "!text-muted"}`}>{post.status}</span>
+        <span className={`chip shrink-0 capitalize ${post.status === "open" ? "!border-primary/20 !bg-primary/10 !text-primary" : "!text-muted"}`}>{post.status}</span>
       </div>
       <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-muted">{typeLabel}</p>
       <h2 className="mt-1.5 text-lg font-bold leading-snug sm:text-xl">{post.title}</h2>

@@ -5,6 +5,7 @@ import type { SocialPost } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import PostBody from "./post-body";
 import PostEngagement from "./post-engagement";
+import PostImage from "./post-image";
 
 export default function SocialPostCard({ post, flat = false }: { post: SocialPost; flat?: boolean }) {
   const profileHref = `/students/${post.author.username}`;
@@ -26,8 +27,7 @@ export default function SocialPostCard({ post, flat = false }: { post: SocialPos
 
       {post.attachment_kind === "image" && post.attachment_url && (
         <div className="mx-4 mb-4 overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
-          {/* eslint-disable-next-line @next/next/no-img-element -- Post media is served from short-lived Supabase signed URLs. */}
-          <img alt={post.attachment_name || "Post attachment"} className="max-h-[640px] w-full object-contain" loading="lazy" src={post.attachment_url} />
+          <PostImage alt={post.attachment_name || "Post attachment"} mime={post.attachment_mime} original={post.attachment_url} postId={post.id} />
         </div>
       )}
       {post.attachment_kind === "video" && post.attachment_url && (

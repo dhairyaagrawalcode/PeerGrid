@@ -12,10 +12,20 @@ const links = [["/admin","Overview"],["/admin/users","Users"],["/admin/issues","
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   await requireAdmin();
   return <div className="min-h-dvh bg-bg text-font">
-    <header className="border-b border-line"><div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-4"><Brand href="/admin" /><span className="text-xs font-semibold text-muted">Private administration</span><span className="ml-auto text-xs text-muted">Password admin</span><form action={signOutAdmin}><button className="button button-secondary !min-h-9 !text-xs">Lock dashboard</button></form></div></header>
-    <div className="mx-auto grid max-w-7xl gap-8 px-5 py-7 lg:grid-cols-[160px_minmax(0,1fr)]">
-      <nav aria-label="Admin navigation" className="flex flex-wrap content-start gap-1 lg:flex-col">{links.map(([href,label]) => <Link key={href} href={href} className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-panel hover:text-font">{label}</Link>)}<Link className="mt-4 px-3 text-xs text-primary" href="/feed">Back to PeerGrid</Link></nav>
-      <main className="min-w-0"><Suspense fallback={null}><AdminLiveRefresh databaseHost={new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).host} /></Suspense>{children}</main>
+    <header className="border-b border-line">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-4 sm:flex sm:gap-4 sm:px-5">
+        <Brand href="/admin" />
+        <span className="row-start-2 text-xs font-semibold text-muted">Private administration</span>
+        <span className="row-start-2 text-right text-xs text-muted sm:ml-auto">Password admin</span>
+        <form action={signOutAdmin} className="col-start-2 row-start-1"><button className="button button-secondary !min-h-9 !px-3 !text-xs">Lock dashboard</button></form>
+      </div>
+    </header>
+    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:gap-8 sm:px-5 sm:py-7 lg:grid-cols-[160px_minmax(0,1fr)]">
+      <nav aria-label="Admin navigation" className="grid grid-cols-3 content-start gap-1 min-[400px]:grid-cols-4 sm:flex sm:flex-wrap lg:flex-col">
+        {links.map(([href,label]) => <Link key={href} href={href} className="rounded-lg px-2 py-3 text-xs text-muted hover:bg-panel hover:text-font sm:px-3 sm:py-2 sm:text-sm">{label}</Link>)}
+        <Link className="rounded-lg px-2 py-3 text-xs text-primary sm:px-3 lg:mt-4" href="/feed">Back to PeerGrid</Link>
+      </nav>
+      <main className="min-w-0 [overflow-wrap:anywhere]"><Suspense fallback={null}><AdminLiveRefresh databaseHost={new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).host} /></Suspense>{children}</main>
     </div>
   </div>;
 }

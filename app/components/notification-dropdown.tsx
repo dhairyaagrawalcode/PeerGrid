@@ -14,7 +14,7 @@ export default function NotificationDropdown({ count, initialNotifications, acti
   active: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const { notifications, busy, error, refresh, clear, markRead } = useNotifications(initialNotifications, 8);
+  const { notifications, busy, error, refresh, clear, markRead } = useNotifications(initialNotifications, 8, open);
   const menuRef = useRef<HTMLDivElement>(null);
 
   async function toggle() {

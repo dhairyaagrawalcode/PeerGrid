@@ -19,7 +19,6 @@ export default function MessagesView({
   messages = [],
   hasMoreMessages = false,
   hasMoreConversations = false,
-  groupCandidates,
   members = [],
 }: {
   profile: StudentProfile;
@@ -28,35 +27,32 @@ export default function MessagesView({
   messages?: DirectMessage[];
   hasMoreMessages?: boolean;
   hasMoreConversations?: boolean;
-  groupCandidates: StudentProfile[];
   members?: ConversationMember[];
 }) {
   return (
-    <section className="app-page flex h-[calc(100dvh-7.5rem)] min-h-[520px] overflow-hidden">
+    <section className="app-page messages-viewport flex overflow-hidden">
       <ConversationList
         currentId={profile.id}
         initialHasMore={hasMoreConversations}
         initialConversations={conversations}
         selectedId={selected?.conversation_id}
-        groupCandidates={groupCandidates}
       />
 
       <div
-        className={`${selected ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}
+        className={`${selected ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-1 flex-col`}
       >
         {selected ? (
           <>
-            <header className="flex h-17 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-5">
+            <header className="flex h-17 shrink-0 items-center gap-2 border-b border-line px-2 sm:gap-3 sm:px-5">
               <Link
                 aria-label="Back to conversations"
-                className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-card hover:text-font md:hidden"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-card hover:text-font md:hidden"
                 href="/messages"
               >
                 <FiArrowLeft />
               </Link>
               {selected.is_group ? <GroupDetailsButton
                 avatarPath={selected.group_avatar_path}
-                candidates={groupCandidates}
                 conversationId={selected.conversation_id}
                 currentId={profile.id}
                 members={members}
@@ -85,7 +81,7 @@ export default function MessagesView({
                 </span>
               </Link>}
               {!selected.is_group && <Link
-                className="button button-ghost ml-auto !min-h-9 !px-3 !text-xs"
+                className="button button-ghost ml-auto shrink-0 !min-h-9 !px-3 !text-xs max-sm:!hidden"
                 href={`/students/${selected.other_username!}`}
               >
                 View profile

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   FiExternalLink,
@@ -22,7 +23,11 @@ export default function ProfileView({
   profile,
   currentId,
   followSummary,
-  posts,
+  posts = [],
+  postsContent,
+  proofsContent,
+  pendingContent,
+  mutualContent,
   own = false,
   page = 0,
   hasMorePosts = false,
@@ -33,7 +38,11 @@ export default function ProfileView({
   profile: StudentProfile;
   currentId: string;
   followSummary: FollowSummary;
-  posts: SocialPost[];
+  posts?: SocialPost[];
+  postsContent?: ReactNode;
+  proofsContent?: ReactNode;
+  pendingContent?: ReactNode;
+  mutualContent?: ReactNode;
   own?: boolean;
   page?: number;
   hasMorePosts?: boolean;
@@ -54,7 +63,7 @@ export default function ProfileView({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
                     {profile.full_name}
@@ -70,7 +79,7 @@ export default function ProfileView({
                   Edit profile
                 </Link>
               ) : (
-                <div className="flex items-center gap-2 self-start">
+                <div className="flex shrink-0 flex-wrap items-center gap-2 self-start">
                   <FollowControls
                     currentId={currentId}
                     isFollowing={followSummary.viewer_follows}
@@ -85,11 +94,11 @@ export default function ProfileView({
                 </div>
               )}
             </div>
-            <div className="mt-4 flex gap-6 text-sm text-muted">
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
               {own ? <Link className="hover:text-font" href="/connections?view=followers#followers"><strong className="text-font">{followSummary.follower_count}</strong> follower{followSummary.follower_count === 1 ? "" : "s"}</Link> : <span><strong className="text-font">{followSummary.follower_count}</strong> follower{followSummary.follower_count === 1 ? "" : "s"}</span>}
               {own ? <Link className="hover:text-font" href="/connections?view=following#following"><strong className="text-font">{followSummary.following_count}</strong> following</Link> : <span><strong className="text-font">{followSummary.following_count}</strong> following</span>}
             </div>
-            {!own && <MutualConnections className="mt-2" context={mutualContext} />}
+            {!own && (mutualContent ?? <MutualConnections className="mt-2" context={mutualContext} />)}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
               {profile.campus?.name && <span className="flex items-center gap-1.5"><FiMapPin className="text-secondary" />{profile.campus.name}</span>}
               {profile.program && <span>{profile.program}</span>}
@@ -163,7 +172,16 @@ export default function ProfileView({
           {profile.goals || "Nothing specific shared yet."}
         </p>
       </section>
-      {own && pendingConfirmations.length > 0 && (
+      {pendingContent ?? <ProfileConfirmations pendingConfirmations={pendingConfirmations} />}
+      {proofsContent ?? <ProfileProofs proofs={proofs} currentId={currentId} />}
+      {postsContent ?? <ProfilePosts posts={posts} page={page} hasMorePosts={hasMorePosts} own={own} profile={profile} />}
+
+    </div>
+  );
+}
+
+export function ProfileConfirmations({ pendingConfirmations }: { pendingConfirmations: PendingCollaborationConfirmation[] }) {
+  return (<>      {pendingConfirmations.length > 0 && (
         <section className="mt-10">
           <p className="eyebrow">Participation confirmations</p>
           <div className="mt-4 space-y-4">
@@ -182,7 +200,11 @@ export default function ProfileView({
           </div>
         </section>
       )}
-      <section className="mt-10 border-t border-line pt-8">
+</>);
+}
+
+export function ProfileProofs({ proofs, currentId }: { proofs: CollaborationProof[]; currentId: string }) {
+  return (      <section className="mt-10 border-t border-line pt-8">
         <div className="flex items-center justify-between"><div><p className="eyebrow">Collaborations</p><h2 className="mt-2 text-lg font-bold">Proof of work</h2></div><span className="text-xs text-muted">{proofs.length}</span></div>
         {proofs.length ? (
           <div className="mt-4 divide-y divide-line">
@@ -202,7 +224,13 @@ export default function ProfileView({
           </div>
         ) : <p className="mt-4 text-sm text-muted">No verified collaborations yet.</p>}
       </section>
-      <section className="mt-10 border-t border-line pt-8">
+);
+}
+
+export function ProfilePosts({ posts, page, proofPage = 0, hasMorePosts, own, profile }: {
+  posts: SocialPost[]; page: number; proofPage?: number; hasMorePosts: boolean; own: boolean; profile: StudentProfile;
+}) {
+  return (      <section className="mt-10 border-t border-line pt-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">Posts</h2>
           <span className="text-xs text-muted">{posts.length}</span>
@@ -222,8 +250,7 @@ export default function ProfileView({
           hasMore={hasMorePosts}
           page={page}
           path={own ? "/profile" : `/students/${profile.username}`}
+          query={{ proofPage: String(proofPage) }}
         />
-      </section>
-    </div>
-  );
+      </section>);
 }

@@ -1,25 +1,19 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import AppShell from "@/app/components/app-shell";
 import SetupRequired from "@/app/components/setup-required";
 import { requireStudent } from "@/app/lib/auth";
-import { getNotifications, getUnreadCollaborationCount, getUnreadMessageCount, getUnreadNotificationCount } from "@/app/lib/data";
 import { isSupabaseConfigured } from "@/app/lib/supabase/config";
+import PlatformShellSkeleton from "@/app/components/platform-shell-skeleton";
 
-export default async function PlatformLayout({ children }: { children: ReactNode }) {
+export default function PlatformLayout({ children }: { children: ReactNode }) {
   if (!isSupabaseConfigured()) return <SetupRequired />;
-  const { profile, supabase } = await requireStudent();
-  const [unreadCount, unreadCollaborationCount, unreadNotificationCount, notifications] = await Promise.all([
-    getUnreadMessageCount(supabase),
-    getUnreadCollaborationCount(supabase),
-    getUnreadNotificationCount(supabase),
-    getNotifications(supabase, 8),
-  ]);
+  return <Suspense fallback={<PlatformShellSkeleton />}><ProtectedShell>{children}</ProtectedShell></Suspense>;
+}
+
+async function ProtectedShell({ children }: { children: ReactNode }) {
+  const { profile } = await requireStudent();
   return (
     <AppShell
-      initialCollaborationUnreadCount={unreadCollaborationCount}
-      initialNotificationUnreadCount={unreadNotificationCount}
-      initialNotifications={notifications}
-      initialUnreadCount={unreadCount}
       profile={profile}
     >
       {children}

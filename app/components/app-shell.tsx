@@ -55,7 +55,7 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
   }, [open]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative ml-auto shrink-0 md:ml-0" ref={menuRef}>
       <button
         aria-expanded={open}
         aria-haspopup="menu"
@@ -71,7 +71,7 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-12 w-60 rounded-xl border border-line bg-panel p-2" role="menu">
+        <div className="absolute right-0 top-12 max-h-[calc(100dvh-6rem)] w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-panel p-2" role="menu">
           <div className="border-b border-line px-3 py-2.5">
             <p className="truncate text-sm font-bold">{profile.full_name}</p>
             <p className="mt-0.5 truncate text-xs text-muted">@{profile.username}</p>
@@ -98,17 +98,17 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
 
 export default function AppShell({
   profile,
-  initialUnreadCount,
-  initialCollaborationUnreadCount,
-  initialNotificationUnreadCount,
-  initialNotifications,
+  initialUnreadCount = 0,
+  initialCollaborationUnreadCount = 0,
+  initialNotificationUnreadCount = 0,
+  initialNotifications = [],
   children,
 }: {
   profile: StudentProfile;
-  initialUnreadCount: number;
-  initialCollaborationUnreadCount: number;
-  initialNotificationUnreadCount: number;
-  initialNotifications: PeerGridNotification[];
+  initialUnreadCount?: number;
+  initialCollaborationUnreadCount?: number;
+  initialNotificationUnreadCount?: number;
+  initialNotifications?: PeerGridNotification[];
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -121,6 +121,34 @@ export default function AppShell({
     let notificationTimer: ReturnType<typeof setTimeout> | undefined;
     let notificationRevision = 0;
     let disposed = false;
+    let countRevision = 0;
+    let countTimer: ReturnType<typeof setTimeout> | undefined;
+    async function refreshCounts() {
+      const revision = ++countRevision;
+      const [messages, collaborations] = await Promise.all([
+        supabase.rpc("get_unread_message_count"),
+        supabase.rpc("get_unread_collaboration_count"),
+      ]);
+      if (disposed || revision !== countRevision) return;
+      if (!messages.error) setUnreadCount(Number(messages.data ?? 0));
+      if (!collaborations.error) setCollaborationUnreadCount(Number(collaborations.data ?? 0));
+    }
+    function scheduleCounts() {
+      countRevision++;
+      clearTimeout(countTimer);
+      countTimer = setTimeout(() => void refreshCounts(), 150);
+    }
+    // Non-critical badges no longer hold up the server-rendered page. Reconcile
+    // on reconnect/focus as well as events so missed events cannot leave stale counts.
+    function reconcile() {
+      if (document.visibilityState !== "visible") return;
+      scheduleCounts();
+      void refreshNotificationCount();
+    }
+    document.addEventListener("visibilitychange", reconcile);
+    window.addEventListener("online", reconcile);
+    void refreshCounts();
+    void refreshNotificationCount();
     async function refreshNotificationCount() {
       const revision = ++notificationRevision;
       const { data, error } = await supabase.rpc("get_unread_notification_count");
@@ -145,16 +173,15 @@ export default function AppShell({
             setUnreadCount((count) => count + 1);
           }
           window.dispatchEvent(new CustomEvent("peergrid:message-change"));
+          scheduleCounts();
         },
       )
-      .subscribe();
+      .subscribe((status) => { if (status === "SUBSCRIBED") scheduleCounts(); });
 
     const collaborationChannel = supabase
       .channel(`navigation-collaborations:${profile.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "collaboration_activity_events" }, () => {
-        void supabase.rpc("get_unread_collaboration_count").then(({ data }) => {
-          setCollaborationUnreadCount(Number(data ?? 0));
-        });
+        scheduleCounts();
       })
       .subscribe();
 
@@ -167,9 +194,10 @@ export default function AppShell({
     function messagesRead(event: Event) {
       const count = Number((event as CustomEvent<number>).detail ?? 0);
       setUnreadCount((current) => Math.max(0, current - count));
+      scheduleCounts();
     }
     window.addEventListener("peergrid:messages-read", messagesRead);
-    const collaborationsSeen = () => setCollaborationUnreadCount(0);
+    const collaborationsSeen = () => { setCollaborationUnreadCount(0); scheduleCounts(); };
     const notificationsRead = () => setNotificationUnreadCount(0);
     const notificationsUpdated = () => {
       setNotificationUnreadCount(0);
@@ -181,6 +209,9 @@ export default function AppShell({
     return () => {
       disposed = true;
       clearTimeout(notificationTimer);
+      clearTimeout(countTimer);
+      document.removeEventListener("visibilitychange", reconcile);
+      window.removeEventListener("online", reconcile);
       window.removeEventListener("peergrid:messages-read", messagesRead);
       window.removeEventListener("peergrid:collaboration-seen", collaborationsSeen);
       window.removeEventListener("peergrid:notifications-read", notificationsRead);
@@ -213,7 +244,7 @@ export default function AppShell({
         aria-label={label}
         className={
           mobile
-            ? `relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active ? "text-primary" : "text-muted"}`
+            ? `relative flex min-w-0 flex-col items-center justify-center gap-1 text-[clamp(8px,2.3vw,10px)] font-semibold ${active ? "text-primary" : "text-muted"}`
             : `relative grid h-10 w-10 place-items-center rounded-xl transition ${active ? "bg-primary/15 text-primary" : "text-muted hover:bg-panel hover:text-font"}`
         }
         href={href}
@@ -221,7 +252,7 @@ export default function AppShell({
         title={label}
       >
         <Icon size={mobile ? 19 : 18} />
-        {mobile && <span>{label}</span>}
+        {mobile && <span className="max-w-full whitespace-nowrap">{label}</span>}
         {count > 0 && (
           <span className={`absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[8px] font-bold leading-4 text-white ${mobile ? "right-[21%] top-2" : "-right-1 -top-1"}`}>
             {count > 99 ? "99+" : count}
@@ -248,11 +279,11 @@ export default function AppShell({
         </div>
       </header>
 
-      <main className="app-frame h-dvh overflow-y-auto overscroll-contain pb-24 pt-[5.5rem] [scrollbar-gutter:stable] md:pb-8">
+      <main className="app-frame app-main">
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[4.4rem] grid-cols-6 border-t border-line bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+      <nav aria-label="Mobile navigation" className="mobile-navigation fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-bg/95 px-1 backdrop-blur-xl md:hidden">
         {navigation.map((item) => navigationLink({ ...item, mobile: true }))}
       </nav>
     </div>

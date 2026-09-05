@@ -1,13 +1,10 @@
 import ProfileForm from "@/app/components/profile-form";
 import { requireStudent } from "@/app/lib/auth";
-import { getCampuses, getStudent } from "@/app/lib/data";
+import { getCampuses } from "@/app/lib/data";
 
 export default async function EditProfilePage() {
-  const { supabase, user } = await requireStudent();
-  const [profile, campuses] = await Promise.all([
-    getStudent(supabase, { id: user.id }),
-    getCampuses(supabase),
-  ]);
+  const { supabase, profile } = await requireStudent();
+  const campuses = await getCampuses(supabase);
   return (
     <div className="app-page">
       <section className="mx-auto max-w-4xl py-6 sm:py-8">

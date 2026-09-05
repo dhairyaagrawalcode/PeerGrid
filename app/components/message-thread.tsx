@@ -179,9 +179,9 @@ export default function MessageThread({ conversationId, currentId, initialHasMor
           <div ref={endRef} />
         </div> : <div className="grid h-full place-items-center text-center"><div><p className="text-sm font-bold">Start the conversation</p><p className="mt-1 text-xs text-muted">Messages are end-to-end encrypted.</p></div></div>}
       </div>
-      <div className="border-t border-line p-3 sm:p-4">
+      <div className="shrink-0 border-t border-line px-1 py-3 sm:p-4">
         <form className="flex w-full items-center gap-2" onSubmit={send}>
-          <div className="relative flex-1"><FiLock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={13} /><input aria-label="Encrypted message" autoComplete="off" className="field !min-h-11 w-full !rounded-full !pl-10 !pr-4" disabled={!cryptoReady} maxLength={2000} onChange={(event) => setBody(event.target.value)} placeholder={cryptoReady ? "Message…" : "Preparing encryption…"} value={body} /></div>
+          <div className="relative min-w-0 flex-1"><FiLock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={13} /><input aria-label="Encrypted message" autoComplete="off" className="field !min-h-11 w-full !rounded-full !pl-10 !pr-4" disabled={!cryptoReady} maxLength={2000} onChange={(event) => setBody(event.target.value)} placeholder={cryptoReady ? "Message…" : "Preparing encryption…"} value={body} /></div>
           <button aria-label="Send encrypted message" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-white transition hover:bg-primary-hover disabled:opacity-40" disabled={sending || !cryptoReady || !body.trim()} type="submit">{sending ? <FiLoader className="animate-spin" /> : <FiSend />}</button>
         </form>
         {error && <p className="mt-2 px-2 text-xs text-danger">{error}</p>}

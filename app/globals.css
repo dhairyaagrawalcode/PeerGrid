@@ -28,6 +28,10 @@
   --pg-accent-soft: rgba(109, 93, 251, 0.1);
   --pg-danger: #f87171;
   --pg-danger-soft: rgba(248, 113, 113, 0.1);
+  --pg-header-height: 4.5rem;
+  --pg-mobile-nav-height: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+  --pg-content-top: calc(var(--pg-header-height) + 1rem);
+  --pg-content-bottom: calc(var(--pg-mobile-nav-height) + 1rem);
 }
 * {
   box-sizing: border-box;
@@ -73,12 +77,37 @@ a {
 }
 .app-page {
   width: 100%;
+  min-width: 0;
   max-width: 77.5rem;
   margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+/* Real pages and loading states share the space between the fixed bars. */
+.app-main {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: var(--pg-content-top);
+  padding-bottom: var(--pg-content-bottom);
+  scroll-padding-block: var(--pg-content-top) var(--pg-content-bottom);
+  scrollbar-gutter: stable;
+}
+.mobile-navigation {
+  height: var(--pg-mobile-nav-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.messages-viewport {
+  height: calc(100dvh - var(--pg-content-top) - var(--pg-content-bottom));
+  min-height: 0;
 }
 @media (min-width: 40rem) {
   .app-frame {
     padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 48rem) {
+  :root {
+    --pg-content-bottom: 2rem;
   }
 }
 
@@ -131,6 +160,7 @@ a {
 }
 .field {
   width: 100%;
+  min-width: 0;
   min-height: 2.85rem;
   border: 1px solid var(--pg-divider);
   border-radius: 0.75rem;
@@ -175,6 +205,8 @@ textarea.field {
 .chip,
 .tag {
   display: inline-flex;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   align-items: center;
   gap: 0.35rem;
   border: 1px solid var(--pg-divider);

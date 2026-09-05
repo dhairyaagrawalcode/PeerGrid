@@ -17,19 +17,19 @@ import type {
 
 type SupabaseClient = Awaited<ReturnType<typeof import("./supabase/server").createClient>>;
 
-export const POST_PAGE_SIZE = 20;
+export const POST_PAGE_SIZE = 12;
 export const COLLABORATION_PAGE_SIZE = 20;
 export const SEARCH_PAGE_SIZE = 30;
 export const MESSAGE_PAGE_SIZE = 50;
 export const CONVERSATION_PAGE_SIZE = 50;
 export const NETWORK_PAGE_SIZE = 30;
 
-const studentSelect =
+export const studentSelect =
   "id, username, full_name, avatar_url, campus_id, graduation_year, program, current_status, bio, goals, github_url, linkedin_url, portfolio_url, is_verified, campus:campuses(id, slug, name, city), profile_skills(skill:skills(id, name)), profile_interests(interest:interests(id, name)), profile_can_help(skill:skills(id, name)), profile_needs_help(skill:skills(id, name))";
 const studentDiscoverySelect =
   "id, username, full_name, avatar_url, campus_id, graduation_year, program, current_status, is_verified, campus:campuses(id, slug, name, city), profile_skills(skill:skills(id, name)), profile_interests(interest:interests(id, name)), profile_can_help(skill:skills(id, name)), profile_needs_help(skill:skills(id, name))";
 
-function normalizeStudent(row: unknown) {
+export function normalizeStudent(row: unknown) {
   const raw = row as StudentProfile & {
     profile_skills?: { skill: { id: number; name: string } | null }[];
     profile_interests?: { interest: { id: number; name: string } | null }[];
@@ -216,41 +216,26 @@ export async function getSocialPosts(
     throw error;
   }
 
-  const postIds = (data ?? []).map((row) => String(row.id));
-  const engagement = new Map<string, { like_count: number; comment_count: number; viewer_liked: boolean }>();
-  if (postIds.length) {
-    const { data: rows, error: engagementError } = await supabase.rpc(
-      "get_post_engagement",
-      { candidate_post_ids: postIds },
-    );
-    if (engagementError) {
-      console.error("[PeerGrid] post engagement unavailable", { code: engagementError.code });
-    }
-    for (const row of rows ?? []) {
-      engagement.set(String(row.post_id), {
-        like_count: Number(row.like_count ?? 0),
-        comment_count: Number(row.comment_count ?? 0),
-        viewer_liked: Boolean(row.viewer_liked),
-      });
-    }
-  }
 
   const posts = (data ?? []) as unknown as Array<
     Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked">
   >;
-  const mediaPaths = posts.flatMap((post) => (post.attachment_path ? [post.attachment_path] : []));
+  const postIds = posts.map((post) => post.id);
+  const mediaPaths = [...new Set(posts.flatMap((post) => post.attachment_path ? [post.attachment_path] : []))];
+  // Independent batched operations: never one author/count/storage request per post.
+  const [engagementResult, mediaResult] = await Promise.all([
+    postIds.length ? supabase.rpc("get_post_engagement", { candidate_post_ids: postIds }) : Promise.resolve({ data: [], error: null }),
+    mediaPaths.length ? supabase.storage.from("post-media").createSignedUrls(mediaPaths, 60 * 60) : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (engagementResult.error) console.error("[PeerGrid] post engagement unavailable", { code: engagementResult.error.code });
+  if (mediaResult.error) console.error("[PeerGrid] post media URLs unavailable", { message: mediaResult.error.message });
+  const engagement = new Map<string, { like_count: number; comment_count: number; viewer_liked: boolean }>();
+  for (const row of engagementResult.data ?? []) {
+    engagement.set(String(row.post_id), { like_count: Number(row.like_count ?? 0), comment_count: Number(row.comment_count ?? 0), viewer_liked: Boolean(row.viewer_liked) });
+  }
   const signedUrls = new Map<string, string>();
-  if (mediaPaths.length) {
-    const { data: signed, error: signedError } = await supabase.storage
-      .from("post-media")
-      .createSignedUrls(mediaPaths, 60 * 60);
-    if (signedError) {
-      console.error("[PeerGrid] post media URLs unavailable", { message: signedError.message });
-    } else {
-      for (const item of signed ?? []) {
-        if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
-      }
-    }
+  for (const item of mediaResult.data ?? []) {
+    if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
   }
 
   const hydrated = posts.map((post) => ({
@@ -266,10 +251,15 @@ export async function getSocialPosts(
   });
 }
 
-export async function getCollaborationProofs(supabase: SupabaseClient, profileId: string) {
-  const { data, error } = await supabase.rpc("get_profile_collaboration_proofs", {
+export async function getCollaborationProofs(supabase: SupabaseClient, profileId: string, options?: { limit: number; offset: number }) {
+  let query = supabase.rpc("get_profile_collaboration_proofs", {
     candidate_profile_id: profileId,
   });
+  if (options) {
+    const offset = Math.max(0, options.offset);
+    query = query.range(offset, offset + Math.min(50, Math.max(1, options.limit)) - 1);
+  }
+  const { data, error } = await query;
   if (error) {
     if (["42883", "PGRST202"].includes(error.code)) return [];
     throw error;

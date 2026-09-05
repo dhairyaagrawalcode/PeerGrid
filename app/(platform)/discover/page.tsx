@@ -20,7 +20,7 @@ export default async function DiscoverPage() {
       </header>
       {!!matches.length && (
         <section className="mt-8">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
             <h2 className="text-sm font-bold">People you should meet</h2>
             <p className="text-xs text-muted">Based on what you build and can help with</p>
           </div>

@@ -28,20 +28,24 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Validate/refresh the signed JWT here. Server pages/actions still use getUser
+  // and fresh platform access checks; claims alone never authorize private data.
+  const { data, error } = await supabase.auth.getClaims();
+  const signedIn = !error && !!data?.claims?.sub;
   const pathname = request.nextUrl.pathname;
   function redirectTo(path: string) {
     const redirectResponse = NextResponse.redirect(new URL(path, request.url));
     response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
     return redirectResponse;
   }
-  if (!user && isProtectedPath(pathname)) return redirectTo(pathname.startsWith("/admin") ? "/auth/login" : "/");
+  if (!signedIn && isProtectedPath(pathname)) return redirectTo("/");
 
   // Auth endpoints must stay reachable, including sign-in for the administrator.
-  const accessPage = ["/maintenance", "/account-restricted", "/service-unavailable"].includes(pathname);
-  if (!pathname.startsWith("/auth/") && !accessPage && (pathname === "/" || isProtectedPath(pathname))) {
+  // Protected pages/actions enforce this in getAuthContext (and database RLS/API
+  // hooks). Only the public landing page needs the additional proxy check.
+  if (pathname === "/") {
     const { data: access, error } = await supabase.rpc("get_platform_access");
-    const destination = accessDestination(error ? null : access, !!user);
+    const destination = accessDestination(error ? null : access, signedIn);
     if (destination) return redirectTo(destination);
   }
   return response;
