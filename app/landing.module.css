@@ -74,6 +74,26 @@
   transition: color 150ms ease;
 }
 
+.githubLink {
+  display: inline-flex;
+  min-height: 38px;
+  margin-left: auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--pg-divider);
+  border-radius: 10px;
+  padding: 0 13px;
+  color: var(--pg-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.githubLink:hover {
+  border-color: var(--pg-text-muted);
+  color: var(--pg-text-primary);
+}
+
 .hero {
   display: grid;
   width: min(1240px, calc(100% - 40px));
@@ -642,11 +662,22 @@
 }
 .footer div {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   /* border-top: 1px solid var(--landing-line); */
   padding-top: 30px;
   color: var(--pg-text-muted);
   font-size: 9px;
+}
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--pg-text-muted);
+  transition: color 150ms ease;
+}
+.footer a:hover {
+  color: var(--pg-text-primary);
 }
 
 @media (max-width: 900px) {
@@ -685,6 +716,10 @@
   }
   .headerLogin {
     font-size: 11px;
+  }
+  .githubLink {
+    min-height: 36px;
+    padding-inline: 11px;
   }
   .hero {
     min-height: auto;
@@ -760,6 +795,7 @@
     padding: 38px 0;
   }
   .footer div {
+    align-items: flex-start;
     flex-direction: column;
     gap: 10px;
   }

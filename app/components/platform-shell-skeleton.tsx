@@ -11,10 +11,13 @@ export default function PlatformShellSkeleton() {
         <Brand href="/feed" />
         <div aria-hidden="true" className="ml-auto hidden items-center gap-1 motion-safe:animate-pulse md:flex">{[0, 1, 2, 3, 4, 5].map(item => <div className="grid h-10 w-10 place-items-center" key={item}><SkeletonBar className="h-5 w-5" /></div>)}</div>
         <div aria-hidden="true" className="hidden h-7 w-px bg-line md:block" />
-        <SkeletonBar className="ml-auto h-9 w-9 shrink-0 rounded-full md:ml-0" />
+        <div aria-hidden="true" className="mobile-header-actions ml-auto flex items-center gap-2 md:ml-0">
+          <SkeletonBar className="h-10 w-10 rounded-xl md:hidden" />
+          <SkeletonBar className="h-9 w-9 shrink-0 rounded-full" />
+        </div>
       </div>
     </header>
     <main className="app-frame app-main"><PlatformLoading /></main>
-    <div aria-hidden="true" className="mobile-navigation fixed inset-x-0 bottom-0 grid grid-cols-6 place-items-center border-t border-line bg-bg px-1 motion-safe:animate-pulse md:hidden">{[0, 1, 2, 3, 4, 5].map(item => <SkeletonBar className="h-5 w-5" key={item} />)}</div>
+    <div aria-hidden="true" className="mobile-navigation fixed inset-x-0 bottom-0 grid grid-cols-5 place-items-center border-t border-line bg-bg px-1 motion-safe:animate-pulse md:hidden">{[0, 1, 2, 3, 4].map(item => <SkeletonBar className="h-5 w-5" key={item} />)}</div>
   </div>;
 }

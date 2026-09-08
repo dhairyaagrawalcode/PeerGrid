@@ -9,6 +9,7 @@ test("loaded and loading shells reserve the same mobile navigation space", () =>
     const shell = source(`app/components/${name}.tsx`);
     assert.match(shell, /className="app-frame app-main"/);
     assert.match(shell, /className="mobile-navigation /);
+    assert.match(shell, /mobile-navigation[^\n]*grid-cols-5/);
     assert.doesNotMatch(shell, /pb-24|h-\[4\.4rem\]/);
   }
   const css = source("app/globals.css");
@@ -30,9 +31,23 @@ test("chat and chat skeleton use the same available viewport without a fixed min
   assert.match(source("app/components/message-thread.tsx"), /shrink-0 border-t border-line/);
 });
 
-test("account menu stays right-aligned and bounded on mobile", () => {
+test("an open mobile conversation replaces the application bars", () => {
   const shell = source("app/components/app-shell.tsx");
-  assert.match(shell, /relative ml-auto shrink-0 md:ml-0/);
+  const css = source("app/globals.css");
+  assert.match(shell, /mobileConversationOpen/);
+  assert.match(shell, /mobile-chat-open/);
+  assert.match(css, /\.mobile-chat-open > header[\s\S]*\.mobile-chat-open > \.mobile-navigation[\s\S]*display: none/);
+  assert.match(css, /\.mobile-chat-open \.messages-viewport\s*\{\s*height: 100dvh/);
+  assert.match(css, /safe-area-inset-top/);
+  assert.match(css, /safe-area-inset-bottom/);
+});
+
+test("mobile notifications sit beside the bounded account menu instead of in bottom navigation", () => {
+  const shell = source("app/components/app-shell.tsx");
+  assert.match(shell, /mobile-header-actions ml-auto flex items-center gap-2 md:ml-0/);
+  assert.match(shell, /md:hidden[\s\S]*NotificationDropdown/);
+  assert.match(shell, /mobileNavigation\.map/);
+  assert.match(shell, /mobileNavigation = navigation\.filter\(\(item\) => item\.label !== "Notifications"\)/);
   assert.match(shell, /right-0 top-12.*max-w-\[calc\(100vw-2rem\)\]/);
   assert.match(shell, /aria-label="Mobile navigation"/);
 });
@@ -40,6 +55,8 @@ test("account menu stays right-aligned and bounded on mobile", () => {
 test("narrow people rows and admin filters stack instead of squeezing content", () => {
   assert.match(source("app/components/student-result.tsx"), /grid-cols-\[auto_minmax\(0,1fr\)\]/);
   assert.match(source("app/components/student-result.tsx"), /col-start-2 justify-self-start/);
-  assert.match(source("app/admin/(dashboard)/users/page.tsx"), /my-6 grid gap-2 sm:grid-cols-\[minmax\(0,1fr\)_auto_auto\]/);
+  const adminUsers = source("app/admin/(dashboard)/users/page.tsx");
+  assert.match(adminUsers, /grid gap-2 sm:grid-cols-\[minmax\(0,1fr\)_180px_auto\]/);
+  assert.match(adminUsers, /mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3/);
   assert.doesNotMatch(source("app/components/issue-report-form.tsx"), /break-all/);
 });

@@ -7,6 +7,8 @@ import type {
   CryptoDevicePublic,
   DecryptedDirectMessage,
   DirectMessage,
+  EncryptedMessageAttachment,
+  MessageAttachmentKind,
 } from "@/app/types";
 
 const DATABASE_NAME = "peergrid-e2ee-v1";
@@ -276,6 +278,9 @@ export async function encryptDirectMessage({
     return {
       ...unsigned,
       signature: b64(sodium.crypto_sign_detached(signaturePayload(unsigned), device.signingPrivateKey)),
+      attachment_path: null,
+      attachment_kind: null,
+      attachment_size: null,
     };
   } finally {
     sodium.memzero(contentKey);
@@ -320,5 +325,84 @@ export async function decryptDirectMessage(
     return { ...message, plaintext: null, decryption_error: "decrypt_failed" };
   } finally {
     if (contentKey) sodium.memzero(contentKey);
+  }
+}
+
+function attachmentAdditionalData(conversationId: string, messageId: string, kind: MessageAttachmentKind) {
+  return JSON.stringify({ version: 1, conversationId, messageId, kind });
+}
+
+/** Encrypts an attachment before it leaves the browser. The returned key is
+ * placed only inside the signed, E2EE message plaintext. */
+export async function encryptMessageAttachment({
+  conversationId,
+  messageId,
+  path,
+  kind,
+  name,
+  mime,
+  data,
+}: {
+  conversationId: string;
+  messageId: string;
+  path: string;
+  kind: MessageAttachmentKind;
+  name: string;
+  mime: string;
+  data: Uint8Array;
+}) {
+  await sodium.ready;
+  const key = sodium.randombytes_buf(sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
+  const nonce = sodium.randombytes_buf(sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+  try {
+    const encrypted = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
+      data,
+      attachmentAdditionalData(conversationId, messageId, kind),
+      null,
+      nonce,
+      key,
+    );
+    const attachment: EncryptedMessageAttachment = {
+      version: 1,
+      path,
+      kind,
+      name,
+      mime,
+      size: data.byteLength,
+      key: b64(key),
+      nonce: b64(nonce),
+    };
+    return { encrypted, attachment };
+  } finally {
+    sodium.memzero(key);
+    sodium.memzero(nonce);
+  }
+}
+
+export async function decryptMessageAttachment({
+  attachment,
+  conversationId,
+  messageId,
+  encrypted,
+}: {
+  attachment: EncryptedMessageAttachment;
+  conversationId: string;
+  messageId: string;
+  encrypted: Uint8Array;
+}) {
+  await sodium.ready;
+  const key = bytes(attachment.key);
+  try {
+    const plaintext = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+      null,
+      encrypted,
+      attachmentAdditionalData(conversationId, messageId, attachment.kind),
+      bytes(attachment.nonce),
+      key,
+    );
+    if (plaintext.byteLength !== attachment.size) throw new Error("Encrypted attachment size mismatch");
+    return plaintext;
+  } finally {
+    sodium.memzero(key);
   }
 }

@@ -5,8 +5,10 @@ import { requireStudent } from "@/app/lib/auth";
 import { moderateContent } from "@/app/lib/moderation";
 
 export type CreatePostResult = { success?: boolean; error?: string; moderation?: "published" | "held" };
+export type DeletePostResult = { success?: boolean; error?: string };
 
 const allowedKinds = new Set(["image", "video", "document"]);
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function createSocialPost(formData: FormData): Promise<CreatePostResult> {
   const { supabase, user } = await requireStudent();
@@ -54,4 +56,26 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
   }
   if (created?.moderation_status === "published") revalidatePath("/feed");
   return { success: true, moderation: created?.moderation_status === "held" ? "held" : "published" };
+}
+
+export async function deleteSocialPost(postId: string): Promise<DeletePostResult> {
+  if (!uuidPattern.test(postId)) return { error: "Invalid post." };
+  const { supabase, user } = await requireStudent();
+  const { data: deleted, error } = await supabase.from("social_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .select("attachment_path")
+    .maybeSingle();
+  if (error || !deleted) {
+    if (error) console.error("[PeerGrid] social post delete failed", { code: error.code });
+    return { error: "This post could not be deleted." };
+  }
+  if (deleted.attachment_path) {
+    const { error: cleanupError } = await supabase.storage.from("post-media").remove([deleted.attachment_path]);
+    if (cleanupError) console.error("[PeerGrid] deleted post media cleanup pending", { code: cleanupError.message });
+  }
+  revalidatePath("/feed");
+  revalidatePath("/profile");
+  return { success: true };
 }

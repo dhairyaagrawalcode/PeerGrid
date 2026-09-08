@@ -1,0 +1,22 @@
+{
+  "measuredAt": "2026-09-08T09:28:00+05:30",
+  "build": "Next.js 16.3.3 production, webpack verification build",
+  "protocol": "Three fresh navigations in the same in-app browser. First run is cold; runs two and three form the warm mean. Cross-origin Supabase byte sizes are unavailable without Timing-Allow-Origin.",
+  "publicLanding": {
+    "runs": [
+      { "ttfbMs": 1385, "documentMs": 1386, "dclMs": 1421, "lcpMs": 1464, "requests": 26, "encodedBytes": 303621, "transferBytes": 17121, "slowestRequestMs": 1457, "largestEncodedResourceBytes": 65604 },
+      { "ttfbMs": 456, "documentMs": 457, "dclMs": 479, "lcpMs": 516, "requests": 25, "encodedBytes": 303610, "transferBytes": 15465, "slowestRequestMs": 486, "largestEncodedResourceBytes": 65604 },
+      { "ttfbMs": 224, "documentMs": 225, "dclMs": 244, "lcpMs": 276, "requests": 25, "encodedBytes": 303610, "transferBytes": 15465, "slowestRequestMs": 250, "largestEncodedResourceBytes": 65604 }
+    ],
+    "warmMean": { "ttfbMs": 340, "documentMs": 341, "lcpMs": 396, "requests": 25, "encodedBytes": 303610 },
+    "previousOptimizedMean": { "ttfbMs": 320, "documentMs": 320, "lcpMs": 392, "encodedBytes": 298961 },
+    "conclusion": "Statistically flat. The warm LCP changed by 4 ms; the observable encoded payload grew 1.6% for the added UI assets. No performance improvement is claimed."
+  },
+  "responsiveWidths": [360, 390, 430, 768, 1366, 1920],
+  "horizontalOverflowDetected": false,
+  "consoleErrors": [],
+  "authenticatedRoutes": {
+    "status": "not remeasured",
+    "reason": "The isolated production browser had no authenticated PeerGrid session. Protected pages correctly redirected to the public landing page and the stale-cookie path produced no console error."
+  }
+}

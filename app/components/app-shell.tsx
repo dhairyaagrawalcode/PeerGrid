@@ -32,6 +32,7 @@ const navigation = [
   { href: "/messages", label: "Messages", icon: FiMessageSquare },
   { href: "/notifications", label: "Notifications", icon: FiBell },
 ];
+const mobileNavigation = navigation.filter((item) => item.label !== "Notifications");
 
 function AccountMenu({ profile }: { profile: StudentProfile }) {
   const pathname = usePathname();
@@ -55,7 +56,7 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
   }, [open]);
 
   return (
-    <div className="relative ml-auto shrink-0 md:ml-0" ref={menuRef}>
+    <div className="relative shrink-0" ref={menuRef}>
       <button
         aria-expanded={open}
         aria-haspopup="menu"
@@ -116,6 +117,8 @@ export default function AppShell({
   const [collaborationUnreadCount, setCollaborationUnreadCount] = useState(initialCollaborationUnreadCount);
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(initialNotificationUnreadCount);
   const supabase = useMemo(() => createClient(), []);
+  const mobileConversationOpen = /^\/messages\/[^/]+$/.test(pathname);
+  const notificationsActive = pathname === "/notifications" || pathname.startsWith("/notifications/");
 
   useEffect(() => {
     let notificationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -176,6 +179,10 @@ export default function AppShell({
           scheduleCounts();
         },
       )
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, () => {
+        window.dispatchEvent(new CustomEvent("peergrid:message-change"));
+        scheduleCounts();
+      })
       .subscribe((status) => { if (status === "SUBSCRIBED") scheduleCounts(); });
 
     const collaborationChannel = supabase
@@ -263,7 +270,7 @@ export default function AppShell({
   }
 
   return (
-    <div className="h-dvh overflow-hidden bg-bg text-font">
+    <div className={`h-dvh overflow-hidden bg-bg text-font ${mobileConversationOpen ? "mobile-chat-open" : ""}`}>
       <ActivityTracker />
       <CryptoDeviceBootstrap userId={profile.id} />
       <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
@@ -275,7 +282,12 @@ export default function AppShell({
           </nav>
           <div className="hidden h-7 w-px bg-line md:block" />
 
-          <AccountMenu key={pathname} profile={profile} />
+          <div className="mobile-header-actions ml-auto flex items-center gap-2 md:ml-0">
+            <div className="md:hidden">
+              <NotificationDropdown active={notificationsActive} count={notificationUnreadCount} initialNotifications={initialNotifications} />
+            </div>
+            <AccountMenu key={pathname} profile={profile} />
+          </div>
         </div>
       </header>
 
@@ -283,8 +295,8 @@ export default function AppShell({
         {children}
       </main>
 
-      <nav aria-label="Mobile navigation" className="mobile-navigation fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-bg/95 px-1 backdrop-blur-xl md:hidden">
-        {navigation.map((item) => navigationLink({ ...item, mobile: true }))}
+      <nav aria-label="Mobile navigation" className="mobile-navigation fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-bg/95 px-1 backdrop-blur-xl md:hidden">
+        {mobileNavigation.map((item) => navigationLink({ ...item, mobile: true }))}
       </nav>
     </div>
   );

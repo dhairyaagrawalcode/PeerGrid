@@ -30,12 +30,30 @@ export async function updateSession(request: NextRequest) {
 
   // Validate/refresh the signed JWT here. Server pages/actions still use getUser
   // and fresh platform access checks; claims alone never authorize private data.
-  const { data, error } = await supabase.auth.getClaims();
-  const signedIn = !error && !!data?.claims?.sub;
+  let signedIn = false;
+  let staleSession = false;
+  try {
+    const { data, error } = await supabase.auth.getClaims();
+    signedIn = !error && !!data?.claims?.sub;
+    staleSession = error?.code === "refresh_token_not_found";
+  } catch (caught) {
+    const authError = caught as { code?: unknown; message?: unknown };
+    staleSession = authError.code === "refresh_token_not_found"
+      || (typeof authError.message === "string" && authError.message.includes("Refresh Token Not Found"));
+  }
   const pathname = request.nextUrl.pathname;
+  function clearStaleAuthCookies(target: NextResponse) {
+    if (!staleSession) return;
+    request.cookies.getAll().forEach((cookie) => {
+      if (/^sb-[^-]+-auth-token(?:\.\d+)?$/.test(cookie.name)) {
+        target.cookies.set(cookie.name, "", { expires: new Date(0), httpOnly: true, path: "/", sameSite: "lax" });
+      }
+    });
+  }
   function redirectTo(path: string) {
     const redirectResponse = NextResponse.redirect(new URL(path, request.url));
     response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+    clearStaleAuthCookies(redirectResponse);
     return redirectResponse;
   }
   if (!signedIn && isProtectedPath(pathname)) return redirectTo("/");
@@ -48,5 +66,6 @@ export async function updateSession(request: NextRequest) {
     const destination = accessDestination(error ? null : access, signedIn);
     if (destination) return redirectTo(destination);
   }
+  clearStaleAuthCookies(response);
   return response;
 }

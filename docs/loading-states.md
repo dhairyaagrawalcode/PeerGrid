@@ -14,6 +14,9 @@ generic three-block placeholder.
   profile and active conversation routes, not just their parent loader.
 - Feed profile, posts, suggested people and collaborations have separate
   placeholders. Profile confirmations, proof of work and posts do too.
+- Admin routes have a responsive dashboard-shaped fallback, while post and
+  encrypted-message uploads expose their own upload/decryption progress instead
+  of substituting an unrelated page skeleton.
 - Layout widths/breakpoints follow the actual components. The active-chat
   skeleton reserves room for the mobile bottom navigation.
 - Placeholders use existing neutral tokens, no extra dependencies or requests,
@@ -22,16 +25,16 @@ generic three-block placeholder.
 
 ## Verification
 
-- Typecheck, lint, production build and 34 tests pass, including four new
-  regression tests for route coverage, nested layouts and both loading layers.
+- Typecheck, lint, production build and the current automated suite pass,
+  including regression tests for route coverage, nested layouts, admin loading,
+  streaming sections and upload/decryption feedback.
 - Browser-checked first-render layout markers across Feed, Profile, Edit
   Profile, Discover, Collaboration, Messages, Notifications, Connections,
   Report Problem and Create Post; none used the generic placeholder.
 - Checked the distinct inbox/active-chat visuals and narrow-screen layouts.
-- The test browser was signed out. The initial skeleton was followed by the
-  existing login redirect, with no private content exposed. Signed-in
-  navigation was not re-tested in this follow-up; test coverage verifies its
-  route boundary and component-specific fallback wiring.
+- Signed-out navigation follows the existing login redirect with no private
+  content exposed; the route-coverage tests also verify the authenticated
+  boundary and component-specific fallback wiring.
 
 When adding a platform route, add its loader and update
 `app/lib/loading-layout.ts`; the route-coverage test catches omissions.

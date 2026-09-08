@@ -6,13 +6,15 @@ import AvatarImage from "./avatar-image";
 import PostBody from "./post-body";
 import PostEngagement from "./post-engagement";
 import PostImage from "./post-image";
+import PostDeleteButton from "./post-delete-button";
 
-export default function SocialPostCard({ post, flat = false }: { post: SocialPost; flat?: boolean }) {
+export default function SocialPostCard({ post, flat = false, canDelete = false }: { post: SocialPost; flat?: boolean; canDelete?: boolean }) {
   const profileHref = `/students/${post.author.username}`;
   return (
     <article className={flat ? "scroll-mt-24 overflow-hidden py-2" : "surface scroll-mt-24 overflow-hidden"} id={`post-${post.id}`}>
       <div className="p-4 sm:p-5">
-        <Link className="flex min-w-0 items-center gap-3" href={profileHref}>
+        <div className="flex min-w-0 items-center gap-2">
+        <Link className="flex min-w-0 flex-1 items-center gap-3" href={profileHref}>
           <span className="avatar !rounded-full">{post.author.avatar_url ? <AvatarImage alt={post.author.full_name} src={post.author.avatar_url} /> : initials(post.author.full_name)}</span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold hover:text-primary">{post.author.full_name}</span>
@@ -21,18 +23,20 @@ export default function SocialPostCard({ post, flat = false }: { post: SocialPos
             </span>
           </span>
         </Link>
+        {canDelete && <PostDeleteButton hasAttachment={Boolean(post.attachment_path)} postId={post.id} />}
+        </div>
         {post.recommendation_reason && <p className="mt-3 text-[11px] text-muted">{post.recommendation_reason}</p>}
         {post.body && <PostBody className="mt-4 text-sm leading-6 text-subtle" text={post.body} />}
       </div>
 
       {post.attachment_kind === "image" && post.attachment_url && (
-        <div className="mx-4 mb-4 overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
+        <div className="mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
           <PostImage alt={post.attachment_name || "Post attachment"} mime={post.attachment_mime} original={post.attachment_url} postId={post.id} />
         </div>
       )}
       {post.attachment_kind === "video" && post.attachment_url && (
-        <div className="mx-4 mb-4 overflow-hidden rounded-xl border border-line bg-black sm:mx-5">
-          <video className="max-h-[640px] w-full" controls playsInline preload="metadata" src={post.attachment_url} />
+        <div className="mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black sm:mx-5">
+          <video className="mx-auto h-auto max-h-[min(68vh,640px)] w-auto max-w-full object-contain" controls playsInline preload="metadata" src={post.attachment_url} />
         </div>
       )}
       {post.attachment_kind === "document" && post.attachment_url && (

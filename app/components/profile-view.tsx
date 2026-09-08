@@ -238,7 +238,7 @@ export function ProfilePosts({ posts, page, proofPage = 0, hasMorePosts, own, pr
         {posts.length ? (
           <div className="space-y-4">
             {posts.map((post) => (
-              <SocialPostCard key={post.id} post={post} />
+              <SocialPostCard canDelete={own} key={post.id} post={post} />
             ))}
           </div>
         ) : (

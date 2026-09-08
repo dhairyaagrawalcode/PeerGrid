@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import sodium from "libsodium-wrappers-sumo";
-import { encryptDirectMessage, decryptDirectMessage } from "../app/lib/e2ee.ts";
+import { decryptDirectMessage, decryptMessageAttachment, encryptDirectMessage, encryptMessageAttachment } from "../app/lib/e2ee.ts";
 
 // Ephemeral fixture keys only. No browser key stores, accounts, or network access.
 async function device(userId: string) {
@@ -50,4 +50,24 @@ test("a new device cannot decrypt history addressed to an older device", async (
   const result = await decryptDirectMessage(message, fresh.unlocked, devices);
   assert.equal(result.plaintext, null);
   assert.equal(result.decryption_error, "missing_key");
+});
+
+test("message attachments encrypt before storage and authenticate their message context", async () => {
+  const conversationId = crypto.randomUUID();
+  const messageId = crypto.randomUUID();
+  const original = new TextEncoder().encode("private attachment fixture");
+  const result = await encryptMessageAttachment({
+    conversationId,
+    messageId,
+    path: `sender/${conversationId}/${messageId}.bin`,
+    kind: "document",
+    name: "notes.txt",
+    mime: "text/plain",
+    data: original,
+  });
+
+  assert.equal(new TextDecoder().decode(result.encrypted).includes("private attachment fixture"), false);
+  const decrypted = await decryptMessageAttachment({ attachment: result.attachment, conversationId, messageId, encrypted: result.encrypted });
+  assert.deepEqual(decrypted, original);
+  await assert.rejects(() => decryptMessageAttachment({ attachment: result.attachment, conversationId, messageId: crypto.randomUUID(), encrypted: result.encrypted }));
 });

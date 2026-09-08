@@ -58,3 +58,17 @@ test("streaming sections use component-specific placeholders", () => {
     assert.ok(!page.includes("<SectionSkeleton"));
   }
 });
+
+test("admin and upload surfaces expose purpose-built loading feedback", () => {
+  const adminLoading = readFileSync(join(root, "app/admin/(dashboard)/loading.tsx"), "utf8");
+  const adminSkeleton = readFileSync(join(root, "app/components/admin-page-skeleton.tsx"), "utf8");
+  const postComposer = readFileSync(join(root, "app/components/post-composer.tsx"), "utf8");
+  const messageThread = readFileSync(join(root, "app/components/message-thread.tsx"), "utf8");
+  const encryptedAttachment = readFileSync(join(root, "app/components/encrypted-message-attachment.tsx"), "utf8");
+
+  assert.ok(adminLoading.includes("<AdminPageSkeleton"));
+  assert.ok(adminSkeleton.includes('<SkeletonRegion label="Loading admin data"'));
+  assert.ok(postComposer.includes("Uploading attachment"));
+  assert.ok(messageThread.includes('role="progressbar"'));
+  assert.ok(encryptedAttachment.includes("Decrypting attachment"));
+});

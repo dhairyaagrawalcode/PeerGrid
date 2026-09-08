@@ -124,13 +124,13 @@ async function FeedProfile() {
 }
 
 async function FeedPosts({ page }: { page: number }) {
-  const { supabase } = await requireStudent();
+  const { supabase, user } = await requireStudent();
   const posts = await getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, ranked: true });
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
   return (<>        <div className="space-y-4">
           {visiblePosts.length ? (
-            visiblePosts.map((post) => <SocialPostCard key={post.id} post={post} />)
+            visiblePosts.map((post) => <SocialPostCard canDelete={post.author_id === user.id} key={post.id} post={post} />)
           ) : (
             <EmptyState
               action={

@@ -75,9 +75,9 @@ function MessagesSkeleton({ thread = false }: { thread?: boolean }) {
       <div className="space-y-1 py-2.5 sm:px-2.5">{[0, 1, 2, 3, 4].map(item => <div className="flex gap-3 p-3" key={item}><Bar className="h-11 w-11 shrink-0 rounded-full" /><div className="min-w-0 flex-1 space-y-2"><div className="flex justify-between gap-4"><Bar className="h-4 w-28" /><Bar className="h-3 w-8" /></div><Bar className="h-3 w-full" /></div></div>)}</div>
     </aside>
     {thread ? <div className="flex min-w-0 flex-1 flex-col">
-      <div className="flex h-17 shrink-0 items-center gap-3 border-b border-line px-5"><Bar className="h-10 w-10 rounded-full" /><div className="space-y-2"><Bar className="h-4 w-36" /><Bar className="h-3 w-24" /></div></div>
+      <div className="conversation-header flex h-17 shrink-0 items-center gap-3 border-b border-line px-5"><Bar className="h-10 w-10 rounded-full" /><div className="space-y-2"><Bar className="h-4 w-36" /><Bar className="h-3 w-24" /></div></div>
       <div className="flex flex-1 flex-col justify-end gap-5 overflow-hidden p-5"><Bar className="h-12 w-3/5 rounded-2xl" /><Bar className="h-16 w-1/2 self-end rounded-2xl" /><Bar className="h-12 w-2/5 rounded-2xl" /></div>
-      <div className="flex shrink-0 gap-2 border-t border-line px-1 py-3 sm:p-4"><Bar className="h-11 flex-1 rounded-full" /><Bar className="h-11 w-11 shrink-0 rounded-full" /></div>
+      <div className="message-composer flex shrink-0 gap-2 border-t border-line px-1 py-3 sm:p-4"><Bar className="h-11 w-11 shrink-0 rounded-full" /><Bar className="h-11 flex-1 rounded-full" /><Bar className="h-11 w-11 shrink-0 rounded-full" /></div>
     </div> : <div className="hidden min-w-0 flex-1 place-items-center px-8 md:grid"><div className="w-full max-w-sm"><Bar className="mx-auto h-16 w-16 rounded-2xl" /><Bar className="mx-auto mt-5 h-6 w-36" /><Bar className="mt-3 h-4 w-full" /><Bar className="mx-auto mt-2 h-4 w-2/3" /><Bar className="mx-auto mt-5 h-11 w-40 rounded-xl" /></div></div>}
   </div>;
 }

@@ -136,8 +136,24 @@ export type DirectMessage = {
   encryption_version: 1;
   sender_device_id: string;
   signature: string;
+  attachment_path: string | null;
+  attachment_kind: MessageAttachmentKind | null;
+  attachment_size: number | null;
   created_at: string;
   read_at: string | null;
+};
+
+export type MessageAttachmentKind = "image" | "video" | "document";
+
+export type EncryptedMessageAttachment = {
+  version: 1;
+  path: string;
+  kind: MessageAttachmentKind;
+  name: string;
+  mime: string;
+  size: number;
+  key: string;
+  nonce: string;
 };
 
 export type DecryptedDirectMessage = DirectMessage & {

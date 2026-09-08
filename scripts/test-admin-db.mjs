@@ -296,6 +296,27 @@ try {
     for(const fn of ['admin_data_version','admin_overview_snapshot','admin_user_directory']) await denied(`select public.${fn}()`);
     await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({'x-peergrid-admin-session':token})]);
   });
+  await db.exec("reset role");
+  await db.exec(await readFile(new URL("20260905000000_product_quality_pass.sql",migrations),"utf8"));
+  console.log("MIGRATION 20260905000000_product_quality_pass.sql");
+  await check("product-quality migration creates private encrypted-media storage",async () => {
+    const bucket=await scalar("select to_jsonb(bucket) from storage.buckets bucket where id='message-media'");
+    assert.equal(bucket.public,false); assert.equal(Number(bucket.file_size_limit),26214432);
+    assert.deepEqual(bucket.allowed_mime_types,["application/octet-stream"]);
+    assert.equal(Number(await scalar("select count(*) from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'message_media_%'")),3);
+  });
+  await check("advanced admin filters are bounded and derived from source data",async () => {
+    await asUser(null,"service_role");
+    await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({'x-peergrid-admin-session':token})]);
+    const options=await scalar("select public.admin_user_filter_options()");
+    assert.ok(Array.isArray(options.campuses)); assert.ok(Array.isArray(options.years));
+    const verified=await scalar("select public.admin_user_directory('',0,'profiles',null,null,'all','verified',null,null,null,null,'all','name')");
+    assert.ok(verified.items.every(item=>item.has_profile && item.is_verified));
+    const posters=await scalar("select public.admin_user_directory('',0,'all',null,null,'all','all',null,null,null,null,'has_posts','most_posts')");
+    assert.ok(posters.items.every(item=>item.posts>0));
+    assert.ok(posters.items.every((item,index,items)=>index===0 || items[index-1].posts>=item.posts));
+    await assert.rejects(db.query("select public.admin_user_directory('',0,'all',null,null,'all','all',null,null,null,null,'invalid','newest')"),/INVALID_ADMIN_FILTER/);
+  });
   await check("expired and logged-out admin sessions lose authorization",async () => {
     await db.exec("reset role");
     await db.query("update peergrid_private.password_admin_sessions set expires_at=now()-interval '1 second' where token_hash=$1",[sessionHash]);

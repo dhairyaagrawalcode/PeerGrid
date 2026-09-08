@@ -4,6 +4,7 @@ import {
   FiArrowRight,
   FiBell,
   FiCompass,
+  FiGithub,
   FiHome,
   FiPlusSquare,
   FiSearch,
@@ -213,6 +214,15 @@ export default async function HomePage() {
             <span>PG</span>
             <strong>PeerGrid</strong>
           </Link>
+          <a
+            aria-label="Open PeerGrid on GitHub"
+            className={styles.githubLink}
+            href="https://github.com/dhairyaagrawalcode/PeerGrid"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <FiGithub aria-hidden="true" /> <span>GitHub</span>
+          </a>
         </div>
       </header>
 
@@ -293,7 +303,9 @@ export default async function HomePage() {
       <footer className={styles.footer}>
         <div>
           <span>© 2026 PeerGrid. Built for NST.</span>
-          <span>Verified students. Useful connections.</span>
+          <a href="https://github.com/dhairyaagrawalcode/PeerGrid" rel="noreferrer" target="_blank">
+            <FiGithub aria-hidden="true" /> View source · contribute · report issues
+          </a>
         </div>
       </footer>
     </main>

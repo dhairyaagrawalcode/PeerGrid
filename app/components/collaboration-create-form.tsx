@@ -18,6 +18,11 @@ export default function CollaborationCreateForm({ campuses }: { campuses: Campus
 
   return <form action={action} aria-busy={pending} className="surface scroll-mt-24 p-5 xl:sticky xl:top-20" id="new">
     <div className="flex items-center gap-2"><FiEdit3 className="text-secondary" /><h2 className="font-bold">Create a collaboration</h2></div>
+    <ol className="mt-4 grid grid-cols-3 gap-2 border-y border-line py-3 text-[10px] leading-4 text-muted">
+      <li><strong className="block text-xs text-font">1 · Post</strong>Share the opening</li>
+      <li><strong className="block text-xs text-font">2 · Connect</strong>Talk in DM</li>
+      <li><strong className="block text-xs text-font">3 · Verify</strong>Confirm the work</li>
+    </ol>
     <fieldset className="mt-5 space-y-4 disabled:opacity-70" disabled={pending}>
       <div><label className="label" htmlFor="title">Title</label><input className="field" id="title" name="title" minLength={5} maxLength={100} onChange={(event) => update("title", event.target.value)} placeholder="Need 2 students for SIH" required value={values.title} /></div>
       <div><label className="label" htmlFor="description">What are you building?</label><textarea className="field" id="description" name="description" minLength={10} maxLength={1200} onChange={(event) => update("description", event.target.value)} placeholder="Share the idea, current progress, and the kind of collaborator you need." required value={values.description} /></div>

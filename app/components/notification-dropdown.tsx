@@ -34,7 +34,7 @@ export default function NotificationDropdown({ count, initialNotifications, acti
   }, [open]);
 
   return <div className="relative" ref={menuRef}>
-    <button aria-expanded={open} aria-haspopup="menu" aria-label="Notifications" className={`relative grid h-10 w-10 place-items-center rounded-xl transition ${active ? "bg-primary/15 text-primary" : "text-muted hover:bg-panel hover:text-font"}`} onClick={toggle} title="Notifications" type="button">
+    <button aria-expanded={open} aria-haspopup="menu" aria-label={count > 0 ? `Notifications, ${count} unread` : "Notifications"} className={`relative grid h-10 w-10 place-items-center rounded-xl transition ${active ? "bg-primary/15 text-primary" : "text-muted hover:bg-panel hover:text-font"}`} onClick={toggle} title="Notifications" type="button">
       <FiBell size={18} />
       {count > 0 && <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[8px] font-bold leading-4 text-white">{count > 99 ? "99+" : count}</span>}
     </button>

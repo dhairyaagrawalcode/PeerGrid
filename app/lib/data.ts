@@ -433,7 +433,7 @@ export async function getDirectMessages(
 ) {
   const { data, error } = await supabase
     .from("messages")
-    .select("id, conversation_id, sender_id, ciphertext, nonce, key_envelopes, encryption_version, sender_device_id, signature, created_at, read_at")
+    .select("id, conversation_id, sender_id, ciphertext, nonce, key_envelopes, encryption_version, sender_device_id, signature, attachment_path, attachment_kind, attachment_size, created_at, read_at")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
     .limit(MESSAGE_PAGE_SIZE + 1);

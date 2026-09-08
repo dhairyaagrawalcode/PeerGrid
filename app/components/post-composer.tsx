@@ -156,8 +156,8 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
             <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-0.5 text-xs text-muted">{readableSize(file.size)}</p></div>
             <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={submitting} onClick={() => updateFile(null)} type="button"><FiX /></button>
           </div>
-          {kind === "image" && previewUrl && <img alt="Selected post attachment" className="max-h-[460px] w-full object-contain" src={previewUrl} />}
-          {kind === "video" && previewUrl && <video className="max-h-[460px] w-full bg-black" controls preload="metadata" src={previewUrl} />}
+          {kind === "image" && previewUrl && <div className="flex min-h-40 items-center justify-center bg-black/20"><img alt="Selected post attachment" className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" src={previewUrl} /></div>}
+          {kind === "video" && previewUrl && <div className="flex min-h-40 items-center justify-center bg-black"><video className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" controls playsInline preload="metadata" src={previewUrl} /></div>}
           {kind === "document" && <div className="flex items-center gap-3 p-5 text-sm text-muted"><FiFileText className="text-subtle" size={24} /> Document ready to upload</div>}
         </div>
       )}
