@@ -19,7 +19,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   const followSummary = await getFollowSummary(supabase, profile.id);
   return <div className="app-page"><ProfileView currentId={user.id} followSummary={followSummary} own={profile.id === user.id} profile={profile}
     mutualContent={<Suspense fallback={null}><ProfileMutualSection profileId={profile.id} /></Suspense>}
-    proofsContent={<Suspense key={proofPage} fallback={<ProfileProofsSkeleton />}><ProfileProofSection profile={profile} page={proofPage} postPage={page} /></Suspense>}
-    postsContent={<Suspense key={page} fallback={<ProfilePostsSkeleton />}><ProfilePostSection profile={profile} page={page} proofPage={proofPage} /></Suspense>}
+    proofsContent={<Suspense key={`student-proofs:${proofPage}`} fallback={<ProfileProofsSkeleton />}><ProfileProofSection profile={profile} page={proofPage} postPage={page} /></Suspense>}
+    postsContent={<Suspense key={`student-posts:${page}`} fallback={<ProfilePostsSkeleton />}><ProfilePostSection profile={profile} page={page} proofPage={proofPage} /></Suspense>}
   /></div>;
 }

@@ -9,6 +9,7 @@ import { createSocialPost } from "@/app/actions/posts";
 import { createClient } from "@/app/lib/supabase/client";
 import { compressPostImage } from "@/app/lib/compress-post-image";
 import { initials } from "@/app/lib/format";
+import { createUuid } from "@/app/lib/random-uuid";
 import type { StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 
@@ -96,7 +97,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         if (!kind) throw new Error("That file type is not supported.");
         const uploadFile = await compressPostImage(file);
         const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
-        uploadedPath = `${profile.id}/${crypto.randomUUID()}-${safeName}`;
+        uploadedPath = `${profile.id}/${createUuid()}-${safeName}`;
         const supabase = createClient();
         const { error: uploadError } = await supabase.storage
           .from("post-media")
@@ -135,7 +136,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
   const kind = file ? fileKind(file) : null;
 
   return (
-    <form aria-busy={submitting} className="surface overflow-hidden" onSubmit={submit} ref={formRef}>
+    <form aria-busy={submitting} className="post-composer surface overflow-hidden" onSubmit={submit} ref={formRef}>
       <div className="flex gap-3 p-4 sm:p-5">
         <div className="avatar !h-11 !w-11">
           {profile.avatar_url ? <AvatarImage alt={profile.full_name} src={profile.avatar_url} /> : initials(profile.full_name)}

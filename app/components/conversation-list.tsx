@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiLoader, FiUsers } from "react-icons/fi";
+import { FiLoader, FiSearch, FiUsers, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { initials, timeAgo } from "@/app/lib/format";
@@ -24,8 +24,21 @@ export default function ConversationList({
   const [conversations, setConversations] = useState(initialConversations);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const nextOffset = useRef(Math.min(initialConversations.length, 50));
   const supabase = useMemo(() => createClient(), []);
+  const filteredConversations = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase();
+    if (!query) return conversations;
+    return conversations.filter((conversation) =>
+      [
+        conversation.other_full_name,
+        conversation.other_username,
+        conversation.group_title,
+        conversation.conversation_id,
+      ].some((value) => value?.toLocaleLowerCase().includes(query)),
+    );
+  }, [conversations, searchQuery]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -90,7 +103,7 @@ export default function ConversationList({
 
   return (
     <aside
-      className={`${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 w-full min-w-0 flex-col border-line md:w-[340px] md:flex-none md:border-r`}
+      className={`conversation-list ${selectedId ? "hidden md:flex" : "flex"} h-full min-h-0 w-full min-w-0 flex-col border-line md:w-[340px] md:flex-none md:border-r`}
     >
       <div className="flex h-17 shrink-0 items-center gap-2 border-b border-line px-2 sm:px-5">
         <div>
@@ -100,10 +113,34 @@ export default function ConversationList({
         <div className="ml-auto"><CreateGroupButton currentId={currentId} /></div>
       </div>
 
+      <label className="conversation-search relative block shrink-0 px-2 py-2.5 sm:px-3">
+        <span className="sr-only">Search conversations by name, username, or ID</span>
+        <FiSearch className="pointer-events-none absolute start-5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+        <input
+          autoComplete="off"
+          className="field !min-h-12 !rounded-full !bg-panel !pl-10 !pr-11"
+          inputMode="search"
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search name, username, or ID"
+          type="text"
+          value={searchQuery}
+        />
+        {searchQuery && (
+          <button
+            aria-label="Clear conversation search"
+            className="absolute end-3.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-card hover:text-font"
+            onClick={() => setSearchQuery("")}
+            type="button"
+          >
+            <FiX aria-hidden="true" />
+          </button>
+        )}
+      </label>
+
       <div className="min-h-0 flex-1 overflow-y-auto py-2.5 sm:px-2.5">
         {conversations.length ? (
           <>
-          {conversations.map((conversation) => {
+          {filteredConversations.map((conversation) => {
             const active = conversation.conversation_id === selectedId;
             const unread = active ? 0 : conversation.unread_count;
             const groupAvatar = groupAvatarUrl(conversation.group_avatar_path);
@@ -148,6 +185,16 @@ export default function ConversationList({
               </Link>
             );
           })}
+          {filteredConversations.length === 0 && (
+            <div className="grid min-h-52 place-items-center px-7 text-center">
+              <div>
+                <p className="text-sm font-bold">No matching conversations</p>
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  Try a name, username, group title, or conversation ID.
+                </p>
+              </div>
+            </div>
+          )}
           {hasMore && (
             <button className="mx-auto my-3 flex items-center gap-2 text-xs font-semibold text-muted hover:text-font" disabled={loadingMore} onClick={loadMore} type="button">
               {loadingMore && <FiLoader className="animate-spin" />} More conversations

@@ -39,14 +39,14 @@ export default function MessagesView({
       />
 
       <div
-        className={`${selected ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-1 flex-col`}
+        className={`conversation-pane ${selected ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-1 flex-col`}
       >
         {selected ? (
           <>
             <header className="conversation-header flex h-17 shrink-0 items-center gap-2 border-b border-line px-2 sm:gap-3 sm:px-5">
               <Link
                 aria-label="Back to conversations"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-card hover:text-font md:hidden"
+                className="conversation-back grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-card hover:text-font md:hidden"
                 href="/messages"
               >
                 <FiArrowLeft />

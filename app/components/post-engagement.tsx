@@ -93,10 +93,10 @@ export default function PostEngagement({ postId, authorId, initialLiked, initial
   }
 
   return (
-    <div>
-      <div className="flex items-center gap-1 px-3 py-2 sm:px-4">
-        <button aria-pressed={liked} className={`flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount} {likeCount === 1 ? "Like" : "Likes"}</button>
-        <button aria-expanded={expanded} className="flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount} {commentCount === 1 ? "Comment" : "Comments"}</button>
+    <div className="post-engagement">
+      <div className="post-engagement-actions flex items-center gap-1 px-3 py-2 sm:px-4">
+        <button aria-label={`${liked ? "Unlike" : "Like"} post, ${likeCount} ${likeCount === 1 ? "like" : "likes"}`} aria-pressed={liked} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount}</button>
+        <button aria-label={`Show comments, ${commentCount} ${commentCount === 1 ? "comment" : "comments"}`} aria-expanded={expanded} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount}</button>
         {authorId && <button aria-expanded={reportOpen} className="ml-auto flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" disabled={reported} onClick={() => setReportOpen((current) => !current)} type="button"><FiFlag /> {reported ? "Reported" : "Report"}</button>}
       </div>
 
@@ -111,17 +111,17 @@ export default function PostEngagement({ postId, authorId, initialLiked, initial
       )}
 
       {expanded && (
-        <div className="border-t border-line px-4 py-4 sm:px-5">
-          <div className="space-y-4">
+        <div className="post-comments border-t border-line px-4 py-4 sm:px-5">
+          <div className="post-comments-list space-y-4">
             {hasMoreComments && comments?.length ? (
               <button className="text-xs font-semibold text-muted hover:text-font" disabled={isPending} onClick={loadOlderComments} type="button">
                 Load older comments
               </button>
             ) : null}
             {comments?.map((item) => (
-              <div className="flex gap-2.5" key={item.id}>
+              <div className="post-comment flex gap-2.5" key={item.id}>
                 <Link className="avatar !h-8 !w-8" href={`/students/${item.author.username}`}>{item.author.avatar_url ? <AvatarImage alt={item.author.full_name} src={item.author.avatar_url} /> : initials(item.author.full_name)}</Link>
-                <div className="min-w-0 flex-1 rounded-xl bg-panel px-3 py-2.5">
+                <div className="post-comment-bubble min-w-0 flex-1 rounded-xl bg-panel px-3 py-2.5">
                   <div className="flex items-center justify-between gap-3"><Link className="truncate text-xs font-bold hover:text-primary" href={`/students/${item.author.username}`}>{item.author.full_name}</Link><span className="shrink-0 text-[10px] text-muted">{timeAgo(item.created_at)}</span></div>
                   <PostBody className="mt-1 text-xs leading-5 text-subtle" text={item.body} />
                 </div>
@@ -131,7 +131,7 @@ export default function PostEngagement({ postId, authorId, initialLiked, initial
             {!comments && isPending && <p className="flex items-center gap-2 text-xs text-muted"><FiLoader className="animate-spin" /> Loading comments</p>}
           </div>
 
-          <form className="mt-4 flex gap-2" onSubmit={submitComment}>
+          <form className="post-comment-form mt-4 flex gap-2" onSubmit={submitComment}>
             <input aria-label="Add a comment" className="field !min-h-10 flex-1" maxLength={1000} onChange={(event) => setComment(event.target.value)} placeholder="Add a comment…" value={comment} />
             <button aria-label="Post comment" className="button button-primary !min-h-10 !px-3" disabled={isPending || !comment.trim()} type="submit">{isPending ? <FiLoader className="animate-spin" /> : <FiSend />}</button>
           </form>

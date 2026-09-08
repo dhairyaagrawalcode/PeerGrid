@@ -17,6 +17,7 @@ import {
   validateMessageAttachment,
 } from "@/app/lib/message-attachment";
 import { uploadEncryptedMessageAttachment } from "@/app/lib/message-attachment-upload";
+import { createUuid } from "@/app/lib/random-uuid";
 import { createClient } from "@/app/lib/supabase/client";
 import type { ConversationMember, CryptoDevicePublic, DecryptedDirectMessage, DirectMessage } from "@/app/types";
 import ConfirmationModal from "./confirmation-modal";
@@ -154,7 +155,7 @@ export default function MessageThread({ conversationId, currentId, initialHasMor
     if ((!plaintext && !attachment) || sending || !device) return;
     setSending(true);
     setError(null);
-    const messageId = crypto.randomUUID();
+    const messageId = createUuid();
     let uploadedPath = "";
     try {
       devicesRef.current = await getConversationCryptoDevices(supabase, conversationId);

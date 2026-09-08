@@ -5,7 +5,7 @@ import {
 } from "./section-skeleton";
 
 function HeadingSkeleton() {
-  return <div><Bar className="h-3 w-24" /><Bar className="mt-3 h-8 w-72" /><Bar className="mt-3 h-4 w-[36rem]" /></div>;
+  return <div className="mobile-skeleton-heading"><Bar className="h-3 w-24" /><Bar className="mt-3 h-8 w-72" /><Bar className="mt-3 h-4 w-[36rem]" /></div>;
 }
 
 function FieldSkeleton({ multiline = false }: { multiline?: boolean }) {
@@ -16,8 +16,8 @@ function FeedSkeleton() {
   return <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
     <aside className="hidden xl:block"><FeedProfileSkeleton /></aside>
     <div className="min-w-0">
-      <Bar className="mb-4 h-7 w-20 xl:hidden" />
-      <div className="surface mb-5 !rounded-2xl p-4 sm:p-5">
+      <Bar className="feed-skeleton-title mb-4 h-7 w-20 xl:hidden" />
+      <div className="feed-composer surface mb-5 p-4 sm:p-5">
         <div className="flex items-center gap-3"><Bar className="h-10 w-10 shrink-0 rounded-full" /><Bar className="h-11 flex-1 rounded-xl" /></div>
         <div className="mt-3 grid grid-cols-3 gap-5 border-t border-line pt-5 pb-2">{[0, 1, 2].map(item => <Bar className="mx-auto h-4 w-20" key={item} />)}</div>
       </div>
@@ -68,6 +68,13 @@ function CollaborationSkeleton() {
   </div>;
 }
 
+function NewCollaborationSkeleton() {
+  return <div className="mx-auto max-w-2xl"><HeadingSkeleton /><div className="surface mt-6 p-5">
+    <Bar className="h-5 w-52" />
+    <div className="mt-5 space-y-4"><FieldSkeleton /><FieldSkeleton multiline /><FieldSkeleton /><FieldSkeleton /><div className="grid grid-cols-2 gap-3"><FieldSkeleton /><FieldSkeleton /></div><FieldSkeleton /><FieldSkeleton /><Bar className="h-11 w-full rounded-xl" /></div>
+  </div></div>;
+}
+
 function MessagesSkeleton({ thread = false }: { thread?: boolean }) {
   return <div className="messages-viewport flex overflow-hidden">
     <aside className={`${thread ? "hidden md:block" : "block"} h-full w-full shrink-0 border-line md:w-[340px] md:border-r`}>
@@ -115,6 +122,7 @@ const layouts = {
   profile: ProfileSkeleton,
   discover: DiscoverSkeleton,
   collaborate: CollaborationSkeleton,
+  "new-collaboration": NewCollaborationSkeleton,
   messages: MessagesSkeleton,
   thread: () => <MessagesSkeleton thread />,
   post: PostComposerSkeleton,

@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import MobilePageHeader from "./mobile-page-header";
 import PlatformLoading from "@/app/(platform)/loading";
 import Brand from "./brand";
 import { SkeletonBar } from "./section-skeleton";
@@ -5,8 +9,11 @@ import { SkeletonBar } from "./section-skeleton";
 // No private data is rendered before ProtectedShell finishes its auth check.
 // Match AppShell's viewport, header and content offsets to avoid a layout jump.
 export default function PlatformShellSkeleton() {
-  return <div className="h-dvh overflow-hidden bg-bg text-font">
-    <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg">
+  const pathname = usePathname();
+  const thread = /^\/messages\/[^/]+$/.test(pathname);
+  return <div data-mobile-route={pathname} className={`platform-shell h-dvh overflow-hidden bg-bg text-font ${thread ? "mobile-chat-open" : ""}`}>
+    <MobilePageHeader key={pathname} loading />
+    <header className="desktop-app-header fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg">
       <div className="app-frame flex h-full items-center gap-6">
         <Brand href="/feed" />
         <div aria-hidden="true" className="ml-auto hidden items-center gap-1 motion-safe:animate-pulse md:flex">{[0, 1, 2, 3, 4, 5].map(item => <div className="grid h-10 w-10 place-items-center" key={item}><SkeletonBar className="h-5 w-5" /></div>)}</div>

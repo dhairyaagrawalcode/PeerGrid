@@ -17,8 +17,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     {params.confirmation === "error" && <p className="mx-auto mb-5 max-w-[920px] rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">Could not update this collaboration confirmation. Apply the latest Supabase migration, then try again.</p>}
     <ProfileView currentId={user.id} followSummary={followSummary} own profile={profile}
       pendingContent={<Suspense fallback={<ProfileConfirmationsSkeleton />}><ProfilePendingSection /></Suspense>}
-      proofsContent={<Suspense key={proofPage} fallback={<ProfileProofsSkeleton />}><ProfileProofSection profile={profile} page={proofPage} postPage={page} /></Suspense>}
-      postsContent={<Suspense key={page} fallback={<ProfilePostsSkeleton />}><ProfilePostSection profile={profile} page={page} proofPage={proofPage} /></Suspense>}
+      proofsContent={<Suspense key={`profile-proofs:${proofPage}`} fallback={<ProfileProofsSkeleton />}><ProfileProofSection profile={profile} page={proofPage} postPage={page} /></Suspense>}
+      postsContent={<Suspense key={`profile-posts:${page}`} fallback={<ProfilePostsSkeleton />}><ProfilePostSection profile={profile} page={page} proofPage={proofPage} /></Suspense>}
     />
   </div>;
 }

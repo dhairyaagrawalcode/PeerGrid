@@ -29,7 +29,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <aside className="hidden xl:block"><Suspense fallback={<FeedProfileSkeleton />}><FeedProfile /></Suspense></aside>
 
       <div className="min-w-0">
-        <div className="mb-4 flex items-center justify-between xl:hidden">
+        <div className="mobile-hide mb-4 flex items-center justify-between xl:hidden">
           <h1 className="text-xl font-black tracking-tight">Home</h1>
           <Link
             className="button button-primary !min-h-9 !px-3 !text-xs sm:hidden"
@@ -39,7 +39,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
 
-        <section className="surface mb-5 !rounded-2xl p-4 sm:p-5">
+        <section className="feed-composer surface mb-5 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div className="avatar !h-10 !w-10 !rounded-full">
               {profile.avatar_url ? (
@@ -52,7 +52,8 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               className="field flex !min-h-11 flex-1 items-center !rounded-xl !py-0 text-sm text-muted hover:border-primary/25"
               href="/post"
             >
-              What are you building or learning?
+              <span className="mobile-only mb-1 block font-semibold text-font">{profile.full_name}</span>
+              <span className="feed-composer-prompt">What are you building or learning?</span>
             </Link>
           </div>
           <div className="mt-3 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
@@ -128,7 +129,7 @@ async function FeedPosts({ page }: { page: number }) {
   const posts = await getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, ranked: true });
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
-  return (<>        <div className="space-y-4">
+  return (<>        <div className="feed-post-list space-y-4">
           {visiblePosts.length ? (
             visiblePosts.map((post) => <SocialPostCard canDelete={post.author_id === user.id} key={post.id} post={post} />)
           ) : (

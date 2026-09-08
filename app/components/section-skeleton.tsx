@@ -23,7 +23,7 @@ export function PersonSkeleton({ compact = false }: { compact?: boolean }) {
 }
 
 export function PostSkeleton({ media = false }: { media?: boolean }) {
-  return <div className="surface space-y-4 overflow-hidden p-4 sm:p-5">
+  return <div className="post-skeleton surface space-y-4 overflow-hidden p-4 sm:p-5">
     <div className="flex items-center gap-3"><SkeletonBar className="h-11 w-11 shrink-0 rounded-full" /><div className="min-w-0 flex-1 space-y-2"><SkeletonBar className="h-4 w-36" /><SkeletonBar className="h-3 w-24" /></div></div>
     <div className="space-y-2"><SkeletonBar className="h-4 w-full" /><SkeletonBar className="h-4 w-4/5" /><SkeletonBar className="h-4 w-2/3" /></div>
     {media && <SkeletonBar className="aspect-[4/3] w-full rounded-xl" />}

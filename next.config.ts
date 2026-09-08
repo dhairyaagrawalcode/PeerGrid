@@ -18,11 +18,11 @@ const supabaseRemotePatterns = supabaseUrl
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  allowedDevOrigins: ["192.168.1.16"],
+  allowedDevOrigins: ['10.202.156.11'],
   images: {
     remotePatterns: supabaseRemotePatterns,
   },
-  experimental: {
+  experimental: { 
     serverActions: {
       bodySizeLimit: "4mb",
     },

@@ -22,7 +22,7 @@ export default function StudentResult({
     .join(" · ");
 
   return (
-    <article className="group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-4 sm:flex sm:items-center sm:gap-4">
+    <article className="student-result group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-4 sm:flex sm:items-center sm:gap-4">
       <Link
         aria-label={`View ${student.full_name}'s profile`}
         className="avatar !h-12 !w-12 !rounded-full transition group-hover:ring-2 group-hover:ring-primary/25 sm:!h-13 sm:!w-13"

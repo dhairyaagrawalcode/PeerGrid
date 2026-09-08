@@ -11,11 +11,11 @@ import PostDeleteButton from "./post-delete-button";
 export default function SocialPostCard({ post, flat = false, canDelete = false }: { post: SocialPost; flat?: boolean; canDelete?: boolean }) {
   const profileHref = `/students/${post.author.username}`;
   return (
-    <article className={flat ? "scroll-mt-24 overflow-hidden py-2" : "surface scroll-mt-24 overflow-hidden"} id={`post-${post.id}`}>
-      <div className="p-4 sm:p-5">
-        <div className="flex min-w-0 items-center gap-2">
+    <article className={`social-post ${flat ? "scroll-mt-24 overflow-hidden py-2" : "surface scroll-mt-24 overflow-hidden"}`} id={`post-${post.id}`}>
+      <div className="post-copy p-4 sm:p-5">
+        <div className="post-author flex min-w-0 items-center gap-2">
         <Link className="flex min-w-0 flex-1 items-center gap-3" href={profileHref}>
-          <span className="avatar !rounded-full">{post.author.avatar_url ? <AvatarImage alt={post.author.full_name} src={post.author.avatar_url} /> : initials(post.author.full_name)}</span>
+          <span className="post-avatar avatar !rounded-full">{post.author.avatar_url ? <AvatarImage alt={post.author.full_name} src={post.author.avatar_url} /> : initials(post.author.full_name)}</span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold hover:text-primary">{post.author.full_name}</span>
             <span className="mt-0.5 block truncate text-xs text-muted">
@@ -30,12 +30,12 @@ export default function SocialPostCard({ post, flat = false, canDelete = false }
       </div>
 
       {post.attachment_kind === "image" && post.attachment_url && (
-        <div className="mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
+        <div className="post-media mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
           <PostImage alt={post.attachment_name || "Post attachment"} mime={post.attachment_mime} original={post.attachment_url} postId={post.id} />
         </div>
       )}
       {post.attachment_kind === "video" && post.attachment_url && (
-        <div className="mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black sm:mx-5">
+        <div className="post-media mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black sm:mx-5">
           <video className="mx-auto h-auto max-h-[min(68vh,640px)] w-auto max-w-full object-contain" controls playsInline preload="metadata" src={post.attachment_url} />
         </div>
       )}

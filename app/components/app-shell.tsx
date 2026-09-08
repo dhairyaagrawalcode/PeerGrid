@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ViewTransition, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import Brand from "./brand";
 import CryptoDeviceBootstrap from "./crypto-device-bootstrap";
 import NotificationDropdown from "./notification-dropdown";
 import ActivityTracker from "./activity-tracker";
+import MobilePageHeader from "./mobile-page-header";
 
 const navigation = [
   { href: "/feed", label: "Home", icon: FiGrid },
@@ -32,7 +33,13 @@ const navigation = [
   { href: "/messages", label: "Messages", icon: FiMessageSquare },
   { href: "/notifications", label: "Notifications", icon: FiBell },
 ];
-const mobileNavigation = navigation.filter((item) => item.label !== "Notifications");
+const mobileNavigation = [
+  { href: "/feed", label: "Home", icon: FiGrid },
+  { href: "/discover", label: "Discover", icon: FiSearch },
+  { href: "/post", label: "Post", icon: FiPlusSquare },
+  { href: "/collaborate", label: "Collab", icon: FiUsers },
+  { href: "/profile", label: "Profile", icon: FiUser },
+];
 
 function AccountMenu({ profile }: { profile: StudentProfile }) {
   const pathname = usePathname();
@@ -118,7 +125,24 @@ export default function AppShell({
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(initialNotificationUnreadCount);
   const supabase = useMemo(() => createClient(), []);
   const mobileConversationOpen = /^\/messages\/[^/]+$/.test(pathname);
-  const notificationsActive = pathname === "/notifications" || pathname.startsWith("/notifications/");
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mobileConversationOpen || !window.visualViewport) return;
+    const viewport = window.visualViewport;
+    const shell = shellRef.current;
+    function resizeChat() {
+      // Visual viewport shrinks with the software keyboard on iOS/Android.
+      // Desktop layout ignores this variable; pinch zoom must remain available.
+      if (viewport.scale === 1) shell?.style.setProperty("--pg-chat-height", `${viewport.height}px`);
+    }
+    resizeChat();
+    viewport.addEventListener("resize", resizeChat);
+    return () => {
+      viewport.removeEventListener("resize", resizeChat);
+      shell?.style.removeProperty("--pg-chat-height");
+    };
+  }, [mobileConversationOpen]);
 
   useEffect(() => {
     let notificationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -238,7 +262,7 @@ export default function AppShell({
     const active = pathname === href || pathname.startsWith(`${href}/`);
     const count = label === "Messages"
       ? unreadCount
-      : label === "Collaborate"
+      : href === "/collaborate"
         ? collaborationUnreadCount
         : label === "Notifications"
           ? notificationUnreadCount
@@ -249,6 +273,7 @@ export default function AppShell({
     return (
       <Link
         aria-label={label}
+        aria-current={active ? "page" : undefined}
         className={
           mobile
             ? `relative flex min-w-0 flex-col items-center justify-center gap-1 text-[clamp(8px,2.3vw,10px)] font-semibold ${active ? "text-primary" : "text-muted"}`
@@ -258,7 +283,7 @@ export default function AppShell({
         key={href}
         title={label}
       >
-        <Icon size={mobile ? 19 : 18} />
+        <Icon aria-hidden="true" size={mobile ? 24 : 18} />
         {mobile && <span className="max-w-full whitespace-nowrap">{label}</span>}
         {count > 0 && (
           <span className={`absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[8px] font-bold leading-4 text-white ${mobile ? "right-[21%] top-2" : "-right-1 -top-1"}`}>
@@ -270,10 +295,11 @@ export default function AppShell({
   }
 
   return (
-    <div className={`h-dvh overflow-hidden bg-bg text-font ${mobileConversationOpen ? "mobile-chat-open" : ""}`}>
+    <div ref={shellRef} data-mobile-route={pathname} className={`platform-shell h-dvh overflow-hidden bg-bg text-font ${mobileConversationOpen ? "mobile-chat-open" : ""}`}>
       <ActivityTracker />
       <CryptoDeviceBootstrap userId={profile.id} />
-      <header className="fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
+      <MobilePageHeader key={`mobile-header:${pathname}`} notifications={notificationUnreadCount} messages={unreadCount} />
+      <header className="desktop-app-header fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="app-frame flex h-full items-center gap-6">
           <Brand href="/feed" />
 
@@ -283,17 +309,21 @@ export default function AppShell({
           <div className="hidden h-7 w-px bg-line md:block" />
 
           <div className="mobile-header-actions ml-auto flex items-center gap-2 md:ml-0">
-            <div className="md:hidden">
-              <NotificationDropdown active={notificationsActive} count={notificationUnreadCount} initialNotifications={initialNotifications} />
-            </div>
             <AccountMenu key={pathname} profile={profile} />
           </div>
         </div>
       </header>
 
-      <main className="app-frame app-main">
-        {children}
-      </main>
+      <ViewTransition
+        default="none"
+        enter={{ "nav-forward": "pg-nav-forward", "nav-back": "pg-nav-back", default: "pg-nav-fade" }}
+        exit={{ "nav-forward": "pg-nav-forward", "nav-back": "pg-nav-back", default: "pg-nav-fade" }}
+        key={`route-content:${pathname}`}
+      >
+        <main className="app-frame app-main">
+          {children}
+        </main>
+      </ViewTransition>
 
       <nav aria-label="Mobile navigation" className="mobile-navigation fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-bg/95 px-1 backdrop-blur-xl md:hidden">
         {mobileNavigation.map((item) => navigationLink({ ...item, mobile: true }))}

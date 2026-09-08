@@ -10,6 +10,7 @@ import type {
   EncryptedMessageAttachment,
   MessageAttachmentKind,
 } from "@/app/types";
+import { createUuid } from "./random-uuid.ts";
 
 const DATABASE_NAME = "peergrid-e2ee-v1";
 const STORE_NAME = "devices";
@@ -100,7 +101,7 @@ async function createStoredDevice(userId: string) {
   const signing = sodium.crypto_sign_keypair();
   const base = {
     userId,
-    deviceId: crypto.randomUUID(),
+    deviceId: createUuid(),
     boxPublicKey: b64(box.publicKey),
     signingPublicKey: b64(signing.publicKey),
   };

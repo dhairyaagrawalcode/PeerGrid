@@ -51,7 +51,7 @@ export default function ProfileView({
   mutualContext?: MutualFollowContext | null;
 }) {
   return (
-    <div className="mx-auto max-w-[920px]">
+    <div className="profile-view mx-auto max-w-[920px]">
       <section className="border-b border-line pb-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="avatar !h-24 !w-24 !rounded-full text-xl sm:!h-28 sm:!w-28">
@@ -75,7 +75,7 @@ export default function ProfileView({
                 <p className="mt-1 text-sm text-muted">@{profile.username}</p>
               </div>
               {own ? (
-                <Link className="button button-secondary self-start !min-h-10" href="/profile/edit">
+                <Link className="profile-edit-button button button-secondary self-start !min-h-10" href="/profile/edit">
                   Edit profile
                 </Link>
               ) : (

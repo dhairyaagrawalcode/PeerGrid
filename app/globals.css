@@ -138,6 +138,177 @@ a {
   background: var(--pg-surface);
   box-shadow: none;
 }
+
+/* Compact application UI only. Landing/admin and desktop remain independent. */
+.mobile-page-header, .mobile-only { display: none; }
+.discover-chips { overscroll-behavior-inline: contain; }
+.discover-chips > button[aria-pressed="true"] { border-color: var(--color-muted); background: var(--color-card); color: var(--color-font); }
+
+@media (max-width: 64rem) {
+  .platform-shell {
+    --pg-header-height: calc(3.75rem + env(safe-area-inset-top, 0px));
+    --pg-mobile-nav-height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+    --pg-content-top: var(--pg-header-height);
+    --pg-content-bottom: calc(var(--pg-mobile-nav-height) + .5rem);
+  }
+  .platform-shell .desktop-app-header, .platform-shell .mobile-hide { display: none !important; }
+  .platform-shell .mobile-only { display: block; }
+  .platform-shell .app-frame { padding-inline: max(1rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
+  .platform-shell .app-page { max-width: 44rem; }
+  .platform-shell .app-main { scrollbar-gutter: auto; }
+  .mobile-page-header { display: block; position: fixed; inset: 0 0 auto; z-index: 40; height: var(--pg-header-height); padding-top: env(safe-area-inset-top, 0px); background: var(--color-bg); }
+  .mobile-page-header-inner { max-width: 46rem; height: 3.75rem; margin-inline: auto; padding-inline: max(.75rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: .5rem; }
+  .mobile-page-header h1, .mobile-page-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -.025em; }
+  .mobile-icon-button { display: grid; flex: none; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; font-size: 1.35rem; }
+  .mobile-icon-button:hover { background: var(--color-card); }
+  .mobile-unread-dot { position: absolute; width: .45rem; height: .45rem; border-radius: 50%; background: var(--color-primary); top: .45rem; right: .5rem; }
+  .platform-shell .mobile-navigation { display: grid; max-width: 46rem; margin-inline: auto; background: var(--color-bg); backdrop-filter: none; }
+  .platform-shell .mobile-navigation > a { gap: .15rem; min-height: 3.5rem; color: var(--color-muted); }
+  .platform-shell .mobile-navigation > a[aria-current="page"] { color: var(--color-font); }
+  .mobile-settings-sheet { inset: auto 0 0; width: min(100%, 36rem); max-height: 85dvh; margin: auto auto 0; padding: 1rem 1.25rem max(1.25rem, env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--color-line); border-radius: 1.5rem 1.5rem 0 0; background: var(--color-panel); color: var(--color-font); animation: pg-sheet-enter .22s cubic-bezier(.2,.8,.2,1) both; }
+  .mobile-settings-sheet::backdrop { background: rgb(0 0 0 / .65); }
+  .mobile-settings-sheet nav a { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; font-size: .9rem; }
+  .mobile-settings-sheet nav a:hover { color: var(--color-primary); }
+  .platform-shell :is(input, textarea, select) { font-size: 1rem; }
+
+  .feed-composer { padding: .75rem 0 1rem; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0 !important; background: transparent; margin-bottom: 0; }
+  .platform-shell[data-mobile-route="/feed"] .feed-composer { inline-size: calc(100% + 2rem); margin-inline: -1rem; padding-inline: 1rem; border-radius: 0 !important; }
+  .feed-composer .field { display: block; min-width: 0; border: 0; background: transparent; padding: 0; line-height: 1.6; font-size: .875rem; }
+  .feed-composer-prompt { display: inline-block; max-inline-size: 100%; overflow: hidden; white-space: nowrap; clip-path: inset(0 100% 0 0); border-inline-end: 1px solid transparent; animation: pg-typewriter 1.8s steps(34, end) .12s both, pg-typewriter-caret .55s step-end .12s 4; }
+  .feed-composer > div + div { display: none; }
+  .platform-shell[data-mobile-route="/feed"] .feed-post-list { inline-size: calc(100% + 2rem); margin-inline: -1rem; }
+  .social-post { position: relative; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; padding-block: 1rem .5rem; margin-top: 0 !important; }
+  .feed-post-list > .social-post { padding-inline: 1rem; }
+  .feed-post-list > .social-post:last-child { border-bottom: 0; }
+  .social-post .post-copy { padding: 0 0 .5rem 3.25rem; }
+  .social-post .post-avatar { position: absolute; inset-inline-start: 0; top: 1rem; width: 2.5rem; height: 2.5rem; }
+  .feed-post-list > .social-post .post-avatar { inset-inline-start: 1rem; }
+  .social-post .post-author { min-height: 2.5rem; }
+  .social-post .post-copy > :not(.post-author) { margin-top: .5rem; }
+  .social-post .post-media { inline-size: calc(100% - 3.25rem); margin-block: .5rem .75rem; margin-inline: 3.25rem 0; overflow: hidden; border: 0; border-radius: .875rem; justify-content: start; background: transparent; }
+  .social-post .post-media :is(img, video) { display: block; width: 100%; height: auto; margin-inline: 0; border-radius: inherit; max-height: min(65dvh, 36rem); object-fit: contain; }
+  .social-post > a { margin-block: .25rem .5rem; margin-inline: 3.25rem 0; border: 0; justify-content: start; background: transparent; }
+  .social-post .post-engagement { margin-inline-start: 3.25rem; }
+  .social-post .post-engagement-actions { padding: .1rem 0; flex-wrap: wrap; gap: 1rem; }
+  .social-post .post-engagement-actions > button { min-height: 2.75rem; }
+  .social-post .post-engagement-button { min-height: 2.75rem; padding-inline: .25rem; font-size: .75rem; }
+  .social-post .post-engagement-actions svg { width: 1.1rem; height: 1.1rem; }
+  .social-post .post-comments { padding: .75rem 0 1rem; }
+  .social-post .post-comment { align-items: flex-start; }
+  .social-post .post-comment + .post-comment { padding-top: .75rem; border-top: 1px solid var(--color-line); }
+  .social-post .post-comment-bubble { border-radius: 0; background: transparent; padding: .1rem 0 0; }
+  .social-post .post-comment-form { align-items: center; }
+  .social-post .post-comment-form .field { min-height: 2.75rem; border-radius: 9999px; background: var(--color-card); }
+  .social-post .post-comment-form .button { min-height: 2.75rem !important; width: 2.75rem; border-radius: 50%; padding: 0 !important; }
+
+  .discover-search { margin-top: .5rem; }
+  .discover-search .field { border-radius: .9rem !important; background: var(--color-card) !important; border-color: transparent; }
+  .platform-shell .discover-chips { display: flex; gap: .5rem; overflow-x: auto; }
+  .discover-chips button { flex: none; min-height: 2.5rem; padding: .4rem .9rem; border: 1px solid var(--color-line); border-radius: 2rem; font-size: .8rem; }
+  .discover-chips button[aria-pressed="true"] { background: var(--color-card); border-color: var(--color-muted); }
+  .student-result { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr) auto; align-items: start; gap: .65rem; }
+  .student-result > .avatar { width: 2.75rem !important; height: 2.75rem !important; }
+  .student-result > div:last-child { grid-column: 3; grid-row: 1; align-self: start; }
+  .student-result > div:last-child .button { padding-inline: .65rem; min-height: 2.5rem; font-size: .7rem; }
+  .student-result > a:nth-child(2) > span:nth-child(2) { flex-direction: column; align-items: start; gap: .1rem; }
+  .student-result > a:nth-child(2) > span:nth-child(2) > [aria-hidden] { display: none; }
+
+  .post-composer { border: 0; border-radius: 0; background: transparent; min-height: calc(100dvh - var(--pg-content-top) - var(--pg-content-bottom)); display: flex; flex-direction: column; }
+  .post-composer > div:first-child { padding: 1rem 0; }
+  .post-composer textarea { min-height: 12rem; line-height: 1.6; }
+  .post-composer > div.border-t { margin-top: auto; padding-inline: 0; flex-direction: row; flex-wrap: wrap; align-items: center; gap: .75rem; }
+  .post-composer > div.border-t > div { flex: 1; }
+  .post-composer button[type="submit"] { width: auto; min-height: 2.75rem !important; }
+  .post-composer label { padding-inline: .4rem; min-height: 2.75rem; }
+  .post-composer > p:last-child { padding-inline: 0; }
+
+  .platform-shell[data-mobile-route="/collaborate"] .collaboration-list { inline-size: calc(100% + 2rem); margin-inline: -1rem; gap: 0; }
+  .platform-shell[data-mobile-route="/collaborate"] .collaboration-list article[id^="collaboration-"] { padding: 1rem; border: 0; border-radius: 0; background: transparent; }
+  .platform-shell[data-mobile-route="/collaborate"] .collaboration-list article[id^="collaboration-"] + article[id^="collaboration-"] { border-top: 1px solid var(--color-line); }
+  .platform-shell[data-mobile-route="/collaborate"] .app-page > .min-w-0 > .mt-6 { margin-top: 0; }
+  .platform-shell[data-mobile-route="/collaborate/new"] #new { border: 0; padding: .75rem 0; background: transparent; }
+  .platform-shell[data-mobile-route="/collaborate/new"] #new > div:first-child { display: none; }
+  .platform-shell [data-page-skeleton="new-collaboration"] .surface { margin-top: .75rem; padding: .75rem 0; border: 0; background: transparent; }
+
+  .platform-shell[data-mobile-route="/messages"] .conversation-list { width: 100%; flex: 1; border-right: 0; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-pane { display: none; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-list > div:first-child { padding-inline: 0; height: 3rem; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-list > div:first-child p:first-child { display: none; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-search { padding-inline: 0; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-search > svg { inset-inline-start: .9rem; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-list > div:last-child { padding-inline: 0; }
+  .platform-shell[data-mobile-route="/messages"] .conversation-list > div:last-child > a { padding: 1rem 0; border-radius: 0; }
+  .platform-shell.mobile-chat-open > header, .platform-shell.mobile-chat-open > .mobile-navigation { display: none; }
+  .platform-shell.mobile-chat-open .app-main { padding: 0; max-width: none; height: var(--pg-chat-height, 100dvh); }
+  .platform-shell.mobile-chat-open .messages-viewport { height: var(--pg-chat-height, 100dvh); max-width: none; }
+  .platform-shell.mobile-chat-open .conversation-list { display: none; }
+  .platform-shell.mobile-chat-open .conversation-back { display: grid; width: 2.75rem; height: 2.75rem; }
+  .platform-shell.mobile-chat-open .conversation-header { height: calc(4rem + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
+  .platform-shell.mobile-chat-open .message-composer { padding: .75rem max(.75rem, env(safe-area-inset-right, 0px)) max(.75rem, env(safe-area-inset-bottom, 0px)) max(.75rem, env(safe-area-inset-left, 0px)); }
+
+  .platform-shell[data-mobile-route="/notifications"] .app-page:not([data-page-skeleton]) > div:first-child,
+  .platform-shell[data-mobile-route="/connections"] .app-page:not([data-page-skeleton]) > header { display: none; }
+
+  .platform-shell[data-mobile-route="/profile"] .profile-edit-button { display: none !important; }
+  .platform-shell[data-mobile-route="/profile/edit"] .edit-profile-section { padding-block: 0; }
+  .platform-shell[data-mobile-route="/profile/edit"] .edit-profile-form { margin-top: 0; padding-top: .5rem; border-top: 0; }
+  .profile-view > section:first-child { padding-bottom: 1.25rem; }
+  .profile-view > section.mt-9 { margin-top: 1.5rem; }
+  .profile-view > .mt-5 { margin-top: 1rem; gap: 1.25rem; }
+  .profile-view > section.mt-10 { margin-top: 1.75rem; padding-top: 1.25rem; }
+
+  .platform-shell [data-page-skeleton] .mobile-skeleton-heading { display: none; }
+  .platform-shell [data-page-skeleton="feed"] .feed-skeleton-title { display: none; }
+  .platform-shell [data-page-skeleton="collaborate"] aside { display: none; }
+  .platform-shell [data-page-skeleton="messages"] .messages-viewport > aside { width: 100%; border: 0; }
+  .platform-shell [data-page-skeleton="messages"] .messages-viewport > div { display: none; }
+  .platform-shell [data-page-skeleton="thread"] .messages-viewport > aside { display: none; }
+  .platform-shell .post-skeleton { border: 0; border-bottom: 1px solid var(--color-line); background: transparent; border-radius: 0; padding: 1rem 0; }
+  .platform-shell .post-skeleton > div:not(:first-child) { margin-left: 3.5rem; width: calc(100% - 3.5rem); }
+}
+
+@keyframes pg-typewriter {
+  to { clip-path: inset(0); }
+}
+@keyframes pg-typewriter-caret {
+  50% { border-inline-end-color: currentColor; }
+}
+@keyframes pg-sheet-enter {
+  from { opacity: 0; transform: translateY(1.5rem); }
+}
+@keyframes pg-route-fade {
+  from { opacity: 0; }
+}
+@keyframes pg-route-forward-in {
+  from { opacity: 0; transform: translateX(2.5rem); }
+}
+@keyframes pg-route-forward-out {
+  to { opacity: 0; transform: translateX(-1.5rem); }
+}
+@keyframes pg-route-back-in {
+  from { opacity: 0; transform: translateX(-2.5rem); }
+}
+@keyframes pg-route-back-out {
+  to { opacity: 0; transform: translateX(1.5rem); }
+}
+
+@media (max-width: 64rem) {
+  ::view-transition { pointer-events: none; }
+  ::view-transition-old(.pg-nav-fade) { animation: 100ms ease-in both pg-route-fade reverse; }
+  ::view-transition-new(.pg-nav-fade) { animation: 180ms ease-out 60ms both pg-route-fade; }
+  ::view-transition-old(.pg-nav-forward) { animation: 150ms ease-in both pg-route-forward-out; }
+  ::view-transition-new(.pg-nav-forward) { animation: 240ms cubic-bezier(.2,.8,.2,1) 80ms both pg-route-forward-in; }
+  ::view-transition-old(.pg-nav-back) { animation: 150ms ease-in both pg-route-back-out; }
+  ::view-transition-new(.pg-nav-back) { animation: 240ms cubic-bezier(.2,.8,.2,1) 80ms both pg-route-back-in; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-composer-prompt, .mobile-settings-sheet { animation: none; clip-path: none; }
+  ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
 .button {
   display: inline-flex;
   min-height: 2.75rem;

@@ -33,6 +33,7 @@ test("nested pages do not reuse a parent page's skeleton", () => {
   assert.equal(getLoadingLayout("/post"), "post");
   assert.equal(getLoadingLayout("/collaboration"), "collaborate");
   assert.equal(getLoadingLayout("/collaborate/"), "collaborate");
+  assert.equal(getLoadingLayout("/collaborate/new"), "new-collaboration");
   assert.equal(getLoadingLayout("/messages-unrelated"), "generic");
 });
 
