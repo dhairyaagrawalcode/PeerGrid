@@ -214,6 +214,7 @@ export type SocialPost = {
   like_count: number;
   comment_count: number;
   viewer_liked: boolean;
+  viewer_saved: boolean;
   viewer_follows_author: boolean;
   moderation_status: ModerationStatus;
   moderation_reason: string | null;

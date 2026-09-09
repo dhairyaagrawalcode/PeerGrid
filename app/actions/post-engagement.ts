@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireStudent } from "@/app/lib/auth";
 import type { PostComment } from "@/app/types";
 
@@ -36,6 +37,35 @@ export async function togglePostLike(postId: string) {
     .select("*", { count: "exact", head: true })
     .eq("post_id", postId);
   return { error: undefined, liked, count: countError ? null : count ?? 0 };
+}
+
+export async function toggleSavedPost(postId: string) {
+  const { supabase, user } = await requireStudent();
+  if (!uuidPattern.test(postId)) return { error: "Invalid post.", saved: false };
+
+  const { data: existing, error: readError } = await supabase
+    .from("saved_posts")
+    .select("post_id")
+    .eq("post_id", postId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) return { error: "Could not update this saved post. Please try again.", saved: false };
+
+  if (existing) {
+    const { error } = await supabase
+      .from("saved_posts")
+      .delete()
+      .eq("post_id", postId)
+      .eq("user_id", user.id);
+    if (error) return { error: "Could not update this saved post. Please try again.", saved: true };
+    revalidatePath("/saved");
+    return { error: undefined, saved: false };
+  }
+
+  const { error } = await supabase.from("saved_posts").insert({ post_id: postId, user_id: user.id });
+  if (error && error.code !== "23505") return { error: "Could not update this saved post. Please try again.", saved: false };
+  revalidatePath("/saved");
+  return { error: undefined, saved: true };
 }
 
 export async function getPostComments(postId: string, before?: string) {

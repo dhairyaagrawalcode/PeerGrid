@@ -2,15 +2,16 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { FiHeart, FiLoader, FiMessageCircle, FiSend } from "react-icons/fi";
-import { addPostComment, getPostComments, togglePostLike } from "@/app/actions/post-engagement";
+import { FiBookmark, FiHeart, FiLoader, FiMessageCircle, FiSend } from "react-icons/fi";
+import { addPostComment, getPostComments, togglePostLike, toggleSavedPost } from "@/app/actions/post-engagement";
 import { initials, timeAgo } from "@/app/lib/format";
 import type { PostComment } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import PostBody from "./post-body";
 
-export default function PostEngagement({ postId, initialLiked, initialLikeCount, initialCommentCount }: { postId: string; initialLiked: boolean; initialLikeCount: number; initialCommentCount: number }) {
+export default function PostEngagement({ postId, initialLiked, initialSaved, initialLikeCount, initialCommentCount }: { postId: string; initialLiked: boolean; initialSaved: boolean; initialLikeCount: number; initialCommentCount: number }) {
   const [liked, setLiked] = useState(initialLiked);
+  const [saved, setSaved] = useState(initialSaved);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [commentCount, setCommentCount] = useState(initialCommentCount);
   const [expanded, setExpanded] = useState(false);
@@ -19,6 +20,7 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isSavePending, startSaveTransition] = useTransition();
 
   function like() {
     setError(null);
@@ -35,6 +37,20 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
       }
       setLiked(result.liked);
       if (result.count !== null) setLikeCount(result.count);
+    });
+  }
+
+  function save() {
+    setError(null);
+    const previousSaved = saved;
+    setSaved(!previousSaved);
+    startSaveTransition(async () => {
+      const result = await toggleSavedPost(postId);
+      if (result.error) {
+        setSaved(previousSaved);
+        return setError(result.error);
+      }
+      setSaved(result.saved);
     });
   }
 
@@ -79,9 +95,12 @@ export default function PostEngagement({ postId, initialLiked, initialLikeCount,
 
   return (
     <div className="post-engagement">
-      <div className="post-engagement-actions flex items-center gap-1 px-3 py-2 sm:px-4">
-        <button aria-label={`${liked ? "Unlike" : "Like"} post, ${likeCount} ${likeCount === 1 ? "like" : "likes"}`} aria-pressed={liked} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount}</button>
-        <button aria-label={`Show comments, ${commentCount} ${commentCount === 1 ? "comment" : "comments"}`} aria-expanded={expanded} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount}</button>
+      <div className="post-engagement-actions flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
+        <div className="flex items-center gap-1">
+          <button aria-label={`${liked ? "Unlike" : "Like"} post, ${likeCount} ${likeCount === 1 ? "like" : "likes"}`} aria-pressed={liked} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount}</button>
+          <button aria-label={`Show comments, ${commentCount} ${commentCount === 1 ? "comment" : "comments"}`} aria-expanded={expanded} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount}</button>
+        </div>
+        <button aria-label={saved ? "Remove post from saved" : "Save post"} aria-pressed={saved} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${saved ? "text-primary" : "text-muted hover:text-font"}`} disabled={isSavePending} onClick={save} type="button"><FiBookmark className={saved ? "fill-current" : ""} /><span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span></button>
       </div>
 
       {expanded && (

@@ -9,6 +9,7 @@ const protectedRoots = [
   "/collaboration",
   "/connections",
   "/notifications",
+  "/saved",
   "/admin",
   "/report-problem",
   "/onboarding",

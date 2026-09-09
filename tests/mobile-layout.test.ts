@@ -65,6 +65,7 @@ test("compact navigation, feed engagement, search filters, and profile settings 
 
   assert.match(header, /path === "\/feed"[\s\S]*href="\/messages"[\s\S]*href="\/notifications"/);
   assert.doesNotMatch(settings, /View profile|Messages/);
+  assert.match(settings, /href="\/saved"/);
   assert.doesNotMatch(css, /a\[href="\/post"\]/);
   assert.doesNotMatch(engagement, /\{likeCount\} \{likeCount ===/);
   assert.doesNotMatch(engagement, /\{commentCount\} \{commentCount ===/);

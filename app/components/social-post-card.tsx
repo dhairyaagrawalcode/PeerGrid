@@ -66,7 +66,7 @@ export default function SocialPostCard({ post, flat = false, own = false }: { po
         </div>
       )}
 
-      <PostEngagement initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
+      <PostEngagement initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} initialSaved={post.viewer_saved} postId={post.id} />
     </article>
   );
 }

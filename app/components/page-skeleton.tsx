@@ -109,6 +109,10 @@ function NotificationsSkeleton() {
   return <div className="mx-auto max-w-3xl"><HeadingSkeleton /><div className="mt-7 flex justify-between"><Bar className="h-3 w-28" /><Bar className="h-3 w-16" /></div><div className="mt-3 divide-y divide-line">{[0, 1, 2, 3, 4].map(item => <div className="flex gap-4 py-5" key={item}><Bar className="h-10 w-10 shrink-0 rounded-full" /><div className="min-w-0 flex-1 space-y-2"><Bar className="h-4 w-full" /><Bar className="h-4 w-2/3" /><Bar className="h-3 w-16" /></div></div>)}</div></div>;
 }
 
+function SavedPostsSkeleton() {
+  return <div className="mx-auto max-w-[620px]"><HeadingSkeleton /><div className="mt-7"><FeedPostsSkeleton /></div></div>;
+}
+
 function ConnectionsSkeleton() {
   return <><HeadingSkeleton /><div className="mt-7 flex gap-6 border-b border-line pb-3"><Bar className="h-5 w-28" /><Bar className="h-5 w-28" /></div><div className="divide-y divide-line pt-4">{[0, 1, 2, 3].map(item => <PersonSkeleton key={item} />)}</div></>;
 }
@@ -128,6 +132,7 @@ const layouts = {
   post: PostComposerSkeleton,
   "edit-profile": EditProfileSkeleton,
   notifications: NotificationsSkeleton,
+  saved: SavedPostsSkeleton,
   connections: ConnectionsSkeleton,
   report: ReportSkeleton,
   generic: HeadingSkeleton,

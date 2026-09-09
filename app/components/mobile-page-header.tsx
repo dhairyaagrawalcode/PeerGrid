@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiArrowLeft, FiBell, FiHelpCircle, FiLogOut, FiMessageSquare, FiPlus, FiSettings, FiUsers, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiBell, FiBookmark, FiHelpCircle, FiLogOut, FiMessageSquare, FiPlus, FiSettings, FiUsers, FiX } from "react-icons/fi";
 import { signOut } from "@/app/actions/auth";
 import { mobilePage } from "@/app/lib/mobile-layout";
 import Brand from "./brand";
@@ -33,6 +33,7 @@ export default function MobilePageHeader({ notifications = 0, messages = 0, load
       <div className="flex items-center justify-between border-b border-line pb-3"><h2 className="text-lg font-bold" id="mobile-settings-title">Settings</h2><button aria-label="Close settings" className="mobile-icon-button" onClick={close} type="button"><FiX /></button></div>
       <nav aria-label="Account settings" onClick={close}>
         <Link href="/profile/edit" transitionTypes={["nav-forward"]}><FiSettings /> Edit profile</Link>
+        <Link href="/saved" transitionTypes={["nav-forward"]}><FiBookmark /> Saved posts</Link>
         <Link href="/connections"><FiUsers /> Followers &amp; following</Link>
         <Link href="/notifications"><FiBell /> Notifications</Link>
         <Link href={`/report-problem?from=${encodeURIComponent(path)}`}><FiHelpCircle /> Report a problem</Link>

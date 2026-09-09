@@ -82,6 +82,9 @@ a {
   margin-inline: auto;
   overflow-wrap: anywhere;
 }
+.app-page.saved-posts-page {
+  max-width: 38.75rem;
+}
 /* Real pages and loading states share the space between the fixed bars. */
 .app-main {
   height: 100dvh;

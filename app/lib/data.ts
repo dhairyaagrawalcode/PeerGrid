@@ -183,12 +183,12 @@ export async function getCollaborations(
 
 export async function getSocialPosts(
   supabase: SupabaseClient,
-  options: { limit?: number; offset?: number; authorId?: string; ranked?: boolean; viewerId?: string } = {},
+  options: { limit?: number; offset?: number; authorId?: string; ranked?: boolean; viewerId?: string; postIds?: string[] } = {},
 ) {
   const limit = Math.min(Math.max(options.limit ?? POST_PAGE_SIZE, 1), 50);
   const offset = Math.max(options.offset ?? 0, 0);
   let rankedRows: Array<{ post_id: string; recommendation_reason: string }> = [];
-  if (options.ranked && !options.authorId) {
+  if (options.ranked && !options.authorId && !options.postIds) {
     const { data: ranking, error: rankingError } = await supabase.rpc("get_ranked_feed", {
       result_limit: limit,
       result_offset: offset,
@@ -208,7 +208,8 @@ export async function getSocialPosts(
     .order("created_at", { ascending: false });
 
   if (options.authorId) query = query.eq("author_id", options.authorId);
-  if (rankedRows.length) query = query.in("id", rankedRows.map((row) => row.post_id));
+  if (options.postIds) query = query.in("id", options.postIds);
+  else if (rankedRows.length) query = query.in("id", rankedRows.map((row) => row.post_id));
   else query = query.range(offset, offset + limit - 1);
   const { data, error } = await query;
   if (error) {
@@ -218,17 +219,20 @@ export async function getSocialPosts(
 
 
   const posts = (data ?? []) as unknown as Array<
-    Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked" | "viewer_follows_author">
+    Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked" | "viewer_saved" | "viewer_follows_author">
   >;
   const postIds = posts.map((post) => post.id);
   const authorIds = [...new Set(posts.map((post) => post.author_id))];
   const mediaPaths = [...new Set(posts.flatMap((post) => post.attachment_path ? [post.attachment_path] : []))];
   // Independent batched operations: never one author/count/storage request per post.
-  const [engagementResult, mediaResult, followsResult] = await Promise.all([
+  const [engagementResult, mediaResult, followsResult, savedResult] = await Promise.all([
     postIds.length ? supabase.rpc("get_post_engagement", { candidate_post_ids: postIds }) : Promise.resolve({ data: [], error: null }),
     mediaPaths.length ? supabase.storage.from("post-media").createSignedUrls(mediaPaths, 60 * 60) : Promise.resolve({ data: [], error: null }),
     options.viewerId && authorIds.length
       ? supabase.from("follows").select("following_id").eq("follower_id", options.viewerId).in("following_id", authorIds)
+      : Promise.resolve({ data: [], error: null }),
+    options.viewerId && postIds.length
+      ? supabase.from("saved_posts").select("post_id").eq("user_id", options.viewerId).in("post_id", postIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
   if (engagementResult.error) console.error("[PeerGrid] post engagement unavailable", { code: engagementResult.error.code });
@@ -242,19 +246,50 @@ export async function getSocialPosts(
     if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
   }
   const followedAuthors = new Set((followsResult.data ?? []).map((row) => String(row.following_id)));
+  const savedPosts = new Set((savedResult.data ?? []).map((row) => String(row.post_id)));
 
   const hydrated = posts.map((post) => ({
     ...post,
     attachment_url: post.attachment_path ? signedUrls.get(post.attachment_path) ?? null : null,
     viewer_follows_author: followedAuthors.has(post.author_id),
+    viewer_saved: savedPosts.has(post.id),
     ...(engagement.get(post.id) ?? { like_count: 0, comment_count: 0, viewer_liked: false }),
   })) as SocialPost[];
+  if (options.postIds) {
+    const byId = new Map(hydrated.map((post) => [post.id, post]));
+    return options.postIds.flatMap((postId) => {
+      const post = byId.get(postId);
+      return post ? [post] : [];
+    });
+  }
   if (!rankedRows.length) return hydrated;
   const byId = new Map(hydrated.map((post) => [post.id, post]));
   return rankedRows.flatMap((ranking) => {
     const post = byId.get(ranking.post_id);
     return post ? [{ ...post, recommendation_reason: ranking.recommendation_reason }] : [];
   });
+}
+
+export async function getSavedSocialPosts(
+  supabase: SupabaseClient,
+  userId: string,
+  options: { limit?: number; offset?: number } = {},
+) {
+  const limit = Math.min(Math.max(options.limit ?? POST_PAGE_SIZE, 1), 50);
+  const offset = Math.max(options.offset ?? 0, 0);
+  const { data, error } = await supabase
+    .from("saved_posts")
+    .select("post_id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) {
+    if (["42P01", "PGRST205"].includes(error.code)) return [];
+    throw error;
+  }
+  const postIds = (data ?? []).map((row) => String(row.post_id));
+  if (!postIds.length) return [];
+  return getSocialPosts(supabase, { postIds, viewerId: userId, limit: postIds.length });
 }
 
 export async function getCollaborationProofs(supabase: SupabaseClient, profileId: string, options?: { limit: number; offset: number }) {

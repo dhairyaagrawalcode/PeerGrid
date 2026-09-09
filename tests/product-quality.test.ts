@@ -43,6 +43,30 @@ test("post owners have a confirmed post and media deletion flow", () => {
   assert.match(menu, /Report post/);
 });
 
+test("saved posts are private, persistent, and reachable from desktop and mobile account menus", () => {
+  const migration = source("supabase/migrations/20260909010000_saved_posts.sql");
+  const action = source("app/actions/post-engagement.ts");
+  const engagement = source("app/components/post-engagement.tsx");
+  const desktopMenu = source("app/components/app-shell.tsx");
+  const mobileMenu = source("app/components/mobile-page-header.tsx");
+  const savedPage = source("app/(platform)/saved/page.tsx");
+  const styles = source("app/globals.css");
+
+  assert.match(migration, /primary key \(user_id, post_id\)/);
+  assert.match(migration, /alter table public\.saved_posts enable row level security/);
+  assert.match(migration, /user_id = \(select auth\.uid\(\)\)/);
+  assert.match(action, /toggleSavedPost/);
+  assert.match(action, /\.eq\("user_id", user\.id\)/);
+  assert.match(action, /revalidatePath\("\/saved"\)/);
+  assert.match(engagement, /FiBookmark/);
+  assert.match(engagement, /aria-pressed=\{saved\}/);
+  assert.match(desktopMenu, /href="\/saved"[\s\S]*Saved posts/);
+  assert.match(mobileMenu, /href="\/saved"[\s\S]*Saved posts/);
+  assert.match(savedPage, /getSavedSocialPosts/);
+  assert.match(savedPage, /saved-posts-page/);
+  assert.match(styles, /\.app-page\.saved-posts-page\s*{[\s\S]*?max-width:\s*38\.75rem/);
+});
+
 test("persisted post preferences affect both the selected post and related author ranking", () => {
   const action = source("app/actions/recommendations.ts");
   const migration = source("supabase/migrations/20260909000000_plaintext_messages_and_post_actions.sql");

@@ -1,4 +1,4 @@
-export type PageSkeletonKind = "feed" | "profile" | "discover" | "collaborate" | "new-collaboration" | "messages" | "thread" | "post" | "edit-profile" | "notifications" | "connections" | "report" | "generic";
+export type PageSkeletonKind = "feed" | "profile" | "discover" | "collaborate" | "new-collaboration" | "messages" | "thread" | "post" | "edit-profile" | "notifications" | "saved" | "connections" | "report" | "generic";
 
 // Both the auth-shell and shared route fallback resolve the destination layout.
 // Match nested routes before their parent (e.g. edit vs. profile).
@@ -14,6 +14,7 @@ export function getLoadingLayout(pathname: string): PageSkeletonKind {
     case "messages": return segments[1] ? "thread" : "messages";
     case "post": return "post";
     case "notifications": return "notifications";
+    case "saved": return "saved";
     case "connections": return "connections";
     case "report-problem": return "report";
     default: return "generic";

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FiBell,
+  FiBookmark,
   FiHelpCircle,
   FiGrid,
   FiLogOut,
@@ -88,6 +89,9 @@ function AccountMenu({ profile }: { profile: StudentProfile }) {
           </Link>
           <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/connections" role="menuitem">
             <FiUsers /> Followers &amp; following
+          </Link>
+          <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href="/saved" role="menuitem">
+            <FiBookmark /> Saved posts
           </Link>
           <Link className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted hover:bg-card hover:text-font" href={`/report-problem?from=${encodeURIComponent(pathname)}`} role="menuitem">
             <FiHelpCircle /> Report a problem

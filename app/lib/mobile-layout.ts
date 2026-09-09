@@ -12,6 +12,7 @@ export function mobilePage(path: string) {
     "/profile/edit": ["Edit profile", "/profile"],
     "/messages": ["Messages", "/profile"],
     "/notifications": ["Notifications", "/feed"],
+    "/saved": ["Saved posts", "/profile"],
     "/connections": ["Your network", "/profile"],
     "/report-problem": ["Report a problem", "/profile"],
     "/collaboration": ["Collaborations", "/feed"],
