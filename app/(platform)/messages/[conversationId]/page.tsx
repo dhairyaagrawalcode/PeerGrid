@@ -14,7 +14,12 @@ export default async function ConversationPage({
   params: Promise<{ conversationId: string }>;
 }) {
   const { conversationId } = await params;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) notFound();
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      conversationId,
+    )
+  )
+    notFound();
   const { supabase, profile } = await requireStudent();
   // Each query enforces conversation membership via RLS. Nothing is rendered
   // until the selected conversation is also authorized below.
@@ -23,11 +28,14 @@ export default async function ConversationPage({
     getDirectMessages(supabase, conversationId),
     getConversationMembers(supabase, conversationId),
   ]);
-  const selected = conversationPage.conversations.find(
-    (conversation) => conversation.conversation_id === conversationId,
-  ) ?? await getConversationSummary(supabase, conversationId, profile.id);
+  const selected =
+    conversationPage.conversations.find(
+      (conversation) => conversation.conversation_id === conversationId,
+    ) ?? (await getConversationSummary(supabase, conversationId, profile.id));
   if (!selected) notFound();
-  const conversations = conversationPage.conversations.some((item) => item.conversation_id === selected.conversation_id)
+  const conversations = conversationPage.conversations.some(
+    (item) => item.conversation_id === selected.conversation_id,
+  )
     ? conversationPage.conversations
     : [selected, ...conversationPage.conversations];
   return (

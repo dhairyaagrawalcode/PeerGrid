@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "PeerGrid — The verified NST student network",
+    default: "PeerGrid",
     template: "%s · PeerGrid",
   },
   description:

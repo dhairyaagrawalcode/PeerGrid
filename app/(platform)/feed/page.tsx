@@ -1,7 +1,21 @@
 import { Suspense } from "react";
-import { FeedCollaborationsSkeleton, FeedPeopleSkeleton, FeedPostsSkeleton, FeedProfileSkeleton } from "@/app/components/section-skeleton";
+import {
+  FeedCollaborationsSkeleton,
+  FeedPeopleSkeleton,
+  FeedPostsSkeleton,
+  FeedProfileSkeleton,
+} from "@/app/components/section-skeleton";
 import Link from "next/link";
-import { FiArrowUpRight, FiCalendar, FiFileText, FiImage, FiMapPin, FiPlus, FiUsers, FiVideo } from "react-icons/fi";
+import {
+  FiArrowUpRight,
+  FiCalendar,
+  FiFileText,
+  FiImage,
+  FiMapPin,
+  FiPlus,
+  FiUsers,
+  FiVideo,
+} from "react-icons/fi";
 import AvatarImage from "@/app/components/avatar-image";
 import EmptyState from "@/app/components/empty-state";
 import SocialPostCard from "@/app/components/social-post-card";
@@ -18,15 +32,22 @@ import {
 } from "@/app/lib/data";
 import { initials } from "@/app/lib/format";
 
-export default async function FeedPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const rawPage = Number((await searchParams).page ?? 0);
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 0;
   const { profile } = await requireStudent();
 
-
   return (
     <div className="app-page grid gap-5 xl:grid-cols-[280px_minmax(0,620px)_280px]">
-      <aside className="hidden xl:block"><Suspense fallback={<FeedProfileSkeleton />}><FeedProfile /></Suspense></aside>
+      <aside className="hidden xl:block">
+        <Suspense fallback={<FeedProfileSkeleton />}>
+          <FeedProfile />
+        </Suspense>
+      </aside>
 
       <div className="min-w-0">
         <div className="mobile-hide mb-4 flex items-center justify-between xl:hidden">
@@ -52,8 +73,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               className="field flex !min-h-11 flex-1 items-center !rounded-xl !py-0 text-sm text-muted hover:border-primary/25"
               href="/post"
             >
-              <span className="mobile-only mb-1 block font-semibold text-font">{profile.full_name}</span>
-              <span className="feed-composer-prompt">What are you building or learning?</span>
+              <span className="mobile-only mb-1 block font-semibold text-font">
+                {profile.full_name}
+              </span>
+              <span className="feed-composer-prompt">
+                What are you building or learning?
+              </span>
             </Link>
           </div>
           <div className="mt-3 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
@@ -78,13 +103,19 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           </div>
         </section>
 
-        <Suspense key={page} fallback={<FeedPostsSkeleton />}><FeedPosts page={page} /></Suspense>
+        <Suspense key={page} fallback={<FeedPostsSkeleton />}>
+          <FeedPosts page={page} />
+        </Suspense>
       </div>
 
       <aside className="hidden xl:block">
         <section className="surface sticky top-0 !rounded-2xl p-4">
-          <Suspense fallback={<FeedPeopleSkeleton />}><FeedPeople /></Suspense>
-          <Suspense fallback={<FeedCollaborationsSkeleton />}><FeedCollaborations /></Suspense>
+          <Suspense fallback={<FeedPeopleSkeleton />}>
+            <FeedPeople />
+          </Suspense>
+          <Suspense fallback={<FeedCollaborationsSkeleton />}>
+            <FeedCollaborations />
+          </Suspense>
         </section>
       </aside>
     </div>
@@ -94,120 +125,268 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 async function FeedProfile() {
   const { supabase, profile: feedProfile, user } = await requireStudent();
   const followSummary = await getFollowSummary(supabase, user.id);
-  return (<>
-        <section className="surface sticky top-0 !rounded-2xl p-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link className="avatar !h-16 !w-16 !shrink-0 !rounded-full text-base transition hover:ring-2 hover:ring-primary/25" href="/profile">
-              {feedProfile.avatar_url ? <AvatarImage alt={feedProfile.full_name} src={feedProfile.avatar_url} /> : initials(feedProfile.full_name)}
+  return (
+    <>
+      <section className="surface sticky top-0 !rounded-2xl p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            className="avatar !h-16 !w-16 !shrink-0 !rounded-full text-base transition hover:ring-2 hover:ring-primary/25"
+            href="/profile"
+          >
+            {feedProfile.avatar_url ? (
+              <AvatarImage
+                alt={feedProfile.full_name}
+                src={feedProfile.avatar_url}
+              />
+            ) : (
+              initials(feedProfile.full_name)
+            )}
+          </Link>
+          <div className="min-w-0">
+            <Link
+              className="block truncate text-sm font-bold hover:text-primary"
+              href="/profile"
+            >
+              {feedProfile.full_name}
             </Link>
-            <div className="min-w-0">
-              <Link className="block truncate text-sm font-bold hover:text-primary" href="/profile">{feedProfile.full_name}</Link>
-              <p className="mt-0.5 truncate text-[11px] text-muted">@{feedProfile.username}</p>
-              <Link className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-subtle hover:text-font" href="/profile">View profile <FiArrowUpRight /></Link>
-            </div>
+            <p className="mt-0.5 truncate text-[11px] text-muted">
+              @{feedProfile.username}
+            </p>
+            <Link
+              className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-subtle hover:text-font"
+              href="/profile"
+            >
+              View profile <FiArrowUpRight />
+            </Link>
           </div>
+        </div>
 
-          <div className="mt-4 space-y-2 text-[11px] text-muted">
-            {feedProfile.campus?.name && <p className="flex items-center gap-2"><FiMapPin className="shrink-0 text-subtle" /><span className="truncate">{feedProfile.campus.name}</span></p>}
-            {feedProfile.graduation_year && <p className="flex items-center gap-2"><FiCalendar className="shrink-0 text-subtle" /><span>Class of {feedProfile.graduation_year}</span></p>}
+        <div className="mt-4 space-y-2 text-[11px] text-muted">
+          {feedProfile.campus?.name && (
+            <p className="flex items-center gap-2">
+              <FiMapPin className="shrink-0 text-subtle" />
+              <span className="truncate">{feedProfile.campus.name}</span>
+            </p>
+          )}
+          {feedProfile.graduation_year && (
+            <p className="flex items-center gap-2">
+              <FiCalendar className="shrink-0 text-subtle" />
+              <span>Class of {feedProfile.graduation_year}</span>
+            </p>
+          )}
+        </div>
+
+        {feedProfile.current_status && (
+          <div className="mt-4">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted">
+              Current status
+            </p>
+            <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-subtle">
+              {feedProfile.current_status}
+            </p>
           </div>
+        )}
 
-          {feedProfile.current_status && <div className="mt-4"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted">Current status</p><p className="mt-1.5 line-clamp-2 text-xs leading-5 text-subtle">{feedProfile.current_status}</p></div>}
-
-          {[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])].length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])].slice(0, 3).map((item, index) => <span className="chip !px-2 !py-1 !text-[9px]" key={`${index}-${item.id}-${item.name}`}>{item.name}</span>)}</div>}
-
-          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-line pt-3">
-            <Link className="rounded-lg px-2 py-1.5 transition hover:bg-card" href="/connections?view=followers#followers"><strong className="block text-sm text-font">{followSummary.follower_count}</strong><span className="text-[9px] font-semibold uppercase tracking-wider text-muted">Followers</span></Link>
-            <Link className="rounded-lg px-2 py-1.5 transition hover:bg-card" href="/connections?view=following#following"><strong className="block text-sm text-font">{followSummary.following_count}</strong><span className="text-[9px] font-semibold uppercase tracking-wider text-muted">Following</span></Link>
+        {[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])]
+          .length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {[...(feedProfile.skills ?? []), ...(feedProfile.interests ?? [])]
+              .slice(0, 3)
+              .map((item, index) => (
+                <span
+                  className="chip !px-2 !py-1 !text-[9px]"
+                  key={`${index}-${item.id}-${item.name}`}
+                >
+                  {item.name}
+                </span>
+              ))}
           </div>
-        </section>
-      </>);
+        )}
+
+        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-line pt-3">
+          <Link
+            className="rounded-lg px-2 py-1.5 transition hover:bg-card"
+            href="/connections?view=followers#followers"
+          >
+            <strong className="block text-sm text-font">
+              {followSummary.follower_count}
+            </strong>
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-muted">
+              Followers
+            </span>
+          </Link>
+          <Link
+            className="rounded-lg px-2 py-1.5 transition hover:bg-card"
+            href="/connections?view=following#following"
+          >
+            <strong className="block text-sm text-font">
+              {followSummary.following_count}
+            </strong>
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-muted">
+              Following
+            </span>
+          </Link>
+        </div>
+      </section>
+    </>
+  );
 }
 
 async function FeedPosts({ page }: { page: number }) {
   const { supabase, user } = await requireStudent();
-  const posts = await getSocialPosts(supabase, { limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, ranked: true });
+  const posts = await getSocialPosts(supabase, {
+    limit: POST_PAGE_SIZE + 1,
+    offset: page * POST_PAGE_SIZE,
+    ranked: true,
+  });
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
-  return (<>        <div className="feed-post-list space-y-4">
-          {visiblePosts.length ? (
-            visiblePosts.map((post) => <SocialPostCard canDelete={post.author_id === user.id} key={post.id} post={post} />)
-          ) : (
-            <EmptyState
-              action={
-                <Link className="button button-primary" href="/post">
-                  Create a post
-                </Link>
-              }
-              copy="Share a project, learning milestone, opportunity, or update with the NST community."
-              icon={<FiFileText size={21} />}
-              title="No posts yet"
+  return (
+    <>
+      {" "}
+      <div className="feed-post-list space-y-4">
+        {visiblePosts.length ? (
+          visiblePosts.map((post) => (
+            <SocialPostCard
+              canDelete={post.author_id === user.id}
+              key={post.id}
+              post={post}
             />
-          )}
-        </div>
-        <PageNavigation hasMore={hasMorePosts} page={page} path="/feed" /></>);
+          ))
+        ) : (
+          <EmptyState
+            action={
+              <Link className="button button-primary" href="/post">
+                Create a post
+              </Link>
+            }
+            copy="Share a project, learning milestone, opportunity, or update with the NST community."
+            icon={<FiFileText size={21} />}
+            title="No posts yet"
+          />
+        )}
+      </div>
+      <PageNavigation hasMore={hasMorePosts} page={page} path="/feed" />
+    </>
+  );
 }
 
 async function FeedPeople() {
   const { supabase, user } = await requireStudent();
   const suggestions = await getProfileMatches(supabase, 4);
-  const mutualContexts = await getMutualFollowContexts(supabase, suggestions.map(({ student }) => student.id));
-  return (<>          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold">People you should meet</h2>
-            <Link
-              className="text-[10px] font-bold text-primary hover:text-primary-hover"
-              href="/discover"
-            >
-              See all
-            </Link>
-          </div>
-          <div className="mt-2 divide-y divide-line">
-            {suggestions.length ? (
-              suggestions.map(({ student, reason }) => (
-                <SuggestedStudent
-                  currentId={user.id}
-                  isFollowing={false}
-                  key={student.id}
-                  mutualContext={mutualContexts.get(student.id)}
-                  reason={reason}
-                  student={student}
-                />
-              ))
-            ) : (
-              <p className="py-5 text-xs leading-5 text-muted">
-                No new suggestions right now.
-              </p>
-            )}
-          </div>
-          <Link
-            className="mt-3 flex items-center gap-2 pt-2 text-xs font-bold text-primary"
-            href="/discover"
-          >
-            <FiUsers /> Explore the network
-          </Link>
-</>);
+  const mutualContexts = await getMutualFollowContexts(
+    supabase,
+    suggestions.map(({ student }) => student.id),
+  );
+  return (
+    <>
+      {" "}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold">People you should meet</h2>
+        <Link
+          className="text-[10px] font-bold text-primary hover:text-primary-hover"
+          href="/discover"
+        >
+          See all
+        </Link>
+      </div>
+      <div className="mt-2 divide-y divide-line">
+        {suggestions.length ? (
+          suggestions.map(({ student, reason }) => (
+            <SuggestedStudent
+              currentId={user.id}
+              isFollowing={false}
+              key={student.id}
+              mutualContext={mutualContexts.get(student.id)}
+              reason={reason}
+              student={student}
+            />
+          ))
+        ) : (
+          <p className="py-5 text-xs leading-5 text-muted">
+            No new suggestions right now.
+          </p>
+        )}
+      </div>
+      <Link
+        className="mt-3 flex items-center gap-2 pt-2 text-xs font-bold text-primary"
+        href="/discover"
+      >
+        <FiUsers /> Explore the network
+      </Link>
+    </>
+  );
 }
 
 async function FeedCollaborations() {
   const { supabase, user } = await requireStudent();
-  const ranked = await getCollaborations(supabase, { status: "open", limit: 6, ranked: true });
-  const collaborationSuggestions = ranked.filter((item) => item.author_id !== user.id).slice(0, 3);
-  return (          <div className="mt-5 border-t border-line pt-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold">Collaborations for you</h2>
-              <Link className="text-[10px] font-bold text-primary hover:text-primary-hover" href="/collaborate">See all</Link>
-            </div>
-            {collaborationSuggestions.length ? <div className="mt-3 space-y-4">
-              {collaborationSuggestions.map((collaboration) => {
-                const openings = collaboration.team_capacity === null ? null : Math.max(collaboration.team_capacity - collaboration.team_current, 0);
-                const type = collaboration.collaboration_type === "study" ? "Study group" : collaboration.collaboration_type.replace("_", " ");
-                return <Link className="block group" href={`/collaborate#collaboration-${collaboration.id}`} key={collaboration.id}>
-                  <p className="line-clamp-2 text-xs font-bold leading-5 group-hover:text-primary">{collaboration.title}</p>
-                  <p className="mt-1 text-[10px] capitalize text-muted">{type}{openings !== null ? ` · ${openings} opening${openings === 1 ? "" : "s"}` : ""}</p>
-                  {collaboration.required_skills.length > 0 && <p className="mt-1 truncate text-[10px] text-subtle">{collaboration.required_skills.slice(0, 2).join(" · ")}</p>}
-                  {collaboration.recommendation_reason && <p className="mt-1 text-[10px] text-primary">{collaboration.recommendation_reason}</p>}
-                </Link>;
-              })}
-            </div> : <p className="mt-3 text-xs leading-5 text-muted">No matching open collaborations right now.</p>}
-          </div>);
+  const ranked = await getCollaborations(supabase, {
+    status: "open",
+    limit: 6,
+    ranked: true,
+  });
+  const collaborationSuggestions = ranked
+    .filter((item) => item.author_id !== user.id)
+    .slice(0, 3);
+  return (
+    <div className="mt-5 border-t border-line pt-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold">Collaborations for you</h2>
+        <Link
+          className="text-[10px] font-bold text-primary hover:text-primary-hover"
+          href="/collaborate"
+        >
+          See all
+        </Link>
+      </div>
+      {collaborationSuggestions.length ? (
+        <div className="mt-3 space-y-4">
+          {collaborationSuggestions.map((collaboration) => {
+            const openings =
+              collaboration.team_capacity === null
+                ? null
+                : Math.max(
+                    collaboration.team_capacity - collaboration.team_current,
+                    0,
+                  );
+            const type =
+              collaboration.collaboration_type === "study"
+                ? "Study group"
+                : collaboration.collaboration_type.replace("_", " ");
+            return (
+              <Link
+                className="block group"
+                href={`/collaborate#collaboration-${collaboration.id}`}
+                key={collaboration.id}
+              >
+                <p className="line-clamp-2 text-xs font-bold leading-5 group-hover:text-primary">
+                  {collaboration.title}
+                </p>
+                <p className="mt-1 text-[10px] capitalize text-muted">
+                  {type}
+                  {openings !== null
+                    ? ` · ${openings} opening${openings === 1 ? "" : "s"}`
+                    : ""}
+                </p>
+                {collaboration.required_skills.length > 0 && (
+                  <p className="mt-1 truncate text-[10px] text-subtle">
+                    {collaboration.required_skills.slice(0, 2).join(" · ")}
+                  </p>
+                )}
+                {collaboration.recommendation_reason && (
+                  <p className="mt-1 text-[10px] text-primary">
+                    {collaboration.recommendation_reason}
+                  </p>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs leading-5 text-muted">
+          No matching open collaborations right now.
+        </p>
+      )}
+    </div>
+  );
 }
