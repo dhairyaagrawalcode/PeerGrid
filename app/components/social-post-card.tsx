@@ -30,7 +30,7 @@ export default function SocialPostCard({ post, flat = false, canDelete = false }
       </div>
 
       {post.attachment_kind === "image" && post.attachment_url && (
-        <div className="post-media mx-4 mb-4 flex items-center justify-center overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
+        <div className="post-media mx-4 mb-4 block w-auto overflow-hidden rounded-xl border border-line bg-black/20 sm:mx-5">
           <PostImage alt={post.attachment_name || "Post attachment"} mime={post.attachment_mime} original={post.attachment_url} postId={post.id} />
         </div>
       )}

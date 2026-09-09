@@ -185,8 +185,9 @@ a {
   .feed-post-list > .social-post .post-avatar { inset-inline-start: 1rem; }
   .social-post .post-author { min-height: 2.5rem; }
   .social-post .post-copy > :not(.post-author) { margin-top: .5rem; }
-  .social-post .post-media { inline-size: calc(100% - 3.25rem); margin-block: .5rem .75rem; margin-inline: 3.25rem 0; overflow: hidden; border: 0; border-radius: .875rem; justify-content: start; background: transparent; }
-  .social-post .post-media :is(img, video) { display: block; width: 100%; height: auto; margin-inline: 0; border-radius: inherit; max-height: min(65dvh, 36rem); object-fit: contain; }
+  .social-post .post-media { inline-size: calc(100% - 3.25rem); display: block; margin-block: .5rem .75rem; margin-inline: 3.25rem 0; overflow: hidden; border: 0; border-radius: .875rem; background: transparent; }
+  .social-post .post-media img { display: block; inline-size: 100%; block-size: auto; max-inline-size: none; max-block-size: none; margin-inline: 0; border-radius: inherit; object-fit: contain; }
+  .social-post .post-media video { display: block; width: 100%; height: auto; max-height: min(65dvh, 36rem); margin-inline: 0; border-radius: inherit; object-fit: contain; }
   .social-post > a { margin-block: .25rem .5rem; margin-inline: 3.25rem 0; border: 0; justify-content: start; background: transparent; }
   .social-post .post-engagement { margin-inline-start: 3.25rem; }
   .social-post .post-engagement-actions { padding: .1rem 0; flex-wrap: wrap; gap: 1rem; }

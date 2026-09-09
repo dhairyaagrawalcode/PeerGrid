@@ -8,9 +8,10 @@ export default function PostImage({ postId, original, alt, mime }: { postId: str
   const optimized = !failed && ["image/jpeg", "image/png", "image/webp"].includes(mime ?? "");
   const source = `/api/post-images/${postId}`;
   // eslint-disable-next-line @next/next/no-img-element -- Same-origin authenticated responsive image endpoint; no public optimizer cache.
-  return <img alt={alt} className="mx-auto h-auto max-h-[min(68vh,640px)] w-auto max-w-full object-contain" decoding="async" loading="lazy"
+  return <img alt={alt} className="block h-auto w-full max-w-none object-contain" decoding="async" loading="lazy"
+    style={{ width: "100%", height: "auto", maxWidth: "none", maxHeight: "none" }}
     src={optimized ? `${source}?w=800` : original}
     srcSet={optimized ? `${source}?w=480 480w, ${source}?w=800 800w, ${source}?w=1280 1280w` : undefined}
-    sizes="auto, (min-width: 1280px) 880px, (min-width: 768px) 800px, 100vw"
+    sizes="(min-width: 1280px) 880px, (min-width: 768px) 800px, calc(100vw - 5.25rem)"
     onError={() => { if (optimized) setFailed(true); }} />;
 }
