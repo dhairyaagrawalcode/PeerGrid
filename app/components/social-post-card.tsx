@@ -6,12 +6,25 @@ import AvatarImage from "./avatar-image";
 import PostBody from "./post-body";
 import PostEngagement from "./post-engagement";
 import PostImage from "./post-image";
-import PostDeleteButton from "./post-delete-button";
+import PostActionMenu from "./post-action-menu";
 
-export default function SocialPostCard({ post, flat = false, canDelete = false }: { post: SocialPost; flat?: boolean; canDelete?: boolean }) {
+function readableSize(bytes: number | null) {
+  if (!bytes) return null;
+  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+}
+
+function documentType(mime: string | null) {
+  if (mime === "application/pdf") return "PDF";
+  if (mime?.includes("word")) return "Word document";
+  if (mime?.includes("powerpoint") || mime?.includes("presentation")) return "Presentation";
+  if (mime?.includes("excel") || mime?.includes("spreadsheet")) return "Spreadsheet";
+  return "Document";
+}
+
+export default function SocialPostCard({ post, flat = false, own = false }: { post: SocialPost; flat?: boolean; own?: boolean }) {
   const profileHref = `/students/${post.author.username}`;
   return (
-    <article className={`social-post ${flat ? "scroll-mt-24 overflow-hidden py-2" : "surface scroll-mt-24 overflow-hidden"}`} id={`post-${post.id}`}>
+    <article className={`social-post ${flat ? "scroll-mt-24 py-2" : "surface scroll-mt-24"}`} id={`post-${post.id}`}>
       <div className="post-copy p-4 sm:p-5">
         <div className="post-author flex min-w-0 items-center gap-2">
         <Link className="flex min-w-0 flex-1 items-center gap-3" href={profileHref}>
@@ -23,7 +36,7 @@ export default function SocialPostCard({ post, flat = false, canDelete = false }
             </span>
           </span>
         </Link>
-        {canDelete && <PostDeleteButton hasAttachment={Boolean(post.attachment_path)} postId={post.id} />}
+        <PostActionMenu authorId={post.author_id} body={post.body} hasAttachment={Boolean(post.attachment_path)} initialFollowing={post.viewer_follows_author} own={own} postId={post.id} />
         </div>
         {post.recommendation_reason && <p className="mt-3 text-[11px] text-muted">{post.recommendation_reason}</p>}
         {post.body && <PostBody className="mt-4 text-sm leading-6 text-subtle" text={post.body} />}
@@ -40,14 +53,20 @@ export default function SocialPostCard({ post, flat = false, canDelete = false }
         </div>
       )}
       {post.attachment_kind === "document" && post.attachment_url && (
-        <a className="mx-4 mb-4 flex items-center gap-3 rounded-xl border border-line bg-panel p-4 hover:border-muted sm:mx-5" href={post.attachment_url} rel="noreferrer" target="_blank">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-card text-subtle"><FiFileText size={20} /></span>
-          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{post.attachment_name}</span><span className="mt-0.5 block text-xs text-muted">Open document</span></span>
-          <FiDownload className="text-muted" />
+        <a aria-label={`Open ${post.attachment_name || "document"}`} className="post-document mx-4 mb-4 flex min-w-0 items-center gap-3 rounded-xl border border-line bg-panel p-4 hover:border-muted sm:mx-5" href={post.attachment_url} rel="noreferrer" target="_blank">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-subtle"><FiFileText size={20} /></span>
+          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{post.attachment_name || "Document"}</span><span className="mt-0.5 block truncate text-xs text-muted">{[documentType(post.attachment_mime), readableSize(post.attachment_size), "Open document"].filter(Boolean).join(" · ")}</span></span>
+          <FiDownload className="shrink-0 text-muted" />
         </a>
       )}
+      {post.attachment_kind === "document" && !post.attachment_url && (
+        <div aria-label={`${post.attachment_name || "Document"} is unavailable`} className="post-document mx-4 mb-4 flex min-w-0 items-center gap-3 rounded-xl border border-line bg-panel p-4 opacity-70 sm:mx-5" role="status">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-subtle"><FiFileText size={20} /></span>
+          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{post.attachment_name || "Document"}</span><span className="mt-0.5 block truncate text-xs text-muted">{[documentType(post.attachment_mime), readableSize(post.attachment_size), "Temporarily unavailable"].filter(Boolean).join(" · ")}</span></span>
+        </div>
+      )}
 
-      <PostEngagement authorId={post.author_id} initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
+      <PostEngagement initialCommentCount={post.comment_count} initialLikeCount={post.like_count} initialLiked={post.viewer_liked} postId={post.id} />
     </article>
   );
 }

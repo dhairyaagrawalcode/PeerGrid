@@ -19,3 +19,15 @@ export async function recordCollaborationViews(collaborationIds: string[]) {
     ),
   );
 }
+
+export async function recordPostPreference(postId: string, preference: "interested" | "not_interested") {
+  if (!uuidPattern.test(postId) || !["interested", "not_interested"].includes(preference)) return { error: "Invalid preference." };
+  const { supabase } = await requireStudent();
+  const { data, error } = await supabase.rpc("record_recommendation_event", {
+    candidate_entity_type: "post",
+    candidate_entity_id: postId,
+    candidate_event_type: preference,
+  });
+  if (error || !data) return { error: "Your feed preference could not be saved. Please try again." };
+  return { success: true };
+}

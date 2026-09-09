@@ -206,7 +206,7 @@ export default function ConversationList({
             <div>
               <p className="text-sm font-bold">No messages yet</p>
               <p className="mt-2 text-xs leading-5 text-muted">
-                Message a student or create an encrypted group.
+                Message a student or create a group.
               </p>
               <Link className="button button-primary mt-5 !min-h-9 !text-xs" href="/discover">
                 Find students

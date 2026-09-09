@@ -94,8 +94,8 @@ export default function CreateGroupButton({ currentId }: { currentId: string }) 
 
   return <>
     <button aria-label="Create group" className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" onClick={openModal} title="Create group" type="button"><FiUserPlus /></button>
-    {open && <div aria-modal="true" className="fixed inset-0 z-[70] grid place-items-center bg-black/75 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }} role="dialog">
-      <div className="flex max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-line bg-panel">
+    {open && <div aria-modal="true" className="responsive-modal-backdrop group-details-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }} role="dialog">
+      <div className="responsive-modal-panel group-details-panel flex max-w-md flex-col overflow-hidden">
         <div className="flex shrink-0 items-center justify-between px-5 py-4">
           <div><h2 className="text-base font-bold">New group</h2><p className="mt-1 text-xs text-muted">Choose 2–9 students.</p></div>
           <button aria-label="Close" className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={creating} onClick={closeModal} type="button"><FiX /></button>

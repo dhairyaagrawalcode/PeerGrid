@@ -32,10 +32,25 @@ test("only message senders receive message deletion permission", () => {
 
 test("post owners have a confirmed post and media deletion flow", () => {
   const action = source("app/actions/posts.ts");
-  const button = source("app/components/post-delete-button.tsx");
+  const menu = source("app/components/post-action-menu.tsx");
   assert.match(action, /\.eq\("author_id", user\.id\)/);
   assert.match(action, /storage\.from\("post-media"\)\.remove/);
-  assert.match(button, /ConfirmationModal/);
+  assert.match(menu, /ConfirmationModal/);
+  assert.match(menu, /Edit post/);
+  assert.match(menu, /Delete post/);
+  assert.match(menu, /Interested/);
+  assert.match(menu, /Not interested/);
+  assert.match(menu, /Report post/);
+});
+
+test("persisted post preferences affect both the selected post and related author ranking", () => {
+  const action = source("app/actions/recommendations.ts");
+  const migration = source("supabase/migrations/20260909000000_plaintext_messages_and_post_actions.sql");
+  assert.match(action, /record_recommendation_event/);
+  assert.match(action, /interested.*not_interested/);
+  assert.match(migration, /event\.user_id = auth\.uid\(\)/);
+  assert.match(migration, /author_negative_signals/);
+  assert.match(migration, /signaled_post\.author_id = post\.author_id/);
 });
 
 test("message attachments use a private opaque bucket and conversation membership policies", () => {
@@ -45,6 +60,17 @@ test("message attachments use a private opaque bucket and conversation membershi
   assert.match(migration, /conversation_members/);
   assert.match(migration, /message\.attachment_path = name/);
   assert.doesNotMatch(migration, /attachment_key|decryption_key|original_filename|original_mime/);
+});
+
+test("new messages use participant-protected plaintext while legacy encrypted rows remain recognizable", () => {
+  const migration = source("supabase/migrations/20260909000000_plaintext_messages_and_post_actions.sql");
+  const thread = source("app/components/message-thread.tsx");
+  assert.match(migration, /add column if not exists body text/);
+  assert.match(migration, /viewer_member\.profile_id = auth\.uid\(\)/);
+  assert.match(migration, /revoke execute on function public\.register_crypto_device/);
+  assert.match(thread, /body: plaintext \|\| null/);
+  assert.match(thread, /Legacy encrypted message/);
+  assert.doesNotMatch(thread, /libsodium|key_envelopes|sender_device_id/);
 });
 
 test("admin user filters execute in the database with bounded pagination", () => {

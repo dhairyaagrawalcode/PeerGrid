@@ -158,8 +158,8 @@ export default function GroupDetailsButton({ avatarPath: initialAvatarPath, conv
       <FiChevronDown className="shrink-0 text-muted" size={14} />
     </button>
 
-    {open && <div aria-modal="true" className="fixed inset-0 z-[80] grid place-items-center bg-black/75 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }} role="dialog">
-      <div className="max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-panel">
+    {open && <div aria-modal="true" className="responsive-modal-backdrop group-details-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }} role="dialog">
+      <div className="responsive-modal-panel group-details-panel max-w-md overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4">
           <div><h2 className="text-base font-bold">Group details</h2><p className="mt-1 text-xs text-muted">{members.length} members</p></div>
           <button aria-label="Close group details" className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={uploading || Boolean(removingId) || adding} onClick={closeModal} type="button"><FiX /></button>

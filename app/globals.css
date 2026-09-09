@@ -139,6 +139,69 @@ a {
   box-shadow: none;
 }
 
+.feed-composer-prompt {
+  display: inline-block;
+  max-inline-size: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+  border-inline-end: 1px solid transparent;
+  animation: pg-typewriter 1.8s steps(34, end) .12s both, pg-typewriter-caret .55s step-end .12s 4;
+}
+.responsive-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / .75);
+}
+.responsive-modal-panel {
+  inline-size: 100%;
+  max-block-size: min(45rem, calc(100dvh - 2rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-panel);
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / .45);
+}
+.post-action-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 54;
+  background: transparent;
+}
+.post-action-menu-panel {
+  position: absolute;
+  inset-block-start: 2.75rem;
+  inset-inline-end: 0;
+  z-index: 55;
+  inline-size: 14rem;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: .875rem;
+  background: var(--color-panel);
+  padding: .4rem;
+  box-shadow: 0 1.25rem 3.5rem rgb(0 0 0 / .5);
+}
+.post-action-menu-panel > button[role="menuitem"] {
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  align-items: center;
+  gap: .75rem;
+  border-radius: .65rem;
+  padding-inline: .75rem;
+  text-align: start;
+  font-size: .82rem;
+  font-weight: 650;
+}
+.post-action-menu-panel > button[role="menuitem"]:hover { background: var(--color-card); }
+.post-action-menu-heading { display: none; }
+.post-action-status { display: flex; align-items: center; gap: .5rem; padding: .65rem .75rem; font-size: .72rem; }
+
 /* Compact application UI only. Landing/admin and desktop remain independent. */
 .mobile-page-header, .mobile-only { display: none; }
 .discover-chips { overscroll-behavior-inline: contain; }
@@ -174,7 +237,6 @@ a {
   .feed-composer { padding: .75rem 0 1rem; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0 !important; background: transparent; margin-bottom: 0; }
   .platform-shell[data-mobile-route="/feed"] .feed-composer { inline-size: calc(100% + 2rem); margin-inline: -1rem; padding-inline: 1rem; border-radius: 0 !important; }
   .feed-composer .field { display: block; min-width: 0; border: 0; background: transparent; padding: 0; line-height: 1.6; font-size: .875rem; }
-  .feed-composer-prompt { display: inline-block; max-inline-size: 100%; overflow: hidden; white-space: nowrap; clip-path: inset(0 100% 0 0); border-inline-end: 1px solid transparent; animation: pg-typewriter 1.8s steps(34, end) .12s both, pg-typewriter-caret .55s step-end .12s 4; }
   .feed-composer > div + div { display: none; }
   .platform-shell[data-mobile-route="/feed"] .feed-post-list { inline-size: calc(100% + 2rem); margin-inline: -1rem; }
   .social-post { position: relative; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; padding-block: 1rem .5rem; margin-top: 0 !important; }
@@ -189,6 +251,7 @@ a {
   .social-post .post-media img { display: block; inline-size: 100%; block-size: auto; max-inline-size: none; max-block-size: none; margin-inline: 0; border-radius: inherit; object-fit: contain; }
   .social-post .post-media video { display: block; width: 100%; height: auto; max-height: min(65dvh, 36rem); margin-inline: 0; border-radius: inherit; object-fit: contain; }
   .social-post > a { margin-block: .25rem .5rem; margin-inline: 3.25rem 0; border: 0; justify-content: start; background: transparent; }
+  .social-post > .post-document { inline-size: calc(100% - 3.25rem); min-block-size: 4rem; margin-block: .25rem .5rem; margin-inline: 3.25rem 0; padding: .65rem 0; }
   .social-post .post-engagement { margin-inline-start: 3.25rem; }
   .social-post .post-engagement-actions { padding: .1rem 0; flex-wrap: wrap; gap: 1rem; }
   .social-post .post-engagement-actions > button { min-height: 2.75rem; }
@@ -222,6 +285,32 @@ a {
   .post-composer button[type="submit"] { width: auto; min-height: 2.75rem !important; }
   .post-composer label { padding-inline: .4rem; min-height: 2.75rem; }
   .post-composer > p:last-child { padding-inline: 0; }
+
+  .responsive-modal-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+  .responsive-modal-panel {
+    max-inline-size: 36rem !important;
+    max-block-size: min(88dvh, 46rem);
+    border-radius: 1.4rem 1.4rem 0 0;
+    padding-block-end: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    animation: pg-sheet-enter .22s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .post-action-menu-backdrop { background: rgb(0 0 0 / .65); }
+  .post-action-menu-panel {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 55;
+    inline-size: min(100%, 36rem);
+    margin-inline: auto;
+    border-radius: 1.4rem 1.4rem 0 0;
+    padding: .75rem 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+    animation: pg-sheet-enter .22s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .post-action-menu-heading { display: flex; min-block-size: 3rem; align-items: center; justify-content: space-between; border-block-end: 1px solid var(--color-line); padding-inline-start: .4rem; }
+  .post-action-menu-panel > button[role="menuitem"] { min-block-size: 3.25rem; font-size: .9rem; }
+  .group-details-panel { max-block-size: 92dvh; }
 
   .platform-shell[data-mobile-route="/collaborate"] .collaboration-list { inline-size: calc(100% + 2rem); margin-inline: -1rem; gap: 0; }
   .platform-shell[data-mobile-route="/collaborate"] .collaboration-list article[id^="collaboration-"] { padding: 1rem; border: 0; border-radius: 0; background: transparent; }
@@ -304,7 +393,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feed-composer-prompt, .mobile-settings-sheet { animation: none; clip-path: none; }
+  .feed-composer-prompt, .mobile-settings-sheet, .responsive-modal-panel, .post-action-menu-panel { animation: none; clip-path: none; }
   ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) {
     animation-duration: 0s !important;
     animation-delay: 0s !important;

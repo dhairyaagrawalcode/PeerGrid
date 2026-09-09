@@ -130,45 +130,18 @@ export type DirectMessage = {
   id: string;
   conversation_id: string;
   sender_id: string;
-  ciphertext: string;
-  nonce: string;
-  key_envelopes: Record<string, string>;
-  encryption_version: 1;
-  sender_device_id: string;
-  signature: string;
+  body: string | null;
   attachment_path: string | null;
   attachment_kind: MessageAttachmentKind | null;
   attachment_size: number | null;
+  attachment_name: string | null;
+  attachment_mime: string | null;
   created_at: string;
   read_at: string | null;
-};
-
-export type MessageAttachmentKind = "image" | "video" | "document";
-
-export type EncryptedMessageAttachment = {
-  version: 1;
-  path: string;
-  kind: MessageAttachmentKind;
-  name: string;
-  mime: string;
-  size: number;
-  key: string;
-  nonce: string;
-};
-
-export type DecryptedDirectMessage = DirectMessage & {
-  plaintext: string | null;
-  decryption_error: "missing_key" | "invalid_signature" | "decrypt_failed" | null;
   optimistic?: boolean;
 };
 
-export type CryptoDevicePublic = {
-  device_id: string;
-  profile_id: string;
-  box_public_key: string;
-  signing_public_key: string;
-  revoked_at: string | null;
-};
+export type MessageAttachmentKind = "image" | "video" | "document";
 
 export type PeerGridNotification = {
   id: string;
@@ -236,10 +209,12 @@ export type SocialPost = {
   attachment_kind: "image" | "video" | "document" | null;
   attachment_name: string | null;
   attachment_mime: string | null;
+  attachment_size: number | null;
   attachment_url: string | null;
   like_count: number;
   comment_count: number;
   viewer_liked: boolean;
+  viewer_follows_author: boolean;
   moderation_status: ModerationStatus;
   moderation_reason: string | null;
   recommendation_reason?: string | null;

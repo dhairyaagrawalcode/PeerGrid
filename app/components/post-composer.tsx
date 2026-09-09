@@ -107,6 +107,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         form.set("attachmentKind", kind);
         form.set("attachmentName", uploadFile.name);
         form.set("attachmentMime", uploadFile.type);
+        form.set("attachmentSize", String(uploadFile.size));
       }
 
       setSubmissionStage("publishing");

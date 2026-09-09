@@ -20,7 +20,6 @@ import { initials } from "@/app/lib/format";
 import type { PeerGridNotification, StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import Brand from "./brand";
-import CryptoDeviceBootstrap from "./crypto-device-bootstrap";
 import NotificationDropdown from "./notification-dropdown";
 import ActivityTracker from "./activity-tracker";
 import MobilePageHeader from "./mobile-page-header";
@@ -297,7 +296,6 @@ export default function AppShell({
   return (
     <div ref={shellRef} data-mobile-route={pathname} className={`platform-shell h-dvh overflow-hidden bg-bg text-font ${mobileConversationOpen ? "mobile-chat-open" : ""}`}>
       <ActivityTracker />
-      <CryptoDeviceBootstrap userId={profile.id} />
       <MobilePageHeader key={`mobile-header:${pathname}`} notifications={notificationUnreadCount} messages={unreadCount} />
       <header className="desktop-app-header fixed inset-x-0 top-0 z-40 h-[4.5rem] border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="app-frame flex h-full items-center gap-6">

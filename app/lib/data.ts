@@ -183,7 +183,7 @@ export async function getCollaborations(
 
 export async function getSocialPosts(
   supabase: SupabaseClient,
-  options: { limit?: number; offset?: number; authorId?: string; ranked?: boolean } = {},
+  options: { limit?: number; offset?: number; authorId?: string; ranked?: boolean; viewerId?: string } = {},
 ) {
   const limit = Math.min(Math.max(options.limit ?? POST_PAGE_SIZE, 1), 50);
   const offset = Math.max(options.offset ?? 0, 0);
@@ -202,7 +202,7 @@ export async function getSocialPosts(
   let query = supabase
     .from("social_posts")
     .select(
-      "id, author_id, body, attachment_path, attachment_kind, attachment_name, attachment_mime, moderation_status, moderation_reason, created_at, author:profiles!social_posts_author_id_fkey(id, username, full_name, avatar_url, program, campus:campuses(id, slug, name, city))",
+      "id, author_id, body, attachment_path, attachment_kind, attachment_name, attachment_mime, attachment_size, moderation_status, moderation_reason, created_at, author:profiles!social_posts_author_id_fkey(id, username, full_name, avatar_url, program, campus:campuses(id, slug, name, city))",
     )
     .eq("moderation_status", "published")
     .order("created_at", { ascending: false });
@@ -218,14 +218,18 @@ export async function getSocialPosts(
 
 
   const posts = (data ?? []) as unknown as Array<
-    Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked">
+    Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked" | "viewer_follows_author">
   >;
   const postIds = posts.map((post) => post.id);
+  const authorIds = [...new Set(posts.map((post) => post.author_id))];
   const mediaPaths = [...new Set(posts.flatMap((post) => post.attachment_path ? [post.attachment_path] : []))];
   // Independent batched operations: never one author/count/storage request per post.
-  const [engagementResult, mediaResult] = await Promise.all([
+  const [engagementResult, mediaResult, followsResult] = await Promise.all([
     postIds.length ? supabase.rpc("get_post_engagement", { candidate_post_ids: postIds }) : Promise.resolve({ data: [], error: null }),
     mediaPaths.length ? supabase.storage.from("post-media").createSignedUrls(mediaPaths, 60 * 60) : Promise.resolve({ data: [], error: null }),
+    options.viewerId && authorIds.length
+      ? supabase.from("follows").select("following_id").eq("follower_id", options.viewerId).in("following_id", authorIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (engagementResult.error) console.error("[PeerGrid] post engagement unavailable", { code: engagementResult.error.code });
   if (mediaResult.error) console.error("[PeerGrid] post media URLs unavailable", { message: mediaResult.error.message });
@@ -237,10 +241,12 @@ export async function getSocialPosts(
   for (const item of mediaResult.data ?? []) {
     if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
   }
+  const followedAuthors = new Set((followsResult.data ?? []).map((row) => String(row.following_id)));
 
   const hydrated = posts.map((post) => ({
     ...post,
     attachment_url: post.attachment_path ? signedUrls.get(post.attachment_path) ?? null : null,
+    viewer_follows_author: followedAuthors.has(post.author_id),
     ...(engagement.get(post.id) ?? { like_count: 0, comment_count: 0, viewer_liked: false }),
   })) as SocialPost[];
   if (!rankedRows.length) return hydrated;
@@ -433,7 +439,7 @@ export async function getDirectMessages(
 ) {
   const { data, error } = await supabase
     .from("messages")
-    .select("id, conversation_id, sender_id, ciphertext, nonce, key_envelopes, encryption_version, sender_device_id, signature, attachment_path, attachment_kind, attachment_size, created_at, read_at")
+    .select("id, conversation_id, sender_id, body, attachment_path, attachment_kind, attachment_size, attachment_name, attachment_mime, created_at, read_at")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
     .limit(MESSAGE_PAGE_SIZE + 1);

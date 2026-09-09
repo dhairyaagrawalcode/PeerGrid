@@ -6,6 +6,7 @@ import { moderateContent } from "@/app/lib/moderation";
 
 export type CreatePostResult = { success?: boolean; error?: string; moderation?: "published" | "held" };
 export type DeletePostResult = { success?: boolean; error?: string };
+export type UpdatePostResult = { success?: boolean; error?: string; moderation?: "published" | "held" };
 
 const allowedKinds = new Set(["image", "video", "document"]);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -17,6 +18,7 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
   const attachmentKind = String(formData.get("attachmentKind") ?? "").trim();
   const attachmentName = String(formData.get("attachmentName") ?? "").trim();
   const attachmentMime = String(formData.get("attachmentMime") ?? "").trim();
+  const attachmentSize = Number(formData.get("attachmentSize") ?? 0);
 
   if (!body && !attachmentPath) return { error: "Write something or attach a file." };
   if (body.length > 5000) return { error: "Posts can contain up to 5,000 characters." };
@@ -26,7 +28,7 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
   const hasAttachment = Boolean(attachmentPath);
   if (hasAttachment) {
     if (!attachmentPath.startsWith(`${user.id}/`)) return { error: "Invalid attachment path." };
-    if (!allowedKinds.has(attachmentKind) || !attachmentName || !attachmentMime) {
+    if (!allowedKinds.has(attachmentKind) || !attachmentName || !attachmentMime || !Number.isSafeInteger(attachmentSize) || attachmentSize < 1 || attachmentSize > 25 * 1024 * 1024) {
       return { error: "The attachment details are incomplete." };
     }
   }
@@ -38,6 +40,7 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
     attachment_kind: hasAttachment ? attachmentKind : null,
     attachment_name: hasAttachment ? attachmentName.slice(0, 255) : null,
     attachment_mime: hasAttachment ? attachmentMime.slice(0, 120) : null,
+    attachment_size: hasAttachment ? attachmentSize : null,
   }).select("moderation_status").single();
 
   if (error) {
@@ -56,6 +59,27 @@ export async function createSocialPost(formData: FormData): Promise<CreatePostRe
   }
   if (created?.moderation_status === "published") revalidatePath("/feed");
   return { success: true, moderation: created?.moderation_status === "held" ? "held" : "published" };
+}
+
+export async function updateSocialPost(postId: string, rawBody: string): Promise<UpdatePostResult> {
+  const { supabase, user } = await requireStudent();
+  const body = rawBody.trim();
+  if (!uuidPattern.test(postId)) return { error: "Invalid post." };
+  if (body.length > 5000) return { error: "Posts can contain up to 5,000 characters." };
+  const { data: existing, error: readError } = await supabase.from("social_posts").select("attachment_path").eq("id", postId).eq("author_id", user.id).maybeSingle();
+  if (readError || !existing) return { error: "This post could not be edited." };
+  if (!body && !existing.attachment_path) return { error: "Write something or keep an attachment." };
+  const moderation = moderateContent(body);
+  if (moderation.status === "rejected") return { error: "This post violates PeerGrid's community rules and cannot be published." };
+  const { error } = await supabase.from("social_posts").update({
+    body,
+    moderation_status: moderation.status,
+    moderation_reason: moderation.reason,
+  }).eq("id", postId).eq("author_id", user.id);
+  if (error) return { error: "Your changes could not be saved. Please try again." };
+  revalidatePath("/feed");
+  revalidatePath("/profile");
+  return { success: true, moderation: moderation.status };
 }
 
 export async function deleteSocialPost(postId: string): Promise<DeletePostResult> {

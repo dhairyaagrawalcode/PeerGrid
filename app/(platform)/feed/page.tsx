@@ -238,6 +238,7 @@ async function FeedPosts({ page }: { page: number }) {
     limit: POST_PAGE_SIZE + 1,
     offset: page * POST_PAGE_SIZE,
     ranked: true,
+    viewerId: user.id,
   });
   const visiblePosts = posts.slice(0, POST_PAGE_SIZE);
   const hasMorePosts = posts.length > POST_PAGE_SIZE;
@@ -248,7 +249,7 @@ async function FeedPosts({ page }: { page: number }) {
         {visiblePosts.length ? (
           visiblePosts.map((post) => (
             <SocialPostCard
-              canDelete={post.author_id === user.id}
+              own={post.author_id === user.id}
               key={post.id}
               post={post}
             />

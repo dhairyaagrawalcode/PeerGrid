@@ -7,7 +7,7 @@ import PageNavigation from "./page-navigation";
 
 export async function ProfilePostSection({ profile, page, proofPage }: { profile: StudentProfile; page: number; proofPage: number }) {
   const { supabase, user } = await requireStudent();
-  const posts = await getSocialPosts(supabase, { authorId: profile.id, limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE });
+  const posts = await getSocialPosts(supabase, { authorId: profile.id, limit: POST_PAGE_SIZE + 1, offset: page * POST_PAGE_SIZE, viewerId: user.id });
   return <ProfilePosts posts={posts.slice(0, POST_PAGE_SIZE)} hasMorePosts={posts.length > POST_PAGE_SIZE} own={user.id === profile.id} profile={profile} page={page} proofPage={proofPage} />;
 }
 
