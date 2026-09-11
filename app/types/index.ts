@@ -201,6 +201,18 @@ export type CollaborationPost = {
   campus: Campus | null;
 };
 
+export type PostMedia = {
+  id: string;
+  post_id: string;
+  position: number;
+  path: string;
+  kind: "image" | "video" | "document";
+  name: string;
+  mime: string;
+  size: number;
+  url: string | null;
+};
+
 export type SocialPost = {
   id: string;
   author_id: string;
@@ -211,6 +223,7 @@ export type SocialPost = {
   attachment_mime: string | null;
   attachment_size: number | null;
   attachment_url: string | null;
+  media: PostMedia[];
   like_count: number;
   comment_count: number;
   viewer_liked: boolean;
@@ -222,6 +235,6 @@ export type SocialPost = {
   created_at: string;
   author: Pick<
     StudentProfile,
-    "id" | "username" | "full_name" | "avatar_url" | "program" | "campus"
+    "id" | "username" | "full_name" | "avatar_url" | "program" | "current_status" | "campus"
   >;
 };

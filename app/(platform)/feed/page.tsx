@@ -10,17 +10,16 @@ import {
   FiArrowUpRight,
   FiCalendar,
   FiFileText,
-  FiImage,
   FiMapPin,
   FiPlus,
   FiUsers,
-  FiVideo,
 } from "react-icons/fi";
 import AvatarImage from "@/app/components/avatar-image";
 import EmptyState from "@/app/components/empty-state";
 import SocialPostCard from "@/app/components/social-post-card";
 import SuggestedStudent from "@/app/components/suggested-student";
 import PageNavigation from "@/app/components/page-navigation";
+import ResponsivePostLink from "@/app/components/responsive-post-link";
 import { requireStudent } from "@/app/lib/auth";
 import {
   getFollowSummary,
@@ -52,60 +51,45 @@ export default async function FeedPage({
       <div className="min-w-0">
         <div className="mobile-hide mb-4 flex items-center justify-between xl:hidden">
           <h1 className="text-xl font-black tracking-tight">Home</h1>
-          <Link
+          <ResponsivePostLink
             className="button button-primary !min-h-9 !px-3 !text-xs sm:hidden"
             href="/post"
           >
             <FiPlus /> Post
-          </Link>
+          </ResponsivePostLink>
         </div>
 
-        <section className="feed-composer surface mb-5 p-4 sm:p-5">
-          <div className="flex items-center gap-3">
-            <div className="avatar !h-10 !w-10 !rounded-full">
-              {profile.avatar_url ? (
-                <AvatarImage alt={profile.full_name} src={profile.avatar_url} />
-              ) : (
-                initials(profile.full_name)
-              )}
+        <div className="feed-stream">
+          <section className="feed-composer surface mb-5 p-4">
+            <div className="flex items-center gap-[.65rem]">
+              <div className="avatar !h-10 !w-10 !rounded-full">
+                {profile.avatar_url ? (
+                  <AvatarImage
+                    alt={profile.full_name}
+                    src={profile.avatar_url}
+                  />
+                ) : (
+                  initials(profile.full_name)
+                )}
+              </div>
+              <ResponsivePostLink
+                className="field flex !min-h-11 flex-1 items-center !rounded-xl !border-0 !px-0 !py-0 text-sm text-muted"
+                href="/post"
+              >
+                <span className="mobile-only mb-.5 block font-semibold text-font">
+                  {profile.full_name}
+                </span>
+                <span className="feed-composer-prompt">
+                  What are you building or learning?
+                </span>
+              </ResponsivePostLink>
             </div>
-            <Link
-              className="field flex !min-h-11 flex-1 items-center !rounded-xl !py-0 text-sm text-muted hover:border-primary/25"
-              href="/post"
-            >
-              <span className="mobile-only mb-1 block font-semibold text-font">
-                {profile.full_name}
-              </span>
-              <span className="feed-composer-prompt">
-                What are you building or learning?
-              </span>
-            </Link>
-          </div>
-          <div className="mt-3 grid grid-cols-3 border-t border-line pt-3 text-xs font-semibold text-muted">
-            <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
-              href="/post"
-            >
-              <FiImage className="text-subtle" /> Photo
-            </Link>
-            <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
-              href="/post"
-            >
-              <FiVideo className="text-subtle" /> Video
-            </Link>
-            <Link
-              className="flex items-center justify-center gap-2 rounded-lg py-2 hover:bg-card hover:text-font"
-              href="/post"
-            >
-              <FiFileText className="text-subtle" /> Document
-            </Link>
-          </div>
-        </section>
+          </section>
 
-        <Suspense key={page} fallback={<FeedPostsSkeleton />}>
-          <FeedPosts page={page} />
-        </Suspense>
+          <Suspense key={page} fallback={<FeedPostsSkeleton />}>
+            <FeedPosts page={page} />
+          </Suspense>
+        </div>
       </div>
 
       <aside className="hidden xl:block">
@@ -245,10 +229,11 @@ async function FeedPosts({ page }: { page: number }) {
   return (
     <>
       {" "}
-      <div className="feed-post-list space-y-4">
+      <div className="feed-post-list">
         {visiblePosts.length ? (
           visiblePosts.map((post) => (
             <SocialPostCard
+              feed
               own={post.author_id === user.id}
               key={post.id}
               post={post}
@@ -257,9 +242,12 @@ async function FeedPosts({ page }: { page: number }) {
         ) : (
           <EmptyState
             action={
-              <Link className="button button-primary" href="/post">
+              <ResponsivePostLink
+                className="button button-primary"
+                href="/post"
+              >
                 Create a post
-              </Link>
+              </ResponsivePostLink>
             }
             copy="Share a project, learning milestone, opportunity, or update with the NST community."
             icon={<FiFileText size={21} />}

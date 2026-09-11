@@ -9,6 +9,14 @@ import type { PostComment } from "@/app/types";
 import AvatarImage from "./avatar-image";
 import PostBody from "./post-body";
 
+function AnimatedCount({ value }: { value: number }) {
+  return (
+    <span aria-hidden="true" className="post-engagement-count">
+      <span className="post-engagement-count-value" key={value}>{value}</span>
+    </span>
+  );
+}
+
 export default function PostEngagement({ postId, initialLiked, initialSaved, initialLikeCount, initialCommentCount }: { postId: string; initialLiked: boolean; initialSaved: boolean; initialLikeCount: number; initialCommentCount: number }) {
   const [liked, setLiked] = useState(initialLiked);
   const [saved, setSaved] = useState(initialSaved);
@@ -97,10 +105,10 @@ export default function PostEngagement({ postId, initialLiked, initialSaved, ini
     <div className="post-engagement">
       <div className="post-engagement-actions flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
         <div className="flex items-center gap-1">
-          <button aria-label={`${liked ? "Unlike" : "Like"} post, ${likeCount} ${likeCount === 1 ? "like" : "likes"}`} aria-pressed={liked} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${liked ? "text-primary" : "text-muted hover:text-font"}`} disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /> {likeCount}</button>
-          <button aria-label={`Show comments, ${commentCount} ${commentCount === 1 ? "comment" : "comments"}`} aria-expanded={expanded} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-card hover:text-font" onClick={loadComments} type="button"><FiMessageCircle /> {commentCount}</button>
+          <button aria-label={`${liked ? "Unlike" : "Like"} post, ${likeCount} ${likeCount === 1 ? "like" : "likes"}`} aria-pressed={liked} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-font hover:bg-card" disabled={isPending} onClick={like} type="button"><FiHeart className={liked ? "fill-current" : ""} /><AnimatedCount value={likeCount} /></button>
+          <button aria-label={`Show comments, ${commentCount} ${commentCount === 1 ? "comment" : "comments"}`} aria-expanded={expanded} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-font hover:bg-card" onClick={loadComments} type="button"><FiMessageCircle className={expanded ? "fill-current" : ""} /><AnimatedCount value={commentCount} /></button>
         </div>
-        <button aria-label={saved ? "Remove post from saved" : "Save post"} aria-pressed={saved} className={`post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-card ${saved ? "text-primary" : "text-muted hover:text-font"}`} disabled={isSavePending} onClick={save} type="button"><FiBookmark className={saved ? "fill-current" : ""} /><span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span></button>
+        <button aria-label={saved ? "Remove post from saved" : "Save post"} aria-pressed={saved} className="post-engagement-button flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-font hover:bg-card" disabled={isSavePending} onClick={save} type="button"><FiBookmark className={saved ? "fill-current" : ""} /><span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span></button>
       </div>
 
       {expanded && (

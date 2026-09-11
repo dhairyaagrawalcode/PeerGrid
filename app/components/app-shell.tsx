@@ -24,6 +24,8 @@ import Brand from "./brand";
 import NotificationDropdown from "./notification-dropdown";
 import ActivityTracker from "./activity-tracker";
 import MobilePageHeader from "./mobile-page-header";
+import ResponsivePostLink from "./responsive-post-link";
+import { PlatformProfileProvider } from "./platform-profile-context";
 
 const navigation = [
   { href: "/feed", label: "Home", icon: FiGrid },
@@ -113,6 +115,7 @@ export default function AppShell({
   initialCollaborationUnreadCount = 0,
   initialNotificationUnreadCount = 0,
   initialNotifications = [],
+  modal,
   children,
 }: {
   profile: StudentProfile;
@@ -120,6 +123,7 @@ export default function AppShell({
   initialCollaborationUnreadCount?: number;
   initialNotificationUnreadCount?: number;
   initialNotifications?: PeerGridNotification[];
+  modal?: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -273,8 +277,9 @@ export default function AppShell({
     if (label === "Notifications" && !mobile) {
       return <NotificationDropdown active={active} count={notificationUnreadCount} initialNotifications={initialNotifications} key={href} />;
     }
+    const NavigationLink = href === "/post" ? ResponsivePostLink : Link;
     return (
-      <Link
+      <NavigationLink
         aria-label={label}
         aria-current={active ? "page" : undefined}
         className={
@@ -293,11 +298,12 @@ export default function AppShell({
             {count > 99 ? "99+" : count}
           </span>
         )}
-      </Link>
+      </NavigationLink>
     );
   }
 
   return (
+    <PlatformProfileProvider profile={profile}>
     <div ref={shellRef} data-mobile-route={pathname} className={`platform-shell h-dvh overflow-hidden bg-bg text-font ${mobileConversationOpen ? "mobile-chat-open" : ""}`}>
       <ActivityTracker />
       <MobilePageHeader key={`mobile-header:${pathname}`} notifications={notificationUnreadCount} messages={unreadCount} />
@@ -327,9 +333,12 @@ export default function AppShell({
         </main>
       </ViewTransition>
 
+      {modal}
+
       <nav aria-label="Mobile navigation" className="mobile-navigation fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-bg/95 px-1 backdrop-blur-xl md:hidden">
         {mobileNavigation.map((item) => navigationLink({ ...item, mobile: true }))}
       </nav>
     </div>
+    </PlatformProfileProvider>
   );
 }

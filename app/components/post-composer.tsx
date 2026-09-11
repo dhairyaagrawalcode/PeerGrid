@@ -14,6 +14,7 @@ import type { StudentProfile } from "@/app/types";
 import AvatarImage from "./avatar-image";
 
 const maxFileSize = 25 * 1024 * 1024;
+const maxPhotos = 10;
 const documentTypes = new Set([
   "application/pdf",
   "application/msword",
@@ -38,12 +39,12 @@ function readableSize(bytes: number) {
     : `${Math.ceil(bytes / 1024)} KB`;
 }
 
-export default function PostComposer({ profile }: { profile: StudentProfile }) {
+export default function PostComposer({ profile, autoFocus = false }: { profile: StudentProfile; autoFocus?: boolean }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const previewUrlRef = useRef<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrlsRef = useRef<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -51,33 +52,40 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
 
   useEffect(() => {
     return () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
-  function updateFile(selected: File | null) {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const nextPreview = selected && fileKind(selected) !== "document"
-      ? URL.createObjectURL(selected)
-      : null;
-    previewUrlRef.current = nextPreview;
-    setPreviewUrl(nextPreview);
-    setFile(selected);
+  function updateFiles(selected: File[]) {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    const nextPreviews = selected.map((file) => fileKind(file) !== "document" ? URL.createObjectURL(file) : "");
+    previewUrlsRef.current = nextPreviews.filter(Boolean);
+    setPreviewUrls(nextPreviews);
+    setFiles(selected);
   }
 
-  function selectFile(selected: File | null) {
+  function selectFiles(selectedList: FileList | null) {
     setError(null);
     setNotice(null);
-    if (!selected) return updateFile(null);
-    if (!fileKind(selected)) {
-      updateFile(null);
+    const selected = Array.from(selectedList ?? []);
+    if (!selected.length) return;
+    if (selected.length > maxPhotos) {
+      updateFiles([]);
+      return setError(`Choose up to ${maxPhotos} photos.`);
+    }
+    if (selected.some((file) => !fileKind(file))) {
+      updateFiles([]);
       return setError("Choose an image, MP4/WebM/MOV video, PDF, Word, PowerPoint, Excel, or text file.");
     }
-    if (selected.size > maxFileSize) {
-      updateFile(null);
+    if (selected.some((file) => file.size > maxFileSize)) {
+      updateFiles([]);
       return setError("Attachments can be up to 25 MB.");
     }
-    updateFile(selected);
+    if (selected.length > 1 && selected.some((file) => fileKind(file) !== "image")) {
+      updateFiles([]);
+      return setError("Choose multiple photos together. Videos and documents can be posted one at a time.");
+    }
+    updateFiles(selected);
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -85,41 +93,39 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
     if (submitting) return;
     setError(null);
     setSubmitting(true);
-    setSubmissionStage(file ? "uploading" : "publishing");
+    setSubmissionStage(files.length ? "uploading" : "publishing");
     const form = new FormData(event.currentTarget);
     const body = String(form.get("body") ?? "").trim();
-    let uploadedPath = "";
+    const uploadedPaths: string[] = [];
 
     try {
-      if (!body && !file) throw new Error("Write something or attach a file.");
-      if (file) {
-        const kind = fileKind(file);
-        if (!kind) throw new Error("That file type is not supported.");
-        const uploadFile = await compressPostImage(file);
-        const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
-        uploadedPath = `${profile.id}/${createUuid()}-${safeName}`;
+      if (!body && !files.length) throw new Error("Write something or attach a file.");
+      if (files.length) {
         const supabase = createClient();
-        const { error: uploadError } = await supabase.storage
-          .from("post-media")
-          .upload(uploadedPath, uploadFile, { contentType: uploadFile.type, upsert: false });
-        if (uploadError) throw new Error("The attachment could not be uploaded. Please try again.");
-        form.set("attachmentPath", uploadedPath);
-        form.set("attachmentKind", kind);
-        form.set("attachmentName", uploadFile.name);
-        form.set("attachmentMime", uploadFile.type);
-        form.set("attachmentSize", String(uploadFile.size));
+        const attachments: Array<{ path: string; kind: "image" | "video" | "document"; name: string; mime: string; size: number }> = [];
+        for (const file of files) {
+          const kind = fileKind(file);
+          if (!kind) throw new Error("That file type is not supported.");
+          const uploadFile = await compressPostImage(file);
+          const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
+          const path = `${profile.id}/${createUuid()}-${safeName}`;
+          const { error: uploadError } = await supabase.storage
+            .from("post-media")
+            .upload(path, uploadFile, { contentType: uploadFile.type, upsert: false });
+          if (uploadError) throw new Error("The attachment could not be uploaded. Please try again.");
+          uploadedPaths.push(path);
+          attachments.push({ path, kind, name: uploadFile.name, mime: uploadFile.type, size: uploadFile.size });
+        }
+        form.set("attachments", JSON.stringify(attachments));
       }
 
       setSubmissionStage("publishing");
       form.delete("attachment");
       const result = await createSocialPost(form);
-      if (result.error) {
-        if (uploadedPath) await createClient().storage.from("post-media").remove([uploadedPath]);
-        throw new Error(result.error);
-      }
+      if (result.error) throw new Error(result.error);
 
       formRef.current?.reset();
-      updateFile(null);
+      updateFiles([]);
       if (result.moderation === "held") {
         setNotice("Your post was submitted and is being reviewed before it appears in the feed.");
         return;
@@ -127,6 +133,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
       router.push("/feed");
       router.refresh();
     } catch (caught) {
+      if (uploadedPaths.length) await createClient().storage.from("post-media").remove(uploadedPaths);
       setError(caught instanceof Error ? caught.message : "Could not publish your post.");
     } finally {
       setSubmitting(false);
@@ -134,7 +141,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
     }
   }
 
-  const kind = file ? fileKind(file) : null;
+  const kind = files[0] ? fileKind(files[0]) : null;
 
   return (
     <form aria-busy={submitting} className="post-composer surface overflow-hidden" onSubmit={submit} ref={formRef}>
@@ -144,6 +151,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         </div>
         <textarea
           aria-label="Post text"
+          autoFocus={autoFocus}
           className="min-h-32 min-w-0 flex-1 resize-none bg-transparent pt-2 text-sm leading-6 text-font outline-none placeholder:text-muted"
           disabled={submitting}
           maxLength={5000}
@@ -152,14 +160,20 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
         />
       </div>
 
-      {file && (
+      {files.length > 0 && (
         <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-line sm:mx-5">
           <div className="flex items-center justify-between border-b border-line bg-panel px-4 py-3">
-            <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-0.5 text-xs text-muted">{readableSize(file.size)}</p></div>
-            <button aria-label="Remove attachment" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={submitting} onClick={() => updateFile(null)} type="button"><FiX /></button>
+            <div className="min-w-0"><p className="truncate text-sm font-semibold">{files.length > 1 ? `${files.length} photos selected` : files[0].name}</p><p className="mt-0.5 text-xs text-muted">{files.length > 1 ? `${files.length} of ${maxPhotos} photos` : readableSize(files[0].size)}</p></div>
+            <button aria-label="Remove all attachments" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-font" disabled={submitting} onClick={() => updateFiles([])} type="button"><FiX /></button>
           </div>
-          {kind === "image" && previewUrl && <div className="flex min-h-40 items-center justify-center bg-black/20"><img alt="Selected post attachment" className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" src={previewUrl} /></div>}
-          {kind === "video" && previewUrl && <div className="flex min-h-40 items-center justify-center bg-black"><video className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" controls playsInline preload="metadata" src={previewUrl} /></div>}
+          {kind === "image" && files.length > 1 && <ul aria-label="Selected photos" className="composer-gallery scrollbar-none">
+            {files.map((file, index) => <li className="composer-gallery-slide" key={`${file.name}-${file.lastModified}-${index}`}>
+              <img alt={`Selected photo ${index + 1} of ${files.length}`} src={previewUrls[index]} />
+              <button aria-label={`Remove ${file.name}`} className="composer-gallery-remove" disabled={submitting} onClick={() => updateFiles(files.filter((_, current) => current !== index))} type="button"><FiX /></button>
+            </li>)}
+          </ul>}
+          {kind === "image" && files.length === 1 && previewUrls[0] && <div className="flex min-h-40 items-center justify-center bg-black/20"><img alt="Selected post attachment" className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" src={previewUrls[0]} /></div>}
+          {kind === "video" && previewUrls[0] && <div className="flex min-h-40 items-center justify-center bg-black"><video className="mx-auto h-auto max-h-[min(60vh,460px)] w-auto max-w-full object-contain" controls playsInline preload="metadata" src={previewUrls[0]} /></div>}
           {kind === "document" && <div className="flex items-center gap-3 p-5 text-sm text-muted"><FiFileText className="text-subtle" size={24} /> Document ready to upload</div>}
         </div>
       )}
@@ -178,8 +192,9 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
             className="sr-only"
             disabled={submitting}
             id="attachment"
+            multiple
             name="attachment"
-            onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+            onChange={(event) => { selectFiles(event.target.files); event.currentTarget.value = ""; }}
             type="file"
           />
         </div>
@@ -187,7 +202,7 @@ export default function PostComposer({ profile }: { profile: StudentProfile }) {
           {submitting ? <><FiLoader className="animate-spin" />{submissionStage === "uploading" ? "Uploading…" : "Publishing…"}</> : <><FiSend /> Post</>}
         </button>
       </div>
-      <p className="flex items-center gap-1.5 px-5 pb-4 text-[11px] text-muted"><FiUploadCloud /> One attachment, up to 25 MB.</p>
+      <p className="flex items-center gap-1.5 px-5 pb-4 text-[11px] text-muted"><FiUploadCloud /> Up to 10 photos, or one video/document. 25 MB each.</p>
     </form>
   );
 }

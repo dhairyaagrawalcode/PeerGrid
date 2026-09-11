@@ -5,16 +5,17 @@ import { requireStudent } from "@/app/lib/auth";
 import { isSupabaseConfigured } from "@/app/lib/supabase/config";
 import PlatformShellSkeleton from "@/app/components/platform-shell-skeleton";
 
-export default function PlatformLayout({ children }: { children: ReactNode }) {
+export default function PlatformLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   if (!isSupabaseConfigured()) return <SetupRequired />;
-  return <Suspense fallback={<PlatformShellSkeleton />}><ProtectedShell>{children}</ProtectedShell></Suspense>;
+  return <Suspense fallback={<PlatformShellSkeleton />}><ProtectedShell modal={modal}>{children}</ProtectedShell></Suspense>;
 }
 
-async function ProtectedShell({ children }: { children: ReactNode }) {
+async function ProtectedShell({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const { profile } = await requireStudent();
   return (
     <AppShell
       profile={profile}
+      modal={modal}
     >
       {children}
     </AppShell>

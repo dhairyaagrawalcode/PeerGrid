@@ -12,6 +12,7 @@ test("every authenticated page has a destination-specific loading layout", () =>
   function check(directory: string) {
     for (const item of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, item.name);
+      if (item.isDirectory() && item.name.startsWith("@")) continue;
       if (item.isDirectory()) check(path);
       if (item.name !== "page.tsx") continue;
       const route = `/${relative(platform, directory)}`;

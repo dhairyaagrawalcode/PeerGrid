@@ -17,6 +17,88 @@ test("post media and previews remain bounded without forced cropping", () => {
     assert.doesNotMatch(component, /object-cover/);
   }
   assert.doesNotMatch(source("app/components/social-post-card.tsx"), /min-h-40/);
+  const feed = source("app/(platform)/feed/page.tsx");
+  const styles = source("app/globals.css");
+  assert.match(feed, /feed-stream/);
+  assert.match(feed, /<SocialPostCard[\s\S]*?feed/);
+  assert.doesNotMatch(styles, /\.feed-stream \.feed-post-card \.post-media\s*{[^}]*aspect-ratio/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-media :is\(img, video\)[\s\S]*?block-size:\s*auto/);
+  assert.match(styles, /\.feed-stream \.feed-post-card:not\(:last-child\)[\s\S]*?border-block-end/);
+});
+
+test("photo galleries persist ordered media and use equal-height proportional slides", () => {
+  const migration = source("supabase/migrations/20260911000000_post_media_gallery.sql");
+  const composer = source("app/components/post-composer.tsx");
+  const gallery = source("app/components/post-media-gallery.tsx");
+  const styles = source("app/globals.css");
+  const action = source("app/actions/posts.ts");
+
+  assert.match(migration, /create table if not exists public\.post_media/);
+  assert.match(migration, /unique \(post_id, position\)/);
+  assert.match(migration, /post_media_rows_insert_own/);
+  assert.match(migration, /attachment_name, attachment_mime, attachment_size/);
+  assert.match(composer, /multiple/);
+  assert.match(composer, /maxPhotos = 10/);
+  assert.match(action, /Multiple attachments must all be photos/);
+  assert.match(gallery, /scrollIntoView/);
+  assert.match(gallery, /captureFirstPhotoSize/);
+  assert.match(gallery, /style=\{\{ aspectRatio: firstAspectRatio \}\}/);
+  assert.match(styles, /\.post-gallery-scroller[\s\S]*?scroll-snap-type: inline mandatory/);
+  assert.match(styles, /\.post-gallery-image,[\s\S]*?inline-size: auto;[\s\S]*?block-size: 100%/);
+  assert.match(styles, /\.post-gallery-scroller\s*\{[\s\S]*?block-size: auto;[\s\S]*?max-block-size/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-gallery \{\s*inline-size: 100%;\s*margin: \.35rem 0 \.6rem;/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-gallery-scroller \{\s*inline-size: calc\(100% - 4\.15rem\);\s*margin-inline-start: 4\.15rem;/);
+});
+
+test("feed engagement uses white filled states, rising counts, aligned avatars, and matching skeletons", () => {
+  const engagement = source("app/components/post-engagement.tsx");
+  const post = source("app/components/social-post-card.tsx");
+  const skeleton = source("app/components/section-skeleton.tsx");
+  const styles = source("app/globals.css");
+
+  assert.match(engagement, /function AnimatedCount/);
+  assert.match(engagement, /post-engagement-count-value/);
+  assert.doesNotMatch(engagement, /liked \? "text-primary"/);
+  assert.doesNotMatch(engagement, /saved \? "text-primary"/);
+  assert.match(styles, /@keyframes pg-count-rise[\s\S]*?translateY\(100%\)/);
+  assert.match(styles, /prefers-reduced-motion[\s\S]*?post-engagement-count-value/);
+  assert.match(post, /className="post-avatar avatar[\s\S]*?<div className="min-w-0 flex-1"/);
+  assert.match(skeleton, /post-skeleton-avatar/);
+  assert.match(skeleton, /post-skeleton-actions/);
+});
+
+test("attachment posting remains compatible until the gallery migration is deployed", () => {
+  const action = source("app/actions/posts.ts");
+  assert.match(action, /\["42501", "42703", "PGRST204"\]/);
+  assert.match(action, /legacyPayload/);
+  assert.match(action, /Apply the latest post gallery migration before sharing multiple photos/);
+  assert.match(action, /error\.message\.includes\("RATE_LIMIT_EXCEEDED"\)/);
+});
+
+test("desktop composer opens without a duplicate profile fetch or purple click ring", () => {
+  const interceptedPage = source("app/(platform)/@modal/(.)post/page.tsx");
+  const modal = source("app/components/post-composer-modal.tsx");
+  const preview = source("app/components/post-author-preview.tsx");
+  const styles = source("app/globals.css");
+
+  assert.doesNotMatch(interceptedPage, /requireStudent/);
+  assert.match(modal, /usePlatformProfile/);
+  assert.doesNotMatch(styles, /desktop-post-dialog::backdrop\s*{[^}]*backdrop-filter/);
+  assert.match(styles, /\.feed-composer \.field:focus\s*{[^}]*box-shadow: none/);
+  assert.match(preview, /FollowControls/);
+  assert.match(preview, /startConversation/);
+  assert.match(source("app/components/social-post-card.tsx"), /post-author-preview relative min-w-0[\s\S]*?post\.author\.full_name[\s\S]*?<PostAuthorPreview/);
+  assert.match(styles, /\.post-author-preview:hover \.post-author-preview-card/);
+  assert.match(styles, /inset-block-start: calc\(100% \+ \.15rem\);[\s\S]*?inset-inline-start: 0/);
+});
+
+test("mobile feed overrides desktop indentation without shrinking post content", () => {
+  const styles = source("app/globals.css");
+  assert.match(styles, /@media \(max-width: 64rem\)[\s\S]*?\.feed-stream \.feed-post-card \.post-copy \{ padding: 0 0 \.5rem 3\.25rem; \}/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-media \{ inline-size: calc\(100% - 3\.25rem\)/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-gallery \{ inline-size: calc\(100% \+ 2rem\); margin-block: \.5rem \.75rem; margin-inline: -1rem; \}/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-gallery-scroller \{ inline-size: calc\(100% - 4\.25rem\); margin-inline-start: 4\.25rem; \}/);
+  assert.match(styles, /\.feed-stream \.feed-post-card \.post-engagement \{ margin-inline: 3\.25rem 0; \}/);
 });
 
 test("only message senders receive message deletion permission", () => {

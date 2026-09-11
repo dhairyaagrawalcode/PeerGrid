@@ -22,8 +22,9 @@ test("post pages are bounded and engagement/storage run concurrently in batches"
   let finish!: (value: unknown) => void;
   let storageCalls = 0;
   let engagementCalls = 0;
+  const { builder: emptyGallery } = query([]);
   const client = {
-    from: () => builder,
+    from: (table: string) => table === "post_media" ? emptyGallery : builder,
     rpc(name: string, args: { candidate_post_ids: string[] }) {
       assert.equal(name, "get_post_engagement");
       assert.deepEqual(args.candidate_post_ids, ["one", "two"]);
@@ -56,7 +57,8 @@ test("an empty post page does not perform engagement or media queries", async ()
 
 test("ranked results retain database order and their explanation", async () => {
   const { builder } = query([{ id: "one" }, { id: "two" }]);
-  const client = { from: () => builder, rpc: async (name: string) => ({
+  const { builder: emptyGallery } = query([]);
+  const client = { from: (table: string) => table === "post_media" ? emptyGallery : builder, rpc: async (name: string) => ({
     data: name === "get_ranked_feed" ? [{ post_id: "two", recommendation_reason: "Followed" }, { post_id: "one", recommendation_reason: "Recent" }] : [], error: null,
   }) } as unknown as Client;
   const result = await getSocialPosts(client, { ranked: true });

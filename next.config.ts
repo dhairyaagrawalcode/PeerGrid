@@ -18,7 +18,7 @@ const supabaseRemotePatterns = supabaseUrl
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  allowedDevOrigins: ['10.202.156.11'],
+  allowedDevOrigins: ['10.67.9.11'],
   images: {
     remotePatterns: supabaseRemotePatterns,
   },

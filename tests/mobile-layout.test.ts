@@ -98,9 +98,30 @@ test("mobile feed details, conversation search, and profile editing remain compa
   assert.match(editProfile, /edit-profile-form/);
   assert.match(css, /data-mobile-route="\/feed"\] \.feed-composer \{ inline-size: calc\(100% \+ 2rem\)/);
   assert.match(css, /feed-composer[^{]*\{[^}]*border-radius: 0 !important/);
-  assert.match(css, /\.social-post \.post-media \{ inline-size: calc\(100% - 3\.25rem\)/);
+  assert.match(css, /\.feed-stream \.feed-post-card \.post-media \{ inline-size: calc\(100% - 3\.25rem\)/);
   assert.match(css, /\.feed-post-list > \.social-post \.post-avatar \{ inset-inline-start: 1rem; \}/);
   assert.match(css, /data-mobile-route="\/profile\/edit"\] \.edit-profile-form \{ margin-top: 0; padding-top: \.5rem; border-top: 0; \}/);
+});
+
+test("post creation is modal on desktop and remains a full page on mobile", () => {
+  const layout = source("app/(platform)/layout.tsx");
+  const shell = source("app/components/app-shell.tsx");
+  const link = source("app/components/responsive-post-link.tsx");
+  const modal = source("app/components/post-composer-modal.tsx");
+  const feed = source("app/(platform)/feed/page.tsx");
+  const css = source("app/globals.css");
+
+  assert.match(layout, /modal=\{modal\}/);
+  assert.match(shell, /href === "\/post" \? ResponsivePostLink : Link/);
+  assert.match(link, /responsive-post-link-mobile/);
+  assert.match(link, /responsive-post-link-desktop/);
+  assert.match(css, /@media \(max-width: 64rem\)[^{]*\{\s*\.responsive-post-link-desktop \{ display: none !important; \}/);
+  assert.match(modal, /dialog\.showModal\(\)/);
+  assert.match(modal, /router\.back\(\)/);
+  assert.match(feed, /!border-0 !px-0 !py-0/);
+  assert.match(feed, /feed-composer surface mb-5 p-4/);
+  assert.match(feed, /gap-\[\.65rem\]/);
+  assert.match(css, /\.desktop-post-dialog::backdrop/);
 });
 
 test("mobile route motion is directional and respects reduced motion", () => {

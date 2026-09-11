@@ -17,11 +17,12 @@ function FeedSkeleton() {
     <aside className="hidden xl:block"><FeedProfileSkeleton /></aside>
     <div className="min-w-0">
       <Bar className="feed-skeleton-title mb-4 h-7 w-20 xl:hidden" />
-      <div className="feed-composer surface mb-5 p-4 sm:p-5">
-        <div className="flex items-center gap-3"><Bar className="h-10 w-10 shrink-0 rounded-full" /><Bar className="h-11 flex-1 rounded-xl" /></div>
-        <div className="mt-3 grid grid-cols-3 gap-5 border-t border-line pt-5 pb-2">{[0, 1, 2].map(item => <Bar className="mx-auto h-4 w-20" key={item} />)}</div>
+      <div className="feed-stream">
+        <div className="feed-composer surface p-4 sm:p-5">
+          <div className="flex items-center gap-3"><Bar className="h-10 w-10 shrink-0 rounded-full" /><Bar className="h-4 w-56" /></div>
+        </div>
+        <FeedPostsSkeleton />
       </div>
-      <FeedPostsSkeleton />
     </div>
     <aside className="hidden xl:block"><div className="surface !rounded-2xl p-4"><FeedPeopleSkeleton /><FeedCollaborationsSkeleton /></div></aside>
   </div>;
@@ -91,7 +92,7 @@ function MessagesSkeleton({ thread = false }: { thread?: boolean }) {
 
 function PostComposerSkeleton() {
   return <div className="mx-auto max-w-2xl"><HeadingSkeleton /><div className="surface mt-6 overflow-hidden">
-    <div className="flex gap-3 p-4 sm:p-5"><Bar className="h-11 w-11 shrink-0 rounded-xl" /><div className="min-h-32 flex-1 pt-2"><Bar className="h-4 w-3/4" /></div></div>
+    <div className="flex gap-3 p-4 sm:p-5"><Bar className="h-11 w-11 shrink-0 rounded-full" /><div className="min-h-32 flex-1 pt-2"><Bar className="h-4 w-3/4" /></div></div>
     <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div className="flex justify-between gap-4"><Bar className="h-4 w-14" /><Bar className="h-4 w-14" /><Bar className="h-4 w-20" /></div><Bar className="h-9 w-full rounded-xl sm:w-20" /></div>
     <Bar className="mx-5 mt-1 mb-5 h-3 w-48" />
   </div></div>;

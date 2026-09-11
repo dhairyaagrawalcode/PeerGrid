@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 // No arbitrary URLs/paths, service-role key, or process-wide private-data cache.
 export async function GET(request: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const width = Number(new URL(request.url).searchParams.get("w") ?? 800);
+  const searchParams = new URL(request.url).searchParams;
+  const width = Number(searchParams.get("w") ?? 800);
+  const mediaId = searchParams.get("media");
   const failure = (status: number) => new Response(null, { status, headers: { "Cache-Control": "no-store" } });
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(postId)
     || !(thumbnailWidths as readonly number[]).includes(width)) return failure(400);
@@ -18,11 +20,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ post
   if (authError || !user) return failure(401);
   // Post RLS plus the API access hook enforce verified/active account access,
   // maintenance mode, and visibility. The path comes only from an authorized row.
-  const { data: post, error } = await supabase.from("social_posts")
-    .select("attachment_path, attachment_kind")
-    .eq("id", postId).eq("moderation_status", "published").maybeSingle();
-  if (error || !post?.attachment_path || post.attachment_kind !== "image") return failure(404);
-  const { data: original, error: storageError } = await supabase.storage.from("post-media").download(post.attachment_path);
+  let mediaPath: string | null = null;
+  if (mediaId) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mediaId)) return failure(400);
+    const { data: media, error } = await supabase.from("post_media")
+      .select("path, kind")
+      .eq("id", mediaId).eq("post_id", postId).maybeSingle();
+    if (error || !media || media.kind !== "image") return failure(404);
+    mediaPath = media.path;
+  } else {
+    const { data: post, error } = await supabase.from("social_posts")
+      .select("attachment_path, attachment_kind")
+      .eq("id", postId).eq("moderation_status", "published").maybeSingle();
+    if (error || !post?.attachment_path || post.attachment_kind !== "image") return failure(404);
+    mediaPath = post.attachment_path;
+  }
+  if (!mediaPath) return failure(404);
+  const { data: original, error: storageError } = await supabase.storage.from("post-media").download(mediaPath);
   if (storageError || !original) return failure(404);
   if (original.size > 25 * 1024 * 1024) return failure(422);
   try {

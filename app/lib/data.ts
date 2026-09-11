@@ -11,6 +11,7 @@ import type {
   ProfileMatch,
   PendingCollaborationConfirmation,
   PeerGridNotification,
+  PostMedia,
   SocialPost,
   StudentProfile,
 } from "@/app/types";
@@ -202,7 +203,7 @@ export async function getSocialPosts(
   let query = supabase
     .from("social_posts")
     .select(
-      "id, author_id, body, attachment_path, attachment_kind, attachment_name, attachment_mime, attachment_size, moderation_status, moderation_reason, created_at, author:profiles!social_posts_author_id_fkey(id, username, full_name, avatar_url, program, campus:campuses(id, slug, name, city))",
+      "id, author_id, body, attachment_path, attachment_kind, attachment_name, attachment_mime, attachment_size, moderation_status, moderation_reason, created_at, author:profiles!social_posts_author_id_fkey(id, username, full_name, avatar_url, program, current_status, campus:campuses(id, slug, name, city))",
     )
     .eq("moderation_status", "published")
     .order("created_at", { ascending: false });
@@ -219,11 +220,21 @@ export async function getSocialPosts(
 
 
   const posts = (data ?? []) as unknown as Array<
-    Omit<SocialPost, "attachment_url" | "like_count" | "comment_count" | "viewer_liked" | "viewer_saved" | "viewer_follows_author">
+    Omit<SocialPost, "attachment_url" | "media" | "like_count" | "comment_count" | "viewer_liked" | "viewer_saved" | "viewer_follows_author">
   >;
   const postIds = posts.map((post) => post.id);
   const authorIds = [...new Set(posts.map((post) => post.author_id))];
-  const mediaPaths = [...new Set(posts.flatMap((post) => post.attachment_path ? [post.attachment_path] : []))];
+  const galleryResult = postIds.length
+    ? await supabase.from("post_media").select("id, post_id, position, path, kind, name, mime, size").in("post_id", postIds).order("position")
+    : { data: [], error: null };
+  if (galleryResult.error && !["42P01", "PGRST205"].includes(galleryResult.error.code)) {
+    console.error("[PeerGrid] post gallery unavailable", { code: galleryResult.error.code });
+  }
+  const galleryRows = galleryResult.error ? [] : (galleryResult.data ?? []) as Array<Omit<PostMedia, "url">>;
+  const mediaPaths = [...new Set([
+    ...posts.flatMap((post) => post.attachment_path ? [post.attachment_path] : []),
+    ...galleryRows.map((media) => media.path),
+  ])];
   // Independent batched operations: never one author/count/storage request per post.
   const [engagementResult, mediaResult, followsResult, savedResult] = await Promise.all([
     postIds.length ? supabase.rpc("get_post_engagement", { candidate_post_ids: postIds }) : Promise.resolve({ data: [], error: null }),
@@ -248,13 +259,34 @@ export async function getSocialPosts(
   const followedAuthors = new Set((followsResult.data ?? []).map((row) => String(row.following_id)));
   const savedPosts = new Set((savedResult.data ?? []).map((row) => String(row.post_id)));
 
-  const hydrated = posts.map((post) => ({
-    ...post,
-    attachment_url: post.attachment_path ? signedUrls.get(post.attachment_path) ?? null : null,
-    viewer_follows_author: followedAuthors.has(post.author_id),
-    viewer_saved: savedPosts.has(post.id),
-    ...(engagement.get(post.id) ?? { like_count: 0, comment_count: 0, viewer_liked: false }),
-  })) as SocialPost[];
+  const galleryByPost = new Map<string, PostMedia[]>();
+  for (const media of galleryRows) {
+    const item = { ...media, url: signedUrls.get(media.path) ?? null };
+    galleryByPost.set(media.post_id, [...(galleryByPost.get(media.post_id) ?? []), item]);
+  }
+  const hydrated = posts.map((post) => {
+    const legacyMedia: PostMedia[] = post.attachment_path && post.attachment_kind && post.attachment_name && post.attachment_mime
+      ? [{
+        id: post.id,
+        post_id: post.id,
+        position: 0,
+        path: post.attachment_path,
+        kind: post.attachment_kind,
+        name: post.attachment_name,
+        mime: post.attachment_mime,
+        size: post.attachment_size ?? 1,
+        url: signedUrls.get(post.attachment_path) ?? null,
+      }]
+      : [];
+    return {
+      ...post,
+      media: galleryByPost.get(post.id) ?? legacyMedia,
+      attachment_url: post.attachment_path ? signedUrls.get(post.attachment_path) ?? null : null,
+      viewer_follows_author: followedAuthors.has(post.author_id),
+      viewer_saved: savedPosts.has(post.id),
+      ...(engagement.get(post.id) ?? { like_count: 0, comment_count: 0, viewer_liked: false }),
+    };
+  }) as SocialPost[];
   if (options.postIds) {
     const byId = new Map(hydrated.map((post) => [post.id, post]));
     return options.postIds.flatMap((postId) => {
